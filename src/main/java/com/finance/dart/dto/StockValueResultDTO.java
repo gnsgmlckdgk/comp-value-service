@@ -8,6 +8,8 @@ import lombok.Data;
 @Data
 public class StockValueResultDTO {
 
+    private String 결과메시지;
+
     private String 기업코드;
 
     private String 기업명;
@@ -20,4 +22,7 @@ public class StockValueResultDTO {
 
     private StockValueResultDetailDTO 상세정보;
 
+    public StockValueResultDTO(String responseMessage) {
+        this.결과메시지 = responseMessage;
+    }
 }

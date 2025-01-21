@@ -46,12 +46,13 @@ public class CalCompanyStockPerValueService {
      */
     public StockValueResultDTO calPerValue(String year, String corpCode, String corpName) {
 
-        StockValueResultDTO result = new StockValueResultDTO();
+        StockValueResultDTO result = new StockValueResultDTO("정상 처리되었습니다.");
 
         //@1. 회사정보
         CorpCodeDTO corpCodeDTO = null;
         if(corpCode.equals("") && !corpName.equals("")) {   // 기업명으로 검색
             corpCodeDTO = corpCodeService.getCorpCodeFindName(true, corpName);
+            if(corpCodeDTO == null) return new StockValueResultDTO("회사정보가 존재하지 않습니다.");
             corpCode = corpCodeDTO.getCorpCode();
         } else {
             corpCodeDTO = getCorpCode(corpCode);
@@ -66,6 +67,7 @@ public class CalCompanyStockPerValueService {
         Map<String, FinancialStatementDTO> fss03 = getTwoYearsPriorFinancialStatements(year, corpCode);
         if(fss03 == null) {
             result.set주당가치("");
+            result.set결과메시지("전전기 재무제표 정보가 존재하지 않습니다.");
             return result;
         }
         //# 전기
