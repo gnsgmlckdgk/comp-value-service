@@ -7,9 +7,11 @@ import com.finance.dart.dto.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
 
 import java.math.RoundingMode;
 import java.util.LinkedHashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
@@ -24,6 +26,7 @@ public class CalCompanyStockPerValueService {
     private String selFinanceBungiCode = ReprtCode.사업보고서.getCode();
     private StockValueResultDetailDTO resultDetail = new StockValueResultDetailDTO();   // 결과상세정보
 
+    private final CorpCodeService corpCodeService;
     private final FinancialStatmentService financialStatmentService;
     private final NumberOfSharesIssuedService numberOfSharesIssuedService;
 
@@ -38,10 +41,10 @@ public class CalCompanyStockPerValueService {
         StockValueResultDTO result = new StockValueResultDTO();
 
         //@1. 회사정보 조회
-        // TODO: 회사명/주식코드 조회 추가
+        CorpCodeDTO corpCodeDTO = getCorpCode(corpCode);
         result.set기업코드(corpCode);
-        result.set기업명("");
-        result.set주식코드("");
+        result.set기업명(corpCodeDTO.getCorpName());
+        result.set주식코드(corpCodeDTO.getStockCode());
 
         //@2. 재무제표 조회(전전기/전기/당기)
         //# 전전기
@@ -62,6 +65,29 @@ public class CalCompanyStockPerValueService {
         result.set상세정보(this.resultDetail);
 
         return result;
+    }
+
+    /**
+     * 기업코드 정보 검색기업정보 검색
+     * @param corpCode
+     * @return
+     */
+    private CorpCodeDTO getCorpCode(String corpCode) {
+
+        CorpCodeDTO corpCodeDTO = new CorpCodeDTO();
+
+        CorpCodeResDTO corpCodeResDTO = corpCodeService.getCorpCode(true);
+        List<CorpCodeDTO> codeDTOList = new LinkedList<>();
+        if(corpCodeResDTO != null || corpCodeResDTO.getList() != null) {
+            codeDTOList = corpCodeResDTO.getList();
+        }
+
+        corpCodeDTO = codeDTOList.stream()
+                .filter(obj -> corpCode.equals(obj.getCorpCode()))
+                .findFirst()
+                .orElse(new CorpCodeDTO());
+
+        return corpCodeDTO;
     }
 
     /**
@@ -396,7 +422,7 @@ public class CalCompanyStockPerValueService {
 
         //TODO: 과도한 조회로 IP차단 될수도 있어서 시간차, 공통으로 뺄 예정, 개발중
         try {
-            Thread.sleep(1000);
+            Thread.sleep(100);
         } catch (InterruptedException e) {
             throw new RuntimeException(e);
         }
