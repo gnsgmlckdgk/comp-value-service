@@ -1,0 +1,83 @@
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+Icon
+._*
+.Spotlight-V100
+.Trashes
+
+# IntelliJ IDEA
+.idea/
+*.iws
+*.iml
+*.ipr
+out/
+.idea_modules/
+
+# Spring Boot
+target/
+!.mvn/wrapper/maven-wrapper.jar
+!**/src/main/**/target/
+!**/src/test/**/target/
+
+# Compiled class files
+*.class
+
+# Log files
+*.log
+logs/
+
+# Package Files
+*.jar
+*.war
+*.nar
+*.ear
+*.zip
+*.tar.gz
+*.rar
+
+# Build
+build/
+bin/
+.gradle/
+
+# Spring Boot specific
+.spring-boot-devtools
+
+# Properties files
+application-*.properties
+application-*.yml
+!application.properties
+!application.yml
+
+# Maven
+.mvn/
+mvnw
+mvnw.cmd
+pom.xml.tag
+pom.xml.releaseBackup
+pom.xml.versionsBackup
+pom.xml.next
+release.properties
+dependency-reduced-pom.xml
+buildNumber.properties
+
+# STS (Spring Tool Suite)
+.apt_generated
+.classpath
+.factorypath
+.project
+.settings
+.springBeans
+.sts4-cache
+
+# JUnit
+junit*
+
+# Java heap dump
+*.hprof
+
+# JVM crash logs
+hs_err_pid*
+replay_pid*
