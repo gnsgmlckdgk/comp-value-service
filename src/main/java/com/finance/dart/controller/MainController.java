@@ -4,6 +4,7 @@ import com.finance.dart.dto.CorpCodeDTO;
 import com.finance.dart.dto.StockValueResultDTO;
 import com.finance.dart.service.CalCompanyStockPerValueService;
 import com.finance.dart.service.CalPerValueService;
+import jakarta.annotation.Nullable;
 import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -47,17 +48,19 @@ public class MainController {
 
     /**
      * 한 기업의 한주당 가치 계산
-     * @param corpCode
      * @param year
+     * @param corpCode
+     * @param corpName
      * @return
      */
     @GetMapping("/cal/per_value")
     public ResponseEntity<StockValueResultDTO> calCompanyStockPerValue(
             @RequestParam("year") String year,
-            @RequestParam("corp_code") String corpCode
+            @RequestParam(value = "corp_code", defaultValue = "") String corpCode,
+            @RequestParam(value = "corp_name", defaultValue = "") String corpName
     ) {
 
-        StockValueResultDTO response = calCompanyStockPerValueService.calPerValue(year, corpCode);
+        StockValueResultDTO response = calCompanyStockPerValueService.calPerValue(year, corpCode, corpName);
 
         return new ResponseEntity<>(response, HttpStatus.OK);
     }

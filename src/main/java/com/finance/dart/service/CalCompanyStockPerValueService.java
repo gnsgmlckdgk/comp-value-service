@@ -7,7 +7,6 @@ import com.finance.dart.dto.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
-import org.springframework.util.StringUtils;
 
 import java.math.RoundingMode;
 import java.util.LinkedHashMap;
@@ -34,14 +33,22 @@ public class CalCompanyStockPerValueService {
      * 기업 한주당가치 계산
      * @param year
      * @param corpCode
+     * @param corpName
      * @return
      */
-    public StockValueResultDTO calPerValue(String year, String corpCode) {
+    public StockValueResultDTO calPerValue(String year, String corpCode, String corpName) {
 
         StockValueResultDTO result = new StockValueResultDTO();
 
-        //@1. 회사정보 조회
-        CorpCodeDTO corpCodeDTO = getCorpCode(corpCode);
+        //@1. 회사정보
+        CorpCodeDTO corpCodeDTO = null;
+        if(corpCode.equals("") && !corpName.equals("")) {   // 기업명으로 검색
+            corpCodeDTO = corpCodeService.getCorpCodeFindName(true, corpName);
+            corpCode = corpCodeDTO.getCorpCode();
+        } else {
+            corpCodeDTO = getCorpCode(corpCode);
+        }
+
         result.set기업코드(corpCode);
         result.set기업명(corpCodeDTO.getCorpName());
         result.set주식코드(corpCodeDTO.getStockCode());

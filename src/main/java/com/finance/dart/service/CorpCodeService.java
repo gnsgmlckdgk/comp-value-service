@@ -48,6 +48,35 @@ public class CorpCodeService {
         return getZipData(zipFile, publicCompanyYn);
     }
 
+    /**
+     * 기업명으로 기업정보 검색
+     * @param publicCompanyYn
+     * @param corpName
+     * @return
+     */
+    public CorpCodeDTO getCorpCodeFindName(boolean publicCompanyYn, String corpName) {
+
+        final String API_KEY = configService.getDartAPI_Key();
+
+        HttpEntity entity = ClientUtil.createHttpEntity(MediaType.APPLICATION_XML);
+        String url = "https://opendart.fss.or.kr/api/corpCode.xml?crtfc_key="+API_KEY;
+
+        ResponseEntity<byte[]> response = httpClientService.exchangeSync(url, HttpMethod.GET, entity, byte[].class);
+        byte[] zipFile = response.getBody();
+
+        CorpCodeResDTO corpCodeResDTO = getZipData(zipFile, publicCompanyYn);
+        List<CorpCodeDTO> corpCodeDTOList = corpCodeResDTO.getList();
+
+        for(CorpCodeDTO corpCodeDTO : corpCodeDTOList) {
+            String cn = corpCodeDTO.getCorpName();
+            if(corpName.equals(cn)) {
+                return corpCodeDTO;
+            }
+        }
+
+        return null;
+    }
+
     private CorpCodeResDTO getZipData(byte[] zipFile, boolean publicCompanyYn) {
 
         String xmlContent = XmlUtil.getXmlContentOfZipFile(zipFile);
