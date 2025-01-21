@@ -145,7 +145,7 @@
 				"method": "GET",
 				"header": [],
 				"url": {
-					"raw": "http://localhost:18080/dart/main/cal/per_value?year=2025&corp_name=화신정공",
+					"raw": "http://localhost:18080/dart/main/cal/per_value?year=2025&corp_name=삼성전자",
 					"protocol": "http",
 					"host": [
 						"localhost"
@@ -165,13 +165,14 @@
 						},
 						{
 							"key": "corp_code",
-							"value": "00825223",
-							"description": "기업코드",
+							"value": "00126380",
+							"description": "기업코드(기업코드, 기업명 중 하나만 입력해도 됨)",
 							"disabled": true
 						},
 						{
 							"key": "corp_name",
-							"value": "화신정공"
+							"value": "삼성전자",
+							"description": "기업명(기업코드, 기업명 중 하나만 입력해도 됨)"
 						}
 					]
 				}
