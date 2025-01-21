@@ -212,46 +212,35 @@ public class CalCompanyStockPerValueService {
         String crValue = CalUtil.divide(caValue, clValue, 2, RoundingMode.HALF_UP);
         this.resultDetail.set유동비율(crValue);
 
-        /**
-         * 투자자산(비유동자산내)
-         *
-         * 종속/관계/공동기업 투자 관련
-         * ifrs_InvestmentsInSubsidiariesJointVenturesAndAssociates
-         * ifrs_InvestmentInAssociate
-         * ifrs_InvestmentsInJointVentures
-         * ifrs_InvestmentsInSubsidiaries
-         *
-         * 금융자산 관련
-         * ifrs_NoncurrentFinancialAssets
-         * ifrs_OtherNoncurrentFinancialAssets
-         * ifrs_FinancialAssetsAtFairValueThroughProfitOrLoss
-         * ifrs_FinancialAssetsAtFairValueThroughOtherComprehensiveIncome
-         * ifrs_AvailableForSaleFinancialAssets
-         * ifrs_HeldToMaturityInvestments
-         *
-         * 투자부동산
-         * ifrs_InvestmentProperty
-         *
-         * 기타 투자
-         * ifrs_OtherInvestments
-         * ifrs_LongTermInvestments
-         * ifrs_EquityInvestments
-         */
+        // 투자자산(비유동자산내)
+        // 2025.01.21 : 유동/비유동 구분이 명확하지 않거나 둘 다 포함될수있는 항목도 포함됨
         final String IA_KEY_ARR[] = {
-                "ifrs_InvestmentsInSubsidiariesJointVenturesAndAssociates"
-                , "ifrs_InvestmentInAssociate"
-                , "ifrs_InvestmentsInJointVentures"
-                , "ifrs_InvestmentsInSubsidiaries"
-                , "ifrs_NoncurrentFinancialAssets"
-                , "ifrs_OtherNoncurrentFinancialAssets"
-                , "ifrs_FinancialAssetsAtFairValueThroughProfitOrLoss"
-                , "ifrs_FinancialAssetsAtFairValueThroughOtherComprehensiveIncome"
-                , "ifrs_AvailableForSaleFinancialAssets"
-                , "ifrs_HeldToMaturityInvestments"
-                , "ifrs_InvestmentProperty"
-                , "ifrs_OtherInvestments"
-                , "ifrs_LongTermInvestments"
-                , "ifrs_EquityInvestments"
+                // 1. 지분투자 관련
+                "ifrs-full_InvestmentsInSubsidiariesJointVenturesAndAssociates",    // 종속/관계/공동기업 투자
+                "ifrs-full_InvestmentInAssociate",                                  // 관계기업투자
+                "ifrs-full_InvestmentsInJointVentures",                            // 공동기업투자
+                "ifrs-full_InvestmentsInSubsidiaries",                             // 종속기업투자
+                "ifrs-full_EquityInvestments",                                      // 지분투자
+
+                // 2. 금융자산 관련
+                "ifrs-full_NoncurrentFinancialAssets",                             // 비유동금융자산
+                "ifrs-full_OtherNoncurrentFinancialAssets",                        // 기타비유동금융자산
+                "ifrs-full_FinancialAssetsAtFairValueThroughProfitOrLoss",         // 당기손익-공정가치측정금융자산
+                "ifrs-full_NoncurrentFinancialAssetsMeasuredAtFairValueThroughOtherComprehensiveIncome",  // 기타포괄손익-공정가치측정금융자산
+                "dart_LongTermDepositsNotClassifiedAsCashEquivalents",             // 장기예치금(당기손익-공정가치측정금융자산)
+                "ifrs-full_AvailableForSaleFinancialAssets",                       // 매도가능금융자산
+                "ifrs-full_HeldToMaturityInvestments",                             // 만기보유투자
+
+                // 3. 기타 투자자산
+                "ifrs-full_InvestmentProperty",                                    // 투자부동산
+                "ifrs-full_OtherInvestments",                                      // 기타투자자산
+                "ifrs-full_LongTermInvestments",                                   // 장기투자자산
+
+                // 4. DART 특화 계정과목
+                "dart_LongTermTradeAndOtherNonCurrentReceivablesGross",           // 장기매출채권및기타비유동채권총장부금액
+                "dart_LongTermDepositsReceived",                                   // 장기예수금
+                "dart_LongTermLoansAndReceivables",                               // 장기대여금및수취채권
+                "dart_LongTermDeposits"                                           // 장기예치금
         };
 
         String iaValueSum = "0";    // 투자자산 합계
