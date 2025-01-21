@@ -84,14 +84,14 @@ public class CorpCodeService {
         JSONObject jsonObject = XML.toJSONObject(xmlContent).getJSONObject("result");
         CorpCodeResDTO corpCodeResDTO = new Gson().fromJson(jsonObject.toString(), CorpCodeResDTO.class);
 
-        log.info("DART에 등록된 전체 기업수 = {}", corpCodeResDTO.getList().size());
+//        log.info("DART에 등록된 전체 기업수 = {}", corpCodeResDTO.getList().size());
 
         // 상장 기업만
         if(publicCompanyYn) {
             List<CorpCodeDTO> corpList = corpCodeResDTO.getList().stream()
                     .filter(corp -> !corp.getStockCode().equals(""))
                     .toList();
-            log.info("DART에 등록된 상장 기업수 = {}", corpList.size());
+//            log.info("DART에 등록된 상장 기업수 = {}", corpList.size());
             corpCodeResDTO.setList(corpList);
         }
 
