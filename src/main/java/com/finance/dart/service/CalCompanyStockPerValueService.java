@@ -7,6 +7,7 @@ import com.finance.dart.common.util.CalUtil;
 import com.finance.dart.common.util.ClientUtil;
 import com.finance.dart.common.util.DateUtil;
 import com.finance.dart.dto.*;
+import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpMethod;
@@ -27,15 +28,29 @@ public class CalCompanyStockPerValueService {
 
     private final String EXEC_ACCT_ID = "-표준계정코드 미사용-"; // 제외 항목
 
-    private FsDiv selFsDiv = FsDiv.연결;  // 기본값: 연결 / 연결없는경우 개별
-    private String selFinanceBungiCode = ReprtCode.사업보고서.getCode();
-    private StockValueResultDetailDTO resultDetail = new StockValueResultDetailDTO();   // 결과상세정보
+//    private FsDiv selFsDiv = FsDiv.연결;  // 기본값: 연결 / 연결없는경우 개별
+//    private String selFinanceBungiCode = ReprtCode.사업보고서.getCode();
+//    private StockValueResultDetailDTO resultDetail = new StockValueResultDetailDTO();   // 결과상세정보
 
     private final CorpCodeService corpCodeService;
     private final FinancialStatmentService financialStatmentService;
     private final NumberOfSharesIssuedService numberOfSharesIssuedService;
 
     private final HttpClientService httpClientService;
+
+
+    @Getter
+    private static class CalculationContext {
+        private FsDiv selFsDiv;
+        private String selFinanceBungiCode;
+        private final StockValueResultDetailDTO resultDetail;
+
+        private CalculationContext() {
+            this.selFsDiv = FsDiv.연결;  // 기본값
+            this.selFinanceBungiCode = ReprtCode.사업보고서.getCode();
+            this.resultDetail = new StockValueResultDetailDTO();
+        }
+    }
 
     /**
      * 기업 한주당가치 계산
@@ -45,6 +60,8 @@ public class CalCompanyStockPerValueService {
      * @return
      */
     public StockValueResultDTO calPerValue(String year, String corpCode, String corpName) {
+
+        CalculationContext context = new CalculationContext();
 
         StockValueResultDTO result = new StockValueResultDTO("정상 처리되었습니다.");
 
@@ -64,22 +81,22 @@ public class CalCompanyStockPerValueService {
 
         //@2. 재무제표 조회(전전기/전기/당기)
         //# 전전기
-        Map<String, FinancialStatementDTO> fss03 = getTwoYearsPriorFinancialStatements(year, corpCode);
+        Map<String, FinancialStatementDTO> fss03 = getTwoYearsPriorFinancialStatements(year, corpCode, context);
         if(fss03 == null) {
             result.set주당가치("");
             result.set결과메시지("전전기 재무제표 정보가 존재하지 않습니다.");
             return result;
         }
         //# 전기
-        Map<String, FinancialStatementDTO> fss02 = getPriorYearFinancialStatements(year, corpCode);
+        Map<String, FinancialStatementDTO> fss02 = getPriorYearFinancialStatements(year, corpCode, context);
         //# 당기
-        Map<String, FinancialStatementDTO> fss01 = getCurrentYearFinancialStatements(year, corpCode);
+        Map<String, FinancialStatementDTO> fss01 = getCurrentYearFinancialStatements(year, corpCode, context);
 
         //@3. 한주당 가치 계산
-        String companyOneStockValue = calCompanyValue(corpCode, year, fss01, fss02, fss03);
+        String companyOneStockValue = calCompanyValue(corpCode, year, fss01, fss02, fss03, context);
         result.set주당가치(companyOneStockValue);
 
-        result.set상세정보(this.resultDetail);
+        result.set상세정보(context.getResultDetail());
 
         //@4. 현재가격 조회
         String currentStockValue = getCurrentValue(corpCodeDTO.getStockCode(), "KS");
@@ -187,6 +204,7 @@ public class CalCompanyStockPerValueService {
      * @param fss01 당기
      * @param fss02 전기
      * @param fss03 전전기
+     * @param context
      * @return
      */
     private String calCompanyValue(
@@ -194,24 +212,25 @@ public class CalCompanyStockPerValueService {
             String year,
             Map<String, FinancialStatementDTO> fss01,
             Map<String, FinancialStatementDTO> fss02,
-            Map<String, FinancialStatementDTO> fss03
+            Map<String, FinancialStatementDTO> fss03,
+            CalculationContext context
     ) {
 
         int tYear = Integer.parseInt(year); // 기준연도
 
         //@ 저평가 확인
         //# 사업가치 [영업이익(전전기/전기/당기)]
-        String bussValue = calBussValue(fss03, fss02, fss01, selFinanceBungiCode);
-        this.resultDetail.set계산_사업가치(bussValue);
+        String bussValue = calBussValue(fss03, fss02, fss01, context.selFinanceBungiCode, context);
+        context.resultDetail.set계산_사업가치(bussValue);
 
         //# 재산가치 [유동자산, 유동부채, 유동비율, 투자자산(비유동자산내)]
-        String properValue = calProperValue(fss01);
-        this.resultDetail.set계산_재산가치(properValue);
+        String properValue = calProperValue(fss01, context);
+        context.resultDetail.set계산_재산가치(properValue);
 
         //# 고정부채(비유동부채)
         String fixedLb = getFixedLiabilities(fss01);
-        this.resultDetail.set고정부채(fixedLb);
-        this.resultDetail.set계산_부채(fixedLb);
+        context.resultDetail.set고정부채(fixedLb);
+        context.resultDetail.set계산_부채(fixedLb);
 
         //# 발행주식수
         String selNoIBungiCode = ReprtCode.사업보고서.getCode();
@@ -244,13 +263,13 @@ public class CalCompanyStockPerValueService {
             totalStockShareIssue = getCommonStockTotalShareIssue(numberOfSharesIssuedResDTO);    // 발행주식수
         }
 
-        this.resultDetail.set발행주식수(totalStockShareIssue);
+        context.resultDetail.set발행주식수(totalStockShareIssue);
 
         //# 결과
         // 기업 가치 (사업가치 + 재산가치 - 부채)
         String jujuValue = CalUtil.add(bussValue, properValue);
         jujuValue = CalUtil.sub(jujuValue, fixedLb);
-        this.resultDetail.set계산_기업가치(jujuValue);
+        context.resultDetail.set계산_기업가치(jujuValue);
 
         // 1주당가치 (기업가치 / 발행주식수)
         String result = CalUtil.divide(jujuValue, totalStockShareIssue, RoundingMode.HALF_UP);
@@ -307,26 +326,27 @@ public class CalCompanyStockPerValueService {
     /**
      * 재산가치 계산
      * @param fss01
+     * @param context
      * @return
      */
     private String calProperValue(
-            Map<String, FinancialStatementDTO> fss01) {
+            Map<String, FinancialStatementDTO> fss01, CalculationContext context) {
 
         // 유동자산 : ifrs-full_CurrentAssets
         final String CA_KEY = "ifrs-full_CurrentAssets";
         FinancialStatementDTO fs01_ca = fss01.get(CA_KEY);
         String caValue = fs01_ca.getThstrmAmount(); // 유동자산
-        this.resultDetail.set유동자산합계(caValue);
+        context.resultDetail.set유동자산합계(caValue);
 
         // 유동부채 : ifrs-full_CurrentLiabilities
         final String CL_KEY = "ifrs-full_CurrentLiabilities";
         FinancialStatementDTO fs01_cl = fss01.get(CL_KEY);
         String clValue = fs01_cl.getThstrmAmount(); // 유동부채
-        this.resultDetail.set유동부채합계(clValue);
+        context.resultDetail.set유동부채합계(clValue);
 
         // 유동비율 : (유동자산 / 유동부채)
         String crValue = CalUtil.divide(caValue, clValue, 2, RoundingMode.HALF_UP);
-        this.resultDetail.set유동비율(crValue);
+        context.resultDetail.set유동비율(crValue);
 
         // 투자자산(비유동자산내)
         // 2025.01.21 : 유동/비유동 구분이 명확하지 않거나 둘 다 포함될수있는 항목도 포함됨
@@ -366,7 +386,7 @@ public class CalCompanyStockPerValueService {
             String iaValue = fs01_ia.getThstrmAmount();
             iaValueSum = CalUtil.add(iaValueSum, iaValue);
         }
-        this.resultDetail.set투자자산_비유동자산내(iaValueSum);
+        context.resultDetail.set투자자산_비유동자산내(iaValueSum);
 
         // 유동자산 - (유동부채 * 1.2(유동비율)) + 투자자산
         String value01 = CalUtil.multi(clValue, crValue);   // 유동부채 * 유동비율
@@ -382,13 +402,15 @@ public class CalCompanyStockPerValueService {
      * @param fss02
      * @param fss01
      * @param selBoongiCode
+     * @param context
      * @return
      */
     private String calBussValue(
             Map<String, FinancialStatementDTO> fss03,
             Map<String, FinancialStatementDTO> fss02,
             Map<String, FinancialStatementDTO> fss01,
-            String selBoongiCode) {
+            String selBoongiCode,
+            CalculationContext context) {
 
         final String BUSS_KEY = "dart_OperatingIncomeLoss"; // 영업이익
 
@@ -411,15 +433,15 @@ public class CalCompanyStockPerValueService {
             bussPf01 = CalUtil.add(bussPf01, fs01.getThstrmAmount());
         }
 
-        this.resultDetail.set영업이익_전전기(bussPf03);
-        this.resultDetail.set영업이익_전기(bussPf02);
-        this.resultDetail.set영업이익_당기(bussPf01);
+        context.resultDetail.set영업이익_전전기(bussPf03);
+        context.resultDetail.set영업이익_전기(bussPf02);
+        context.resultDetail.set영업이익_당기(bussPf01);
 
         String sum = CalUtil.add(CalUtil.add(bussPf03, bussPf02), bussPf01);
         String average = CalUtil.divide(sum, "3", 2, RoundingMode.HALF_UP);
 
-        this.resultDetail.set영업이익_합계(sum);
-        this.resultDetail.set영업이익_평균(average);
+        context.resultDetail.set영업이익_합계(sum);
+        context.resultDetail.set영업이익_평균(average);
 
         return CalUtil.multi(average, "10");
     }
@@ -428,19 +450,21 @@ public class CalCompanyStockPerValueService {
      * 전전기 재무제표 조회
      * @param year
      * @param corpCode
+     * @param context
      * @return
      */
-    private Map<String, FinancialStatementDTO> getTwoYearsPriorFinancialStatements(String year, String corpCode) {
+    private Map<String, FinancialStatementDTO> getTwoYearsPriorFinancialStatements(
+            String year, String corpCode, CalculationContext context) {
 
         int tYear = Integer.parseInt(year); // 기준연도
 
         //@ 재무정보 조회
         // 전전기
         FinancialStatementResDTO financialStatementResDTO =
-                getFinancialStatement(corpCode, String.valueOf(tYear-3), ReprtCode.사업보고서, selFsDiv);
+                getFinancialStatement(corpCode, String.valueOf(tYear-3), ReprtCode.사업보고서, context.selFsDiv);
         if(null == financialStatementResDTO.getList()) {
-            selFsDiv = FsDiv.개별;
-            financialStatementResDTO = getFinancialStatement(corpCode, String.valueOf(tYear-3), ReprtCode.사업보고서, selFsDiv);
+            context.selFsDiv = FsDiv.개별;
+            financialStatementResDTO = getFinancialStatement(corpCode, String.valueOf(tYear-3), ReprtCode.사업보고서, context.selFsDiv);
             if(null == financialStatementResDTO.getList()) {
                 // 개별도 없으면 해당기업 계산 생략
                 return null;
@@ -455,16 +479,18 @@ public class CalCompanyStockPerValueService {
      * 전기
      * @param year
      * @param corpCode
+     * @param context
      * @return
      */
-    private Map<String, FinancialStatementDTO> getPriorYearFinancialStatements(String year, String corpCode) {
+    private Map<String, FinancialStatementDTO> getPriorYearFinancialStatements(
+            String year, String corpCode, CalculationContext context) {
 
         int tYear = Integer.parseInt(year); // 기준연도
 
         //@ 재무정보 조회
         Map<String, FinancialStatementDTO> fss02 =
                 cleanUpFinancailStatement(
-                        getFinancialStatement(corpCode, String.valueOf(tYear-2), ReprtCode.사업보고서, selFsDiv));
+                        getFinancialStatement(corpCode, String.valueOf(tYear-2), ReprtCode.사업보고서, context.selFsDiv));
 
         return fss02;
     }
@@ -473,26 +499,28 @@ public class CalCompanyStockPerValueService {
      * 당기
      * @param year
      * @param corpCode
+     * @param context
      * @return
      */
-    private Map<String, FinancialStatementDTO> getCurrentYearFinancialStatements(String year, String corpCode) {
+    private Map<String, FinancialStatementDTO> getCurrentYearFinancialStatements(
+            String year, String corpCode, CalculationContext context) {
 
         int tYear = Integer.parseInt(year); // 기준연도
 
         // 당기
-        selFinanceBungiCode = ReprtCode.사업보고서.getCode();
+        context.selFinanceBungiCode = ReprtCode.사업보고서.getCode();
         FinancialStatementResDTO fss01Res =
-                getFinancialStatement(corpCode, String.valueOf(tYear-1), ReprtCode.사업보고서, selFsDiv);
+                getFinancialStatement(corpCode, String.valueOf(tYear-1), ReprtCode.사업보고서, context.selFsDiv);
 
         if(null == fss01Res.getList()) {
             // 사업보고서가 없는 경우(4분기 발표전 다음해) 작년3분기 조회
-            fss01Res = getFinancialStatement(corpCode, String.valueOf(tYear-1), ReprtCode.분기보고서_3, selFsDiv);
-            selFinanceBungiCode = ReprtCode.분기보고서_3.getCode();
+            fss01Res = getFinancialStatement(corpCode, String.valueOf(tYear-1), ReprtCode.분기보고서_3, context.selFsDiv);
+            context.selFinanceBungiCode = ReprtCode.분기보고서_3.getCode();
 
-        } else if(null == fss01Res.getList() && selFinanceBungiCode.equals(ReprtCode.분기보고서_3.getCode())) {
+        } else if(null == fss01Res.getList() && context.selFinanceBungiCode.equals(ReprtCode.분기보고서_3.getCode())) {
             // 3분기보고서도 없으면 2분기보고서(반기보고서)
-            fss01Res = getFinancialStatement(corpCode, String.valueOf(tYear-1), ReprtCode.반기보고서, selFsDiv);
-            selFinanceBungiCode = ReprtCode.반기보고서.getCode();
+            fss01Res = getFinancialStatement(corpCode, String.valueOf(tYear-1), ReprtCode.반기보고서, context.selFsDiv);
+            context.selFinanceBungiCode = ReprtCode.반기보고서.getCode();
         }
 
         Map<String, FinancialStatementDTO> fss01 = cleanUpFinancailStatement(fss01Res);
@@ -509,8 +537,7 @@ public class CalCompanyStockPerValueService {
      * @return
      */
     private FinancialStatementResDTO getFinancialStatement(String corpCode, String year, ReprtCode reprtCode, FsDiv fsDiv) {
-
-        //TODO: 과도한 조회로 IP차단 될수도 있어서 시간차, 공통으로 뺄 예정, 개발중
+        
         try {
             Thread.sleep(100);
         } catch (InterruptedException e) {
