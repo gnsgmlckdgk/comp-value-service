@@ -2,10 +2,16 @@ package com.finance.dart.service;
 
 import com.finance.dart.common.enums.FsDiv;
 import com.finance.dart.common.enums.ReprtCode;
+import com.finance.dart.common.service.HttpClientService;
 import com.finance.dart.common.util.CalUtil;
+import com.finance.dart.common.util.ClientUtil;
+import com.finance.dart.common.util.DateUtil;
 import com.finance.dart.dto.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import java.math.RoundingMode;
@@ -28,6 +34,8 @@ public class CalCompanyStockPerValueService {
     private final CorpCodeService corpCodeService;
     private final FinancialStatmentService financialStatmentService;
     private final NumberOfSharesIssuedService numberOfSharesIssuedService;
+
+    private final HttpClientService httpClientService;
 
     /**
      * 기업 한주당가치 계산
@@ -71,7 +79,80 @@ public class CalCompanyStockPerValueService {
 
         result.set상세정보(this.resultDetail);
 
+        //@4. 현재가격 조회
+        String currentStockValue = getCurrentValue(corpCodeDTO.getStockCode(), "KS");
+        result.set현재가격(currentStockValue);
+
+        //@5. 확인시간 추가
+        result.set확인시간(DateUtil.getToday());
+
         return result;
+    }
+
+    /**
+     * 현재 한주 가격 조회
+     * @param stockCode     종목코드
+     * @param exchangeCd    거래소코드(KS, KQ)
+     * @return
+     */
+    private String getCurrentValue(String stockCode, String exchangeCd) {
+
+        exchangeCd = "." + exchangeCd;
+
+        // 종목코드 뒤에 .KS(코스피) 또는 .KQ(코스닥)를 붙여야 함 (ex: 005930.KS)
+        String symbol = stockCode + exchangeCd;
+        String url = "https://query1.finance.yahoo.com/v8/finance/chart/" + symbol;
+
+        ResponseEntity<StockPriceDTO> response = httpClientService.exchangeSync(url,
+                HttpMethod.GET, ClientUtil.createHttpEntity(MediaType.APPLICATION_JSON), StockPriceDTO.class);
+
+        StockPriceDTO stockPriceDTO = response.getBody();
+        StockPriceDTO.Meta meta = null;
+        try {
+            meta = stockPriceDTO.getChart().getResult().get(0).getMeta();
+            if("".equals(validationResponse(meta))) {   // 정상
+                return String.valueOf(Math.round(meta.getRegularMarketPrice()));   // 현재가
+            }
+            else if("1".equals(validationResponse(meta))) {
+                // 코스피 종목을 코스닥에서 조회하거나 하면 검증1에서 걸릴 수 있어서 다시 조회
+                if(".KS".equals(exchangeCd)) {
+                    return getCurrentValue(stockCode, "KQ");   // 코스닥 조회
+                } else if(".KQ".equals(exchangeCd)) {
+                    return getCurrentValue(stockCode, "KS");   // 코스피 조회
+                }
+            } else {
+                return "";
+            }
+        } catch (Exception e) {
+            return "";
+        }
+
+        return "";
+    }
+
+    /**
+     * 현재가격 응답정보 검증
+     * @param meta
+     * @return "" 정상
+     */
+    private String validationResponse(StockPriceDTO.Meta meta) {
+
+        // 검증
+        if (!"EQUITY".equals(meta.getInstrumentType())) {
+            return "1";
+        }
+
+        // 가격이 null이거나 0 이하인지 확인
+        if (meta.getRegularMarketPrice() == null || meta.getRegularMarketPrice() <= 0) {
+            return "2";
+        }
+
+        // 거래소 코드 확인 (KSE=코스피, KOSDAQ=코스닥)
+        if (!"KSE".equals(meta.getFullExchangeName()) && !"KOSDAQ".equals(meta.getFullExchangeName())) {
+            return "3";
+        }
+
+        return "";
     }
 
     /**
