@@ -1,5 +1,6 @@
 package com.finance.dart.service;
 
+import com.finance.dart.common.enums.ExchangeCd;
 import com.finance.dart.common.enums.FsDiv;
 import com.finance.dart.common.enums.ReprtCode;
 import com.finance.dart.common.service.HttpClientService;
@@ -27,10 +28,6 @@ import java.util.Map;
 public class CalCompanyStockPerValueService {
 
     private final String EXEC_ACCT_ID = "-표준계정코드 미사용-"; // 제외 항목
-
-//    private FsDiv selFsDiv = FsDiv.연결;  // 기본값: 연결 / 연결없는경우 개별
-//    private String selFinanceBungiCode = ReprtCode.사업보고서.getCode();
-//    private StockValueResultDetailDTO resultDetail = new StockValueResultDetailDTO();   // 결과상세정보
 
     private final CorpCodeService corpCodeService;
     private final FinancialStatmentService financialStatmentService;
@@ -66,46 +63,67 @@ public class CalCompanyStockPerValueService {
         StockValueResultDTO result = new StockValueResultDTO("정상 처리되었습니다.");
 
         //@1. 회사정보
-        CorpCodeDTO corpCodeDTO = null;
-        if(corpCode.equals("") && !corpName.equals("")) {   // 기업명으로 검색
-            corpCodeDTO = corpCodeService.getCorpCodeFindName(true, corpName);
-            if(corpCodeDTO == null) return new StockValueResultDTO("회사정보가 존재하지 않습니다.");
-            corpCode = corpCodeDTO.getCorpCode();
-        } else {
-            corpCodeDTO = getCorpCode(corpCode);
-        }
+        CorpCodeDTO corpCodeDTO = setCompanyInfo(corpCode, corpName);
+        corpCode = corpCodeDTO.getCorpCode();
+        if(corpCodeDTO == null) return new StockValueResultDTO("회사정보가 존재하지 않습니다.");
 
-        result.set기업코드(corpCode);
+        result.set기업코드(corpCodeDTO.getCorpCode());
         result.set기업명(corpCodeDTO.getCorpName());
         result.set주식코드(corpCodeDTO.getStockCode());
 
         //@2. 재무제표 조회(전전기/전기/당기)
-        //# 전전기
-        Map<String, FinancialStatementDTO> fss03 = getTwoYearsPriorFinancialStatements(year, corpCode, context);
-        if(fss03 == null) {
-            result.set주당가치("");
-            result.set결과메시지("전전기 재무제표 정보가 존재하지 않습니다.");
-            return result;
-        }
-        //# 전기
-        Map<String, FinancialStatementDTO> fss02 = getPriorYearFinancialStatements(year, corpCode, context);
-        //# 당기
-        Map<String, FinancialStatementDTO> fss01 = getCurrentYearFinancialStatements(year, corpCode, context);
+        Map<String, FinancialStatementDTO> fss03 = getTwoYearsPriorFinancialStatements(year, corpCode, context);    //# 전전기
+        if(fss03 == null) return setReturnMessage(result, "전전기 재무제표 정보가 존재하지 않습니다.");
+        Map<String, FinancialStatementDTO> fss02 = getPriorYearFinancialStatements(year, corpCode, context);    //# 전기
+        if(fss02 == null) return setReturnMessage(result, "전기 재무제표 정보가 존재하지 않습니다.");
+        Map<String, FinancialStatementDTO> fss01 = getCurrentYearFinancialStatements(year, corpCode, context);  //# 당기
+        if(fss01 == null) return setReturnMessage(result, "당기 재무제표 정보가 존재하지 않습니다.");
 
         //@3. 한주당 가치 계산
         String companyOneStockValue = calCompanyValue(corpCode, year, fss01, fss02, fss03, context);
         result.set주당가치(companyOneStockValue);
-
         result.set상세정보(context.getResultDetail());
 
         //@4. 현재가격 조회
-        String currentStockValue = getCurrentValue(corpCodeDTO.getStockCode(), "KS");
+        String currentStockValue = getCurrentValue(corpCodeDTO.getStockCode(), ExchangeCd.코스피.getCode());
         result.set현재가격(currentStockValue);
 
         //@5. 확인시간 추가
         result.set확인시간(DateUtil.getToday());
 
         return result;
+    }
+
+    /**
+     * ReturnMessage 세팅
+     * @param result
+     * @param responseMessage
+     * @return
+     */
+    private StockValueResultDTO setReturnMessage(StockValueResultDTO result, String responseMessage) {
+        result.set주당가치("");
+        result.set결과메시지(responseMessage);
+        return result;
+    }
+
+    /**
+     * 회사정보 세팅
+     * @param corpCode
+     * @param corpName
+     * @return
+     */
+    private CorpCodeDTO setCompanyInfo(String corpCode, String corpName) {
+
+        CorpCodeDTO corpCodeDTO = null;
+        if(corpCode.equals("") && !corpName.equals("")) {   // 기업명으로 검색
+            corpCodeDTO = corpCodeService.getCorpCodeFindName(true, corpName);
+            if(corpCodeDTO == null) return null;
+            corpCode = corpCodeDTO.getCorpCode();
+        } else {
+            corpCodeDTO = getCorpCode(corpCode);
+        }
+
+        return corpCodeDTO;
     }
 
     /**
@@ -134,10 +152,10 @@ public class CalCompanyStockPerValueService {
             }
             else if("1".equals(validationResponse(meta))) {
                 // 코스피 종목을 코스닥에서 조회하거나 하면 검증1에서 걸릴 수 있어서 다시 조회
-                if(".KS".equals(exchangeCd)) {
-                    return getCurrentValue(stockCode, "KQ");   // 코스닥 조회
-                } else if(".KQ".equals(exchangeCd)) {
-                    return getCurrentValue(stockCode, "KS");   // 코스피 조회
+                if(ExchangeCd.코스피.getUrlCode().equals(exchangeCd)) {
+                    return getCurrentValue(stockCode, ExchangeCd.코스닥.getCode());   // 코스닥 조회
+                } else if(ExchangeCd.코스닥.getUrlCode().equals(exchangeCd)) {
+                    return getCurrentValue(stockCode, ExchangeCd.코스피.getCode());   // 코스피 조회
                 }
             } else {
                 return "";
@@ -167,7 +185,8 @@ public class CalCompanyStockPerValueService {
         }
 
         // 거래소 코드 확인 (KSE=코스피, KOSDAQ=코스닥)
-        if (!"KSE".equals(meta.getFullExchangeName()) && !"KOSDAQ".equals(meta.getFullExchangeName())) {
+        if (!ExchangeCd.코스피.getFullExchangeName().equals(meta.getFullExchangeName())
+                && !ExchangeCd.코스닥.getFullExchangeName().equals(meta.getFullExchangeName())) {
             return "3";
         }
 
