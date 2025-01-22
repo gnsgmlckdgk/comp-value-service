@@ -537,7 +537,7 @@ public class CalCompanyStockPerValueService {
      * @return
      */
     private FinancialStatementResDTO getFinancialStatement(String corpCode, String year, ReprtCode reprtCode, FsDiv fsDiv) {
-        
+
         try {
             Thread.sleep(100);
         } catch (InterruptedException e) {
