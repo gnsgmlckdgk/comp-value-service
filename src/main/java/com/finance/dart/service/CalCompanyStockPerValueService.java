@@ -64,8 +64,8 @@ public class CalCompanyStockPerValueService {
 
         //@1. 회사정보
         CorpCodeDTO corpCodeDTO = setCompanyInfo(corpCode, corpName);
-        corpCode = corpCodeDTO.getCorpCode();
         if(corpCodeDTO == null) return new StockValueResultDTO("회사정보가 존재하지 않습니다.");
+        corpCode = corpCodeDTO.getCorpCode();
 
         result.set기업코드(corpCodeDTO.getCorpCode());
         result.set기업명(corpCodeDTO.getCorpName());
@@ -403,6 +403,7 @@ public class CalCompanyStockPerValueService {
             FinancialStatementDTO fs01_ia = fss01.get(IA_KEY);
             if(fs01_ia == null) continue;   // 값이 없을수도 있음
             String iaValue = fs01_ia.getThstrmAmount();
+            if("".equals(iaValue)) continue;
             iaValueSum = CalUtil.add(iaValueSum, iaValue);
         }
         context.resultDetail.set투자자산_비유동자산내(iaValueSum);
