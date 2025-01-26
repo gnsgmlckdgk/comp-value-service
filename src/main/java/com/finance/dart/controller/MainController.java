@@ -1,11 +1,10 @@
 package com.finance.dart.controller;
 
-import com.finance.dart.dto.CorpCodeDTO;
 import com.finance.dart.dto.StockValueResultDTO;
 import com.finance.dart.service.CalCompanyStockPerValueService;
 import com.finance.dart.service.CalPerValueService;
-import jakarta.annotation.Nullable;
 import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -13,6 +12,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+@Slf4j
 @AllArgsConstructor
 @RequestMapping("main")
 @RestController
@@ -60,7 +60,10 @@ public class MainController {
             @RequestParam(value = "corp_name", defaultValue = "") String corpName
     ) {
 
+        log.debug("year={}, corp_code={}, corp_name={}", year, corpCode, corpName);
+
         StockValueResultDTO response = calCompanyStockPerValueService.calPerValue(year, corpCode, corpName);
+        log.debug("response = {}", response);
 
         return new ResponseEntity<>(response, HttpStatus.OK);
     }

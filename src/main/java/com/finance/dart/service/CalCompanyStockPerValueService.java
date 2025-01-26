@@ -89,7 +89,7 @@ public class CalCompanyStockPerValueService {
         result.set현재가격(currentStockValue);
 
         //@5. 확인시간 추가
-        result.set확인시간(DateUtil.getToday());
+        result.set확인시간(DateUtil.getToday("yyyy-MM-dd HH:mm:ss"));
 
         return result;
     }
