@@ -1,6 +1,5 @@
 package com.finance.dart.controller.dart;
 
-import com.finance.dart.dto.CorpCodeResDTO;
 import com.finance.dart.service.CorpCodeService;
 import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
