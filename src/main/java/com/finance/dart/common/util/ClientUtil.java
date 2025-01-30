@@ -5,6 +5,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 
 import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 public class ClientUtil {
@@ -25,6 +26,28 @@ public class ClientUtil {
         HttpEntity<String> entity = new HttpEntity<>(headers);
 
         return entity;
+    }
+
+    /**
+     * URL 쿼리파라미터 추가
+     * @param url
+     * @param paramData
+     * @param emptyKeyDelete true: 빈 데이터 키 삭제
+     * @return
+     */
+    public static String addQueryParams(String url, Map<String, String> paramData, boolean emptyKeyDelete) {
+
+        Map<String, String> newParamData = new LinkedHashMap<>();
+
+        for(String key : paramData.keySet()) {
+            String data = paramData.get(key);
+            if(data == null || "".equals(data)) {
+                continue;
+            }
+            newParamData.put(key, data);
+        }
+
+        return addQueryParams(url, newParamData);
     }
 
     /**
