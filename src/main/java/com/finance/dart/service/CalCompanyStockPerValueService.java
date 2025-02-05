@@ -264,6 +264,7 @@ public class CalCompanyStockPerValueService {
             numberOfSharesIssuedResDTO =
                     getNumberOfSharesIssued(corpCode, String.valueOf(tYear-1), ReprtCode.분기보고서_3);
             totalStockShareIssue = getCommonStockTotalShareIssue(numberOfSharesIssuedResDTO);    // 발행주식수
+            context.resultDetail.set예외메시지_발행주식수("당기 보고서 발행주식수 정보가 없어서 3분기 발행주식수 정보 조회");
         }
 
         if("".equals(totalStockShareIssue) && selNoIBungiCode.equals(ReprtCode.분기보고서_3.getCode())) {
@@ -272,6 +273,7 @@ public class CalCompanyStockPerValueService {
             numberOfSharesIssuedResDTO =
                     getNumberOfSharesIssued(corpCode, String.valueOf(tYear-1), ReprtCode.반기보고서);
             totalStockShareIssue = getCommonStockTotalShareIssue(numberOfSharesIssuedResDTO);    // 발행주식수
+            context.resultDetail.set예외메시지_발행주식수("3분기 보고서 발행주식수 정보가 없어서 2분기 발행주식수 정보 조회");
         }
 
         if("".equals(totalStockShareIssue) && selNoIBungiCode.equals(ReprtCode.반기보고서.getCode())) {
@@ -280,6 +282,7 @@ public class CalCompanyStockPerValueService {
             numberOfSharesIssuedResDTO =
                     getNumberOfSharesIssued(corpCode, String.valueOf(tYear-1), ReprtCode.분기보고서_1);
             totalStockShareIssue = getCommonStockTotalShareIssue(numberOfSharesIssuedResDTO);    // 발행주식수
+            context.resultDetail.set예외메시지_발행주식수("2분기 보고서 발행주식수 정보가 없어서 1분기 발행주식수 정보 조회");
         }
 
         context.resultDetail.set발행주식수(totalStockShareIssue);
@@ -446,11 +449,13 @@ public class CalCompanyStockPerValueService {
         if(selBoongiCode.equals(ReprtCode.분기보고서_3.getCode())) {
             // 3분기 영업이익에 누적영업이익 더하기
             bussPf01 = CalUtil.add(bussPf01, fs01.getThstrmAddAmount());
+            context.resultDetail.set예외메세지_영업이익("당기 영업이익정보 없어서 3분기 영업이익 정보 한번 더 합산");
 
         } else if(selBoongiCode.equals(ReprtCode.반기보고서.getCode())) {
             // 2분기 영업이익에 누적영업이익 더하고 2분기 영업이익 한번 더 더하기
             bussPf01 = CalUtil.add(bussPf01, fs01.getThstrmAddAmount());
             bussPf01 = CalUtil.add(bussPf01, fs01.getThstrmAmount());
+            context.resultDetail.set예외메세지_영업이익("3분기 영업이익정보 없어서 2분기 영업이익 정보 두번 더 합산");
         }
 
         context.resultDetail.set영업이익_전전기(bussPf03);

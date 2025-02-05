@@ -33,4 +33,10 @@ public class StockValueResultDetailDTO {
     private String 계산_재산가치;
     private String 계산_부채;
     private String 계산_기업가치;
+
+
+    /** 기타값 **/
+    private String 예외메세지_영업이익 = "";
+    private String 예외메시지_발행주식수 = "";
+
 }
