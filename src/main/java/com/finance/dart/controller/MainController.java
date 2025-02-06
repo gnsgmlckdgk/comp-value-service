@@ -1,16 +1,18 @@
 package com.finance.dart.controller;
 
+import com.finance.dart.dto.StockValueManualReqDTO;
 import com.finance.dart.dto.StockValueResultDTO;
+import com.finance.dart.service.CalCompanyStockPerValueManualService;
 import com.finance.dart.service.CalCompanyStockPerValueService;
 import com.finance.dart.service.CalPerValueService;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.LinkedHashMap;
+import java.util.Map;
 
 @Slf4j
 @AllArgsConstructor
@@ -20,6 +22,7 @@ public class MainController {
 
     private final CalPerValueService calPerValueService;
     private final CalCompanyStockPerValueService calCompanyStockPerValueService;
+    private final CalCompanyStockPerValueManualService calCompanyStockPerValueManualService;
 
     /**
      * 헬스체크
@@ -66,6 +69,26 @@ public class MainController {
         log.debug("response = {}", response);
 
         return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+
+    /**
+     * 한 기업의 한주당 가치 수동 계산
+     * @param stockValueManualReqDTO
+     * @return
+     */
+    @PostMapping("/cal/per_value/manual")
+    public ResponseEntity<Map> calCompanyStockPerValueManual(
+            @RequestBody StockValueManualReqDTO stockValueManualReqDTO
+            ) {
+
+        String response = calCompanyStockPerValueManualService.calPerValue(stockValueManualReqDTO);
+        log.debug("response = {}", response);
+
+        Map<String, Object> responseMap = new LinkedHashMap<>();
+        responseMap.put("result", response);
+
+        return new ResponseEntity<>(responseMap, HttpStatus.OK);
     }
 
 }
