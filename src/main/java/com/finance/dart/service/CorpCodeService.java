@@ -80,6 +80,13 @@ public class CorpCodeService {
     private CorpCodeResDTO getZipData(byte[] zipFile, boolean publicCompanyYn) {
 
         String xmlContent = XmlUtil.getXmlContentOfZipFile(zipFile);
+        if(xmlContent == null || xmlContent.equals("")) {
+            try {
+                throw new Exception("서버로부터 응답을 받지 못했습니다.");
+            } catch (Exception e) {
+                throw new RuntimeException(e.getMessage());
+            }
+        }
 
         JSONObject jsonObject = XML.toJSONObject(xmlContent).getJSONObject("result");
         CorpCodeResDTO corpCodeResDTO = new Gson().fromJson(jsonObject.toString(), CorpCodeResDTO.class);
