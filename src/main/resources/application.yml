@@ -10,10 +10,27 @@ server:
 spring:
   application:
     name: FinReport
+  datasource:
+    url: jdbc:postgresql://localhost:5432/COMP_VALUE
+    username: compvalue
+    password: compvalue
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    hibernate:
+      # none: 아무런 스키마 변경도 수행하지 않습니다.
+      # validate: 엔티티와 데이터베이스 스키마가 일치하는지 검증만 하고, 수정은 하지 않습니다.
+      # update: 엔티티 변경 시 수정만 함
+      # create: 애플리케이션 시작 시 기존 스키마를 모두 삭제하고 새로 생성합니다.
+      # create-drop: 애플리케이션 시작 시 스키마를 생성하고, 종료 시에 삭제합니다.
+      ddl-auto: validate
+      naming:
+        # 물리명그대로 사용하기
+        physical-strategy: org.hibernate.boot.model.naming.PhysicalNamingStrategyStandardImpl
+    database:
+      platform: org.hibernate.dialect.PostgreSQLDialect
 
 logging:
   level:
     root: INFO               # 기본 로그레벨
 #    com.finance.dart: DEBUG  # 특정 패키지
-
 
