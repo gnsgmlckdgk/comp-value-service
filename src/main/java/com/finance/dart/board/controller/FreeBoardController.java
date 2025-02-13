@@ -2,7 +2,6 @@ package com.finance.dart.board.controller;
 
 import com.finance.dart.board.entity.FreeBoard;
 import com.finance.dart.board.service.FreeBoardService;
-import jakarta.annotation.Nullable;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.PageRequest;
@@ -26,11 +25,13 @@ public class FreeBoardController {
     @GetMapping("")
     public ResponseEntity<List<FreeBoard>> getFreeBoard(
             @RequestParam(name = "page",defaultValue = "0") int page,
-            @RequestParam(name = "size", defaultValue = "10") int size
+            @RequestParam(name = "size", defaultValue = "10") int size,
+            @RequestParam(name = "search", defaultValue = "") String search,
+            @RequestParam(name = "sgubun", defaultValue = "0") String sgubun
     ) {
 
-        Pageable pageable = PageRequest.of(page, size);
-        List<FreeBoard> freeBoardList = freeBoardService.getAllBoards(pageable);
+        Pageable pageable = PageRequest.of("".equals(search) ? 0 : page, size);
+        List<FreeBoard> freeBoardList = freeBoardService.getAllBoards(pageable, search, sgubun);
 
         return new ResponseEntity<>(freeBoardList, HttpStatus.OK);
     }

@@ -17,6 +17,9 @@ spring:
     driver-class-name: org.postgresql.Driver
   jpa:
     hibernate:
+      jdbc:
+        lob:
+          non_contextual_creation: true
       # none: 아무런 스키마 변경도 수행하지 않습니다.
       # validate: 엔티티와 데이터베이스 스키마가 일치하는지 검증만 하고, 수정은 하지 않습니다.
       # update: 엔티티 변경 시 수정만 함
@@ -28,6 +31,8 @@ spring:
         physical-strategy: org.hibernate.boot.model.naming.PhysicalNamingStrategyStandardImpl
     database:
       platform: org.hibernate.dialect.PostgreSQLDialect
+
+
 
 logging:
   level:

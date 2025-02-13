@@ -20,7 +20,7 @@ public class FreeBoard {
 
     private String title;
 
-    @Lob
+//    @Lob
     @Column(columnDefinition = "text")
     private String content;
 
