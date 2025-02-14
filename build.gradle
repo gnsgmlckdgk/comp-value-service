@@ -23,6 +23,10 @@ repositories {
 	mavenCentral()
 }
 
+bootRun {	// bootRun 명령어 실행 할 시
+	systemProperty 'spring.profiles.active', 'test'
+}
+
 dependencies {
 	implementation 'org.springframework.boot:spring-boot-starter-web'
 	implementation 'org.springframework.boot:spring-boot-starter-webflux'
@@ -36,6 +40,12 @@ dependencies {
 
 	implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
 	runtimeOnly 'org.postgresql:postgresql'
+
+	// Flyway (DB 마이그레이션 툴)
+	implementation 'org.flywaydb:flyway-core:9.16.3'
+	// Testcontainers (Junit 5 + PostgreSQL 모듈)
+	testImplementation 'org.testcontainers:junit-jupiter'
+	testImplementation 'org.testcontainers:postgresql'
 
 	compileOnly 'org.projectlombok:lombok'
 	developmentOnly 'org.springframework.boot:spring-boot-devtools'

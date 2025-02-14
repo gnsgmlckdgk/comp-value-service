@@ -10,11 +10,13 @@ server:
 spring:
   application:
     name: FinReport
+  profiles:
+    active: test # CI 빌드 테스트 시 컨피그서버에서 테스트컨테이너 설정도 읽을 수 있게하기 위해 추가
   datasource:
+    driver-class-name: org.postgresql.Driver
     url: jdbc:postgresql://localhost:5432/COMP_VALUE
     username: compvalue
     password: compvalue
-    driver-class-name: org.postgresql.Driver
   jpa:
     hibernate:
       jdbc:
@@ -31,8 +33,6 @@ spring:
         physical-strategy: org.hibernate.boot.model.naming.PhysicalNamingStrategyStandardImpl
     database:
       platform: org.hibernate.dialect.PostgreSQLDialect
-
-
 
 logging:
   level:
