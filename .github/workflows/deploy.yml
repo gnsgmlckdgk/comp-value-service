@@ -38,6 +38,8 @@ jobs:
         with:
           sarif_file: ${{ steps.scan.outputs.sarif }} # 이전 단계 결과의 리포트를 가져온다.
       - name: Build, unit tests and integration tests
+        env:
+          SPRING_PROFILES_ACTIVE: test
         run: |
           chmod +x gradlew
           ./gradlew build
