@@ -90,7 +90,7 @@ jobs:
           severity-cutoff: high
           acs-report-enable: true
       - name: Upload vulnerability report
-        uses: github/codeql-action/upload-sarif@v2  # 깃허브로 보안 취약성 리포트를 업로드 한다.(SARIF 형식)
+        uses: github/codeql-action/upload-sarif@v3  # 깃허브로 보안 취약성 리포트를 업로드 한다.(SARIF 형식)
         if: success() || failure()
         with:
           sarif_file: ${{ steps.scan.outputs.sarif }}
