@@ -32,7 +32,7 @@ jobs:
           severity-cutoff: high           # 오류로 간주할 최소 수준의 보안 유형(낮음, 중간, 높음, 치명적)
           acs-report-enable: true         # 스캔이 완료된 이후에 리포트를 생성할지 여부
       - name: Upload vulnerability report
-        uses: github/codeql-action/upload-sarif@v2  # 깃허브로 보안 취약성리포트(SARIF 형식) 전송
+        uses: github/codeql-action/upload-sarif@v3  # 깃허브로 보안 취약성리포트(SARIF 형식) 전송
         #  이전 단계가 실패하더라도 리포트 전송
         if: success() || failure()
         with:
