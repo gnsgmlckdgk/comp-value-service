@@ -38,4 +38,6 @@ logging:
   level:
     root: INFO               # 기본 로그레벨
 #    com.finance.dart: DEBUG  # 특정 패키지
+    org.testcontainers: DEBUG
+    org.springframework.test: DEBUG
 
