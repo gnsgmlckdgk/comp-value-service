@@ -43,9 +43,12 @@ dependencies {
 
 	// Flyway (DB 마이그레이션 툴)
 	implementation 'org.flywaydb:flyway-core:9.16.3'
+
 	// Testcontainers (Junit 5 + PostgreSQL 모듈)
-	testImplementation 'org.testcontainers:junit-jupiter'
-	testImplementation 'org.testcontainers:postgresql'
+//	testImplementation 'org.testcontainers:junit-jupiter'
+//	testImplementation 'org.testcontainers:postgresql'
+	testImplementation 'org.testcontainers:junit-jupiter:1.18.3'
+	testImplementation 'org.testcontainers:postgresql:1.18.3'
 
 	compileOnly 'org.projectlombok:lombok'
 	developmentOnly 'org.springframework.boot:spring-boot-devtools'
