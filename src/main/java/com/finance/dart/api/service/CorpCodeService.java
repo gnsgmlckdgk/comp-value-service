@@ -2,11 +2,14 @@ package com.finance.dart.api.service;
 
 import com.finance.dart.api.dto.CorpCodeDTO;
 import com.finance.dart.api.dto.CorpCodeResDTO;
+import com.finance.dart.common.config.SingleOrArrayDeserializer;
 import com.finance.dart.common.service.ConfigService;
 import com.finance.dart.common.service.HttpClientService;
 import com.finance.dart.common.util.ClientUtil;
 import com.finance.dart.common.util.XmlUtil;
 import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.reflect.TypeToken;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.json.JSONObject;
@@ -14,13 +17,12 @@ import org.json.XML;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 
+import java.lang.reflect.Type;
 import java.util.List;
-
 
 /**
  * 공시정보 > 고유번호 조회 서비스
  */
-
 @Slf4j
 @Service
 @AllArgsConstructor
@@ -29,18 +31,16 @@ public class CorpCodeService {
     private final HttpClientService httpClientService;
     private final ConfigService configService;
 
-
     /**
      * 고유번호 조회
+     *
      * @param publicCompanyYn 상장기업 여부
-     * @return
+     * @return CorpCodeResDTO 객체
      */
     public CorpCodeResDTO getCorpCode(boolean publicCompanyYn) {
-
-        final String API_KEY = configService.getDartAPI_Key();
-
-        HttpEntity entity = ClientUtil.createHttpEntity(MediaType.APPLICATION_XML);
-        String url = "https://opendart.fss.or.kr/api/corpCode.xml?crtfc_key="+API_KEY;
+        final String apiKey = configService.getDartAPI_Key();
+        final HttpEntity<?> entity = ClientUtil.createHttpEntity(MediaType.APPLICATION_XML);
+        final String url = "https://opendart.fss.or.kr/api/corpCode.xml?crtfc_key=" + apiKey;
 
         ResponseEntity<byte[]> response = httpClientService.exchangeSync(url, HttpMethod.GET, entity, byte[].class);
         byte[] zipFile = response.getBody();
@@ -50,60 +50,52 @@ public class CorpCodeService {
 
     /**
      * 기업명으로 기업정보 검색
-     * @param publicCompanyYn
-     * @param corpName
-     * @return
+     *
+     * @param publicCompanyYn 상장기업 여부
+     * @param corpName        검색할 기업명
+     * @return 해당 기업 정보를 담은 CorpCodeDTO (찾지 못하면 null)
      */
     public CorpCodeDTO getCorpCodeFindName(boolean publicCompanyYn, String corpName) {
-
-        final String API_KEY = configService.getDartAPI_Key();
-
-        HttpEntity entity = ClientUtil.createHttpEntity(MediaType.APPLICATION_XML);
-        String url = "https://opendart.fss.or.kr/api/corpCode.xml?crtfc_key="+API_KEY;
+        final String apiKey = configService.getDartAPI_Key();
+        final HttpEntity<?> entity = ClientUtil.createHttpEntity(MediaType.APPLICATION_XML);
+        final String url = "https://opendart.fss.or.kr/api/corpCode.xml?crtfc_key=" + apiKey;
 
         ResponseEntity<byte[]> response = httpClientService.exchangeSync(url, HttpMethod.GET, entity, byte[].class);
         byte[] zipFile = response.getBody();
 
         CorpCodeResDTO corpCodeResDTO = getZipData(zipFile, publicCompanyYn);
-        List<CorpCodeDTO> corpCodeDTOList = corpCodeResDTO.getList();
-
-        for(CorpCodeDTO corpCodeDTO : corpCodeDTOList) {
-            String cn = corpCodeDTO.getCorpName();
-            if(corpName.equals(cn)) {
-                return corpCodeDTO;
-            }
-        }
-
-        return null;
+        return corpCodeResDTO.getList().stream()
+                .filter(corpDTO -> corpName.equals(corpDTO.getCorpName()))
+                .findFirst()
+                .orElse(null);
     }
 
     private CorpCodeResDTO getZipData(byte[] zipFile, boolean publicCompanyYn) {
-
         String xmlContent = XmlUtil.getXmlContentOfZipFile(zipFile);
-        if(xmlContent == null || xmlContent.equals("")) {
-            try {
-                throw new Exception("서버로부터 응답을 받지 못했습니다.");
-            } catch (Exception e) {
-                throw new RuntimeException(e.getMessage());
-            }
+        if (xmlContent == null || xmlContent.isEmpty()) {
+            throw new RuntimeException("서버로부터 응답을 받지 못했습니다.");
         }
 
         JSONObject jsonObject = XML.toJSONObject(xmlContent).getJSONObject("result");
-        CorpCodeResDTO corpCodeResDTO = new Gson().fromJson(jsonObject.toString(), CorpCodeResDTO.class);
+        CorpCodeResDTO corpCodeResDTO = getSingArrayToListGson().fromJson(jsonObject.toString(), CorpCodeResDTO.class);
 
-//        log.info("DART에 등록된 전체 기업수 = {}", corpCodeResDTO.getList().size());
-
-        // 상장 기업만
-        if(publicCompanyYn) {
-            List<CorpCodeDTO> corpList = corpCodeResDTO.getList().stream()
-                    .filter(corp -> !corp.getStockCode().equals(""))
+        // 상장 기업만 필터링 (stockCode가 존재하는 경우)
+        if (publicCompanyYn) {
+            List<CorpCodeDTO> filteredList = corpCodeResDTO.getList().stream()
+                    .filter(corp -> corp.getStockCode() != null && !corp.getStockCode().isEmpty())
                     .toList();
-//            log.info("DART에 등록된 상장 기업수 = {}", corpList.size());
-            corpCodeResDTO.setList(corpList);
+            corpCodeResDTO.setList(filteredList);
         }
-
         return corpCodeResDTO;
     }
 
+    private Gson getSingArrayToListGson() {
+        Type corpCodeDtoListType = new TypeToken<List<CorpCodeDTO>>() {}.getType();
 
+        Gson gson = new GsonBuilder()
+                .registerTypeAdapter(corpCodeDtoListType, new SingleOrArrayDeserializer<>(CorpCodeDTO.class))
+                .create();
+
+        return gson;
+    }
 }

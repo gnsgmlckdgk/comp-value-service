@@ -1,10 +1,10 @@
 package com.finance.dart.api.service;
 
 import com.finance.dart.api.dto.DisclosuerInfoReqDTO;
+import com.finance.dart.api.dto.DisclosuerInfoResDTO;
 import com.finance.dart.common.service.ConfigService;
 import com.finance.dart.common.service.HttpClientService;
 import com.finance.dart.common.util.ClientUtil;
-import com.finance.dart.api.dto.DisclosuerInfoResDTO;
 import com.google.gson.Gson;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -16,11 +16,9 @@ import org.springframework.stereotype.Service;
 
 import java.util.Map;
 
-
 /**
- * 공시정보 > 공시목록 조회
+ * 공시정보 > 공시목록 조회 서비스
  */
-
 @Slf4j
 @Service
 @AllArgsConstructor
@@ -28,28 +26,31 @@ public class DisclosuerInfoService {
 
     private final HttpClientService httpClientService;
     private final ConfigService configService;
-
+    private final Gson gson = new Gson();
 
     /**
-     * 공시정보 목록 조회
-     * @return
+     * 공시정보 목록을 조회한다.
+     *
+     * @param request 공시정보 요청 DTO
+     * @return 공시정보 응답 DTO
      */
-    public DisclosuerInfoResDTO getDisclosuerInfo(DisclosuerInfoReqDTO disclosuerInfoReqDTO) {
-
-        final String API_KEY = configService.getDartAPI_Key();
-
-        HttpEntity entity = ClientUtil.createHttpEntity(MediaType.APPLICATION_JSON);
+    public DisclosuerInfoResDTO getDisclosuerInfo(DisclosuerInfoReqDTO request) {
+        final String apiKey = configService.getDartAPI_Key();
+        final HttpEntity<?> httpEntity = ClientUtil.createHttpEntity(MediaType.APPLICATION_JSON);
         String url = "https://opendart.fss.or.kr/api/list.json";
 
-        Map<String, String> paramData = new Gson().fromJson(new Gson().toJson(disclosuerInfoReqDTO), Map.class);
-        paramData.put("crtfc_key", API_KEY);    // API인증키
+        // 요청 DTO를 Map으로 변환하여 query parameter 구성
+        Map<String, String> queryParams = gson.fromJson(gson.toJson(request), Map.class);
+        queryParams.put("crtfc_key", apiKey);
 
-        url = ClientUtil.addQueryParams(url, paramData, true);
-        ResponseEntity<DisclosuerInfoResDTO> response = httpClientService.exchangeSync(url, HttpMethod.GET, entity, DisclosuerInfoResDTO.class);
+        url = ClientUtil.addQueryParams(url, queryParams, true);
+        ResponseEntity<DisclosuerInfoResDTO> response = httpClientService.exchangeSync(
+                url,
+                HttpMethod.GET,
+                httpEntity,
+                DisclosuerInfoResDTO.class
+        );
 
         return response.getBody();
     }
-
-
-
 }

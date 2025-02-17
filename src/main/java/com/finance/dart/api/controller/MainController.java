@@ -3,7 +3,6 @@ package com.finance.dart.api.controller;
 import com.finance.dart.api.dto.StockValueManualReqDTO;
 import com.finance.dart.api.dto.StockValueResultDTO;
 import com.finance.dart.api.service.CalCompanyStockPerValueService;
-import com.finance.dart.api.service.CalPerValueService;
 import com.finance.dart.api.service.CalCompanyStockPerValueManualService;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -20,7 +19,6 @@ import java.util.Map;
 @RestController
 public class MainController {
 
-    private final CalPerValueService calPerValueService;
     private final CalCompanyStockPerValueService calCompanyStockPerValueService;
     private final CalCompanyStockPerValueManualService calCompanyStockPerValueManualService;
 
@@ -31,22 +29,6 @@ public class MainController {
     @GetMapping("/check")
     public ResponseEntity<Object> healthCheck() {
         return new ResponseEntity<>("Check OK", HttpStatus.OK);
-    }
-
-    /**
-     * 전체 한주당 가치 계산
-     * @param year
-     * @return
-     */
-    @GetMapping("/cal/all/per_value")
-    public ResponseEntity<Object> calPerValue(
-            @RequestParam("year") String year
-    ) {
-
-        // TODO: 개발중단 [2025.01.16 한번에 여러번 호출 시 요청 차된되서 이 방법은 힘들거 같음]
-        Object response = calPerValueService.calPerValue(year);
-
-        return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
     /**

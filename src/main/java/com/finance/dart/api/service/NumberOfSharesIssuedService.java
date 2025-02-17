@@ -1,6 +1,5 @@
 package com.finance.dart.api.service;
 
-
 import com.finance.dart.api.dto.NumberOfSharesIssuedResDTO;
 import com.finance.dart.common.service.ConfigService;
 import com.finance.dart.common.service.HttpClientService;
@@ -24,35 +23,34 @@ public class NumberOfSharesIssuedService {
 
     private final HttpClientService httpClientService;
     private final ConfigService configService;
+    private final Gson gson = new Gson();
 
     /**
-     * 주식의 총수 현황 조회
-     * @param corpCode  고유번호
-     * @param bsnsYear  사업연도
-     * @param reprtCode 보고서코드
-     * @return
+     * 주식의 총수 현황을 조회하여 NumberOfSharesIssuedResDTO 객체로 반환한다.
+     *
+     * @param corpCode  기업 고유번호
+     * @param bsnsYear  사업 연도
+     * @param reprtCode 보고서 코드
+     * @return NumberOfSharesIssuedResDTO 객체
      */
     public NumberOfSharesIssuedResDTO getNumberOfSharesIssued(String corpCode, String bsnsYear, String reprtCode) {
-
-        final String API_KEY = configService.getDartAPI_Key();
-
-        HttpEntity entity = ClientUtil.createHttpEntity(MediaType.APPLICATION_JSON);
+        final String apiKey = configService.getDartAPI_Key();
+        final HttpEntity<?> httpEntity = ClientUtil.createHttpEntity(MediaType.APPLICATION_JSON);
         String url = "https://opendart.fss.or.kr/api/stockTotqySttus.json";
 
-        Map<String, String> paramData = new LinkedHashMap<>();
-        paramData.put("crtfc_key", API_KEY);
-        paramData.put("corp_code", corpCode);
-        paramData.put("bsns_year", bsnsYear);
-        paramData.put("reprt_code", reprtCode);
+        Map<String, String> params = new LinkedHashMap<>();
+        params.put("crtfc_key", apiKey);
+        params.put("corp_code", corpCode);
+        params.put("bsns_year", bsnsYear);
+        params.put("reprt_code", reprtCode);
 
-        url = ClientUtil.addQueryParams(url, paramData);
+        url = ClientUtil.addQueryParams(url, params);
+        log.debug("Request URL: {}", url);
 
-        ResponseEntity<String> response = httpClientService.exchangeSync(url, HttpMethod.GET, entity, String.class);
-        NumberOfSharesIssuedResDTO numberOfSharesIssuedResDTO =
-                new Gson().fromJson(response.getBody(), NumberOfSharesIssuedResDTO.class);
+        ResponseEntity<String> response = httpClientService.exchangeSync(url, HttpMethod.GET, httpEntity, String.class);
+        String responseBody = response.getBody();
+        log.debug("Response Body: {}", responseBody);
 
-        return numberOfSharesIssuedResDTO;
+        return gson.fromJson(responseBody, NumberOfSharesIssuedResDTO.class);
     }
-
-
 }

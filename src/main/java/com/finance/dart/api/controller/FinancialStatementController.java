@@ -1,7 +1,7 @@
 package com.finance.dart.api.controller;
 
 import com.finance.dart.api.dto.FinancialStatementResDTO;
-import com.finance.dart.api.service.FinancialStatmentService;
+import com.finance.dart.api.service.FinancialStatementService;
 import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -19,7 +19,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("financial")
 public class FinancialStatementController {
 
-    private final FinancialStatmentService financialStatmentService;
+    private final FinancialStatementService financialStatementService;
 
     /**
      * 단일회사 전체 재무제표 조회
@@ -38,7 +38,7 @@ public class FinancialStatementController {
     ) {
 
         FinancialStatementResDTO financialStatementResDTO =
-                financialStatmentService.getCompanyFinancialStatement(corpCode, bsnsYear, reprtCode, fsDiv);
+                financialStatementService.getCompanyFinancialStatement(corpCode, bsnsYear, reprtCode, fsDiv);
 
         return new ResponseEntity<>(financialStatementResDTO, HttpStatus.OK);
     }
