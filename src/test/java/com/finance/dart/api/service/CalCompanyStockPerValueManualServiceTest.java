@@ -29,6 +29,6 @@ class CalCompanyStockPerValueManualServiceTest {
 
         // 예상 결과 계산 (예시)
         // 결과: 15
-        assertEquals("13", result, "한 주당 계산 결과가 예상과 달라요");
+        assertEquals("15", result, "한 주당 계산 결과가 예상과 달라요");
     }
 }
