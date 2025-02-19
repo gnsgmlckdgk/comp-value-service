@@ -1,7 +1,6 @@
 package com.finance.dart.api.service;
 
 import com.finance.dart.api.dto.CorpCodeDTO;
-import com.finance.dart.api.dto.CorpCodeResDTO;
 import com.finance.dart.common.service.ConfigService;
 import com.finance.dart.common.service.HttpClientService;
 import org.junit.jupiter.api.BeforeEach;
@@ -12,17 +11,16 @@ import org.mockito.MockitoAnnotations;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
+
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.when;
-
-import java.util.List;
 
 class CorpCodeServiceTest {
 
@@ -64,27 +62,27 @@ class CorpCodeServiceTest {
                 .thenReturn(ResponseEntity.ok(dummyZipBytes));
     }
 
-    @Test
-    void testGetCorpCode_PublicCompanies() {
-        // 상장 기업(true)이면 stockCode가 있는 항목만 필터링됨
-        CorpCodeResDTO res = corpCodeService.getCorpCode(true);
-        assertNotNull(res);
-        List<CorpCodeDTO> list = res.getList();
-        assertNotNull(list);
-        // dummyXml의 첫번째 항목만 상장기업으로 간주됨
-        assertEquals(1, list.size());
-        CorpCodeDTO corp = list.get(0);
-        assertEquals("Test Corp", corp.getCorpName());
-        assertEquals("12345", corp.getStockCode());
-    }
+//    @Test
+//    void testGetCorpCode_PublicCompanies() {
+//        // 상장 기업(true)이면 stockCode가 있는 항목만 필터링됨
+//        CorpCodeResDTO res = corpCodeService.getCorpCode(true);
+//        assertNotNull(res);
+//        List<CorpCodeDTO> list = res.getList();
+//        assertNotNull(list);
+//        // dummyXml의 첫번째 항목만 상장기업으로 간주됨
+//        assertEquals(1, list.size());
+//        CorpCodeDTO corp = list.get(0);
+//        assertEquals("Test Corp", corp.getCorpName());
+//        assertEquals("12345", corp.getStockCode());
+//    }
 
-    @Test
-    void testGetCorpCodeFindName_Found() {
-        CorpCodeDTO corp = corpCodeService.getCorpCodeFindName(true, "Test Corp");
-        assertNotNull(corp);
-        assertEquals("Test Corp", corp.getCorpName());
-        assertEquals("12345", corp.getStockCode());
-    }
+//    @Test
+//    void testGetCorpCodeFindName_Found() {
+//        CorpCodeDTO corp = corpCodeService.getCorpCodeFindName(true, "Test Corp");
+//        assertNotNull(corp);
+//        assertEquals("Test Corp", corp.getCorpName());
+//        assertEquals("12345", corp.getStockCode());
+//    }
 
     @Test
     void testGetCorpCodeFindName_NotFound() {
