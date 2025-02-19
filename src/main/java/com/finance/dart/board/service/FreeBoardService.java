@@ -3,12 +3,15 @@ package com.finance.dart.board.service;
 import com.finance.dart.board.entity.FreeBoard;
 import com.finance.dart.board.repository.FreeBoardRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 @Service
@@ -36,19 +39,31 @@ public class FreeBoardService {
     // Read: 모든 게시글 조회(페이징)
     // Pageable pageable = PageRequest.of(page, size);
     @Transactional(readOnly = true)
-    public List<FreeBoard> getAllBoards(Pageable pageable, String search, String sgubun) {
+    public Map<String, Object> getAllBoards(Pageable pageable, String search, String sgubun) {
+
+        Page<FreeBoard> page = null;
+
         // 검색 값 투입
         if("1".equals(sgubun)) {          // 제목으로 검색
-            return freeBoardRepository.findByTitleContaining(search, pageable).stream().toList();
+            page = freeBoardRepository.findByTitleContaining(search, pageable);
         } else if("2".equals(sgubun)) {   // 작성자로 검색
-            return freeBoardRepository.findByAuthorContaining(search, pageable).stream().toList();
+            page = freeBoardRepository.findByAuthorContaining(search, pageable);
         } else if("3".equals(sgubun)) {   // 내용으로 검색
-            return freeBoardRepository.findByContentContaining(search, pageable).stream().toList();
+            page = freeBoardRepository.findByContentContaining(search, pageable);
         } else if("4".equals(sgubun)) {   // 제목, 내용으로 검색
-            return freeBoardRepository.findByTitleContainingOrContentContaining(search, search, pageable).stream().toList();
+            page = freeBoardRepository.findByTitleContainingOrContentContaining(search, search, pageable);
         } else {    // 전체 조회
-            return freeBoardRepository.findAll(pageable).stream().toList();
+            page = freeBoardRepository.findAll(pageable);
         }
+
+        List<FreeBoard> boards = page.getContent();
+        long totalElements = page.getTotalElements();
+
+        Map<String, Object> response = new LinkedHashMap<>();
+        response.put("data", boards);
+        response.put("total", totalElements);
+
+        return response;
     }
 
     // Update: 게시글 수정

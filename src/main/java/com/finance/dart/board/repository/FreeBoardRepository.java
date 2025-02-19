@@ -41,5 +41,6 @@ public interface FreeBoardRepository extends JpaRepository<FreeBoard, Long> {
      * @return
      */
     Page<FreeBoard> findByAuthorContaining(String author, Pageable pageable);
+
 }
 
