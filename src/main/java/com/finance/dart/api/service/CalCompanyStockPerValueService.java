@@ -58,7 +58,7 @@ public class CalCompanyStockPerValueService {
      * @param corpName 기업 명
      * @return 계산 결과 DTO
      */
-    public StockValueResultDTO calPerValue(String year, String corpCode, String corpName) {
+    public StockValueResultDTO calPerValue(String year, String corpCode, String corpName) throws InterruptedException {
         final CalculationContext context = new CalculationContext();
         StockValueResultDTO result = new StockValueResultDTO("정상 처리되었습니다.");
 
@@ -77,10 +77,12 @@ public class CalCompanyStockPerValueService {
         if (fss03 == null) {
             return setReturnMessage(result, "전전기 재무제표 정보가 존재하지 않습니다.");
         }
+        Thread.sleep(500); // 0.5초 딜레이
         Map<String, FinancialStatementDTO> fss02 = getPriorYearFinancialStatements(year, corpCode, context);
         if (fss02 == null) {
             return setReturnMessage(result, "전기 재무제표 정보가 존재하지 않습니다.");
         }
+        Thread.sleep(500); // 0.5초 딜레이
         Map<String, FinancialStatementDTO> fss01 = getCurrentYearFinancialStatements(year, corpCode, context);
         if (fss01 == null) {
             return setReturnMessage(result, "당기 재무제표 정보가 존재하지 않습니다.");
@@ -119,11 +121,22 @@ public class CalCompanyStockPerValueService {
     private String getCurrentValue(String stockCode, String exchangeCd) {
         final String symbol = stockCode + "." + exchangeCd;
         final String url = "https://query1.finance.yahoo.com/v8/finance/chart/" + symbol;
+
+        Map<String, String> headersData = new LinkedHashMap<>();
+        headersData.put("User-Agent", "Mozilla/5.0");
+
         ResponseEntity<StockPriceDTO> response = httpClientService.exchangeSync(
                 url, HttpMethod.GET,
-                ClientUtil.createHttpEntity(MediaType.APPLICATION_JSON),
+                ClientUtil.createHttpEntity(MediaType.APPLICATION_JSON, headersData),
                 StockPriceDTO.class
         );
+
+        try {
+            Thread.sleep(1000); // 과도한 요청방지
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
+
         try {
             StockPriceDTO.Meta meta = response.getBody().getChart().getResult().get(0).getMeta();
             String validation = validationResponse(meta);

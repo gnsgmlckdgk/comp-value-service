@@ -12,7 +12,6 @@ public class ClientUtil {
 
     /**
      * HttpEntity 생성
-     * TODO: 요청헤더추가기능
      * @param mediaType
      * @return
      */
@@ -21,6 +20,29 @@ public class ClientUtil {
         // 요청 헤더 설정
         HttpHeaders headers = new HttpHeaders();
         headers.setAccept(Collections.singletonList(mediaType));
+
+        // HTTP 엔티티 생성
+        HttpEntity<String> entity = new HttpEntity<>(headers);
+
+        return entity;
+    }
+
+    /**
+     * HttpEntity 생성
+     * @param mediaType
+     * @param headerDatas
+     * @return
+     */
+    public static HttpEntity createHttpEntity(MediaType mediaType, Map<String, String> headerDatas) {
+
+        // 요청 헤더 설정
+        HttpHeaders headers = new HttpHeaders();
+        headers.setAccept(Collections.singletonList(mediaType));
+
+        for(String key : headerDatas.keySet()) {
+            headers.add(key, headerDatas.get(key));
+        }
+
 
         // HTTP 엔티티 생성
         HttpEntity<String> entity = new HttpEntity<>(headers);

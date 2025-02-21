@@ -47,7 +47,12 @@ public class MainController {
 
         log.debug("year={}, corp_code={}, corp_name={}", year, corpCode, corpName);
 
-        StockValueResultDTO response = calCompanyStockPerValueService.calPerValue(year, corpCode, corpName);
+        StockValueResultDTO response = null;
+        try {
+            response = calCompanyStockPerValueService.calPerValue(year, corpCode, corpName);
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
         log.debug("response = {}", response);
 
         return new ResponseEntity<>(response, HttpStatus.OK);
