@@ -123,7 +123,12 @@ class CalCompanyStockPerValueServiceTest {
                 .thenReturn(ResponseEntity.ok(dummyStockPriceDTO));
 
         // 실제 메서드 실행
-        StockValueResultDTO result = service.calPerValue(year, corpCode, corpName);
+        StockValueResultDTO result = null;
+        try {
+            result = service.calPerValue(year, corpCode, corpName);
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
 
         // 결과 검증 (정상 처리 메시지 및 값이 설정되었는지 확인)
         assertNotNull(result);
