@@ -23,6 +23,12 @@ repositories {
 	mavenCentral()
 }
 
+bootBuildImage {
+	environment = [
+			'BP_JVM_JAVA_OPTS': '-Dfile.encoding=UTF-8'
+	]
+}
+
 bootRun {	// bootRun 명령어 실행 할 시
 	systemProperty 'spring.profiles.active', 'test'
 }
