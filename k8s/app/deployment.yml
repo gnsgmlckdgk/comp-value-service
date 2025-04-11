@@ -5,6 +5,7 @@ kind: Deployment
 metadata:
   # 배포의 이름
   name: comp-value-service
+  namespace: comp-value
   # 배포에 추가할 레이블의 집합
   labels:
     # 이 배포는 "app=comp-value-service"라는 레이블을 갖는다.
@@ -47,7 +48,7 @@ spec:
             # 헤드레스 서비스 주소 규칙: <Pod이름>.<HeadlessService이름>.<네임스페이스>.svc.cluster.local
             # - 헤드레스서비스 : clusterIP: None  으로 설정한거
             - name: SPRING_DATASOURCE_URL
-              value: jdbc:postgresql://postgres-0.postgres.default.svc.cluster.local:5432/COMP_VALUE
+              value: jdbc:postgresql://postgres-0.postgres.comp-value.svc.cluster.local:5432/COMP_VALUE
             # 'test' 스프링 프로파일 활성화(테스트컨테이너)
 #            - name: SPRING_PROFILES_ACTIVE
 #              value: test

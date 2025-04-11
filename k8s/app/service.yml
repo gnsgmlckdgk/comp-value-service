@@ -5,6 +5,7 @@ kind: Service
 metadata:
   # 서비스 이름. 유효한 DSN 이름이어야 한다.
   name: comp-value-service
+  namespace: comp-value
   # 서비스에 추가 될 레이블
   labels:
     app: comp-value-service

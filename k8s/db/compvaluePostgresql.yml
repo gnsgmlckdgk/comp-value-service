@@ -1,0 +1,54 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: postgres
+  namespace: comp-value
+spec:
+  serviceName: "postgres"  # StatefulSet과 연동되는 Headless Service 이름
+  replicas: 1              # 늘리려면 복제/클러스터링 솔루션과 함께 구성 필요
+  selector:
+    matchLabels:
+      app: postgres
+  template:
+    metadata:
+      labels:
+        app: postgres
+    spec:
+      containers:
+      - name: postgres
+        image: postgres:latest   # 사용하고자 하는 PostgreSQL 버전
+        ports:
+        - containerPort: 5432
+        env:
+          - name: POSTGRES_USER
+            value: "compvalue"    # 테스트
+          - name: POSTGRES_PASSWORD
+            value: "compvalue"    # 테스트
+          - name: POSTGRES_DB
+            value: "COMP_VALUE"
+        volumeMounts:
+        - name: postgres-storage
+          mountPath: /var/lib/postgresql/data
+  volumeClaimTemplates:
+  - metadata:
+      name: postgres-storage
+    spec:
+      accessModes: [ "ReadWriteOnce" ]
+      resources:
+        requests:
+          storage: 1Gi
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: postgres
+  namespace: comp-value
+spec:
+  clusterIP: None  # Headless Service로 설정
+  selector:
+    app: postgres  # StatefulSet의 Pod에 붙은 라벨과 일치해야 합니다.
+  ports:
+    - port: 5432
+      targetPort: 5432
