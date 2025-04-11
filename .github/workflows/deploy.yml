@@ -75,12 +75,11 @@ jobs:
           distribution: temurin
           java-version: 17
           cache: gradle
-      - name: Build container image
-        # 컨테이너 이미지를 빌드하고 릴리스 후보를 위한 이름을 정의하기 위해 스프링 부트의 빌드팩 통합을 사용한다.
+
+      - name: Build container image using Dockerfile
         run: |
-          chmod +x gradlew
-          ./gradlew bootBuildImage \
-          --imageName ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ env.VERSION }}
+          docker build -t ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ env.VERSION }} .
+
       - name: OCI image vulnerability scanning
         uses: anchore/scan-action@v3            # 취약성 검사를 위해 그라이프를 사용해 릴리스 후보 이미지를 스캔한다.
         id: scan
