@@ -1,7 +1,7 @@
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: comp-value-service-ingress
+  name: comp-value-ingress
   namespace: comp-value
 spec:
   rules:
