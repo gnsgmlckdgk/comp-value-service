@@ -28,6 +28,7 @@ public class MainController {
      */
     @GetMapping("/check")
     public ResponseEntity<Object> healthCheck() {
+        log.info("HealthCheck!!!_헬스체크!!!");
         return new ResponseEntity<>("Check OK", HttpStatus.OK);
     }
 
