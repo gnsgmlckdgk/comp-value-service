@@ -81,6 +81,7 @@ jobs:
           chmod +x gradlew
           ./gradlew bootBuildImage \
           --imageName ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ env.VERSION }}
+          -PBP_JVM_JAVA_OPTS="-Dfile.encoding=UTF-8"
       - name: OCI image vulnerability scanning
         uses: anchore/scan-action@v3            # 취약성 검사를 위해 그라이프를 사용해 릴리스 후보 이미지를 스캔한다.
         id: scan
