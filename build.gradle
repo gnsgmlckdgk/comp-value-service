@@ -25,7 +25,7 @@ repositories {
 
 bootBuildImage {
 	environment = [
-			"BP_JVM_JAVA_OPTS": "-Dfile.encoding=UTF-8"
+			"JAVA_TOOL_OPTIONS": "-Dfile.encoding=UTF-8"
 	]
 }
 
