@@ -53,10 +53,10 @@ spec:
 #            - name: SPRING_PROFILES_ACTIVE
 #              value: test
             - name: OPEN_DART_API_KEY
-                valueFrom:
-                  secretKeyRef:
-                    name: dart-secret
-                    key: api-key
+              valueFrom:
+                secretKeyRef:
+                  name: dart-secret
+                  key: api-key
           # 나중에 테스트(nginx dns 갱신 확인용)
           readinessProbe:
             httpGet:
