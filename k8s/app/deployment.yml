@@ -57,5 +57,5 @@ spec:
             httpGet:
               path: /actuator/health
               port: 18080  # 여긴 네 백엔드 컨테이너가 실제로 리스닝하는 포트
-            initialDelaySeconds: 5
+            initialDelaySeconds: 10
             periodSeconds: 5
