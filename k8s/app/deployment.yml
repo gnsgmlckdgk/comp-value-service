@@ -52,6 +52,11 @@ spec:
             # 'test' 스프링 프로파일 활성화(테스트컨테이너)
 #            - name: SPRING_PROFILES_ACTIVE
 #              value: test
+            - name: OPEN_DART_API_KEY
+                valueFrom:
+                  secretKeyRef:
+                    name: dart-secret
+                    key: api-key
           # 나중에 테스트(nginx dns 갱신 확인용)
           readinessProbe:
             httpGet:
