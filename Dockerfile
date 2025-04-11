@@ -10,4 +10,6 @@ RUN apt-get update && apt-get install -y curl && rm -rf /var/lib/apt/lists/*
 COPY --from=builder /app/build/libs/*.jar app.jar
 
 ENV JAVA_OPTS=""
+ENV JAVA_TOOL_OPTIONS="-Dfile.encoding=UTF-8"
+
 ENTRYPOINT ["sh", "-c", "java $JAVA_OPTS -jar app.jar"]

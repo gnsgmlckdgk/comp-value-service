@@ -1,14 +1,11 @@
 package com.finance.dart.common.util;
 
-import lombok.extern.slf4j.Slf4j;
-
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
-@Slf4j
 public class XmlUtil {
 
     /**
@@ -17,8 +14,6 @@ public class XmlUtil {
      * @return
      */
     public static String getXmlContentOfZipFile(byte[] zipFile) {
-
-        log.debug("zipFile = {}", zipFile);
 
         String xmlContent = "";
 
@@ -34,7 +29,6 @@ public class XmlUtil {
         } catch (IOException e) {
 //            log.error("ZIP 파일 처리 중 오류 발생", e);
         } finally {
-            log.debug("xmlContent = {}", xmlContent);
             return xmlContent;
         }
 
