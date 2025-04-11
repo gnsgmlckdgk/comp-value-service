@@ -55,7 +55,7 @@ spec:
           # 나중에 테스트(nginx dns 갱신 확인용)
           readinessProbe:
             httpGet:
-              path: /actuator/health
+              path: /dart/actuator/health
               port: 18080  # 여긴 네 백엔드 컨테이너가 실제로 리스닝하는 포트
             initialDelaySeconds: 10
             periodSeconds: 5
