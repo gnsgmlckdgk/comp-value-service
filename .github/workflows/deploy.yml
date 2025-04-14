@@ -66,6 +66,7 @@ jobs:
       contents: read                            # 현재 git 저장소를 체크아웃 하기 위한 권한
       packages: write                           # 깃허브 컨테이너 저장소로 이미지를 업로드하기 위한 권한
       security-events: write                    # 깃허브로 보안 이벤트를 제출하기 위한 권한
+
     steps:
       - name: Checkout source code
         uses: actions/checkout@v3               # 현재 깃 저장소를 체크아웃 한다.
@@ -76,29 +77,47 @@ jobs:
           java-version: 17
           cache: gradle
 
-      - name: Build container image using Dockerfile
-        run: |
-          docker build -t ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ env.VERSION }} .
+#      - name: Build container image using Dockerfile
+#        run: |
+#          docker build -t ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ env.VERSION }} .
+#      - name: OCI image vulnerability scanning
+#        uses: anchore/scan-action@v3            # 취약성 검사를 위해 그라이프를 사용해 릴리스 후보 이미지를 스캔한다.
+#        id: scan
+#        with:
+#          image: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ env.VERSION }}
+#          fail-build: false                     # 이미지에서 취약점이 발견되더라도 빌드를 실패로 만들지 않는다.
+#          severity-cutoff: high
+#          acs-report-enable: true
+#      - name: Upload vulnerability report
+#        uses: github/codeql-action/upload-sarif@v3  # 깃허브로 보안 취약성 리포트를 업로드 한다.(SARIF 형식)
+#        if: success() || failure()
+#        with:
+#          sarif_file: ${{ steps.scan.outputs.sarif }}
+#      - name: Log into container registry
+#        uses: docker/login-action@v2                # 깃허브 컨테이너 저장소와 인증한다.
+#        with:
+#          registry: ${{ env.REGISTRY }}
+#          username: ${{ github.actor }}
+#          password: ${{ secrets.GITHUB_TOKEN }}     # 저장소와 인증하기 위해 필요한 토큰 깃허브 액션이 제공한다.
 
-      - name: OCI image vulnerability scanning
-        uses: anchore/scan-action@v3            # 취약성 검사를 위해 그라이프를 사용해 릴리스 후보 이미지를 스캔한다.
-        id: scan
-        with:
-          image: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ env.VERSION }}
-          fail-build: false                     # 이미지에서 취약점이 발견되더라도 빌드를 실패로 만들지 않는다.
-          severity-cutoff: high
-          acs-report-enable: true
-      - name: Upload vulnerability report
-        uses: github/codeql-action/upload-sarif@v3  # 깃허브로 보안 취약성 리포트를 업로드 한다.(SARIF 형식)
-        if: success() || failure()
-        with:
-          sarif_file: ${{ steps.scan.outputs.sarif }}
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
       - name: Log into container registry
-        uses: docker/login-action@v2                # 깃허브 컨테이너 저장소와 인증한다.
+        uses: docker/login-action@v2
         with:
           registry: ${{ env.REGISTRY }}
           username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}     # 저장소와 인증하기 위해 필요한 토큰 깃허브 액션이 제공한다.
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push multi-arch Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: true
+          platforms: linux/amd64,linux/arm64
+          tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ env.VERSION }}
+
       - name: Publish container image
         run: docker push ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ env.VERSION }} # 릴리스 후보를 저장소로 푸쉬
 
