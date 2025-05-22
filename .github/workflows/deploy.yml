@@ -34,7 +34,7 @@ jobs:
       - name: Upload vulnerability report
         uses: github/codeql-action/upload-sarif@v3  # 깃허브로 보안 취약성리포트(SARIF 형식) 전송
         #  이전 단계가 실패하더라도 리포트 전송
-        if: success() || failure()
+        if: always()  # 실패해도 다음 단계 진행
         with:
           sarif_file: ${{ steps.scan.outputs.sarif }} # 이전 단계 결과의 리포트를 가져온다.
       - name: Build, unit tests and integration tests
