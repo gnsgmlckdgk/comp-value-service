@@ -69,8 +69,16 @@ public class CalUtil {
     }
 
     public static String divide(String val1, String val2, RoundingMode roundingMode) {
+
+        if("".equals(val1)) val1 = "0";
+        if("".equals(val2)) val2 = "0";
+
         BigDecimal num1 = new BigDecimal(deleteComma(val1));
         BigDecimal num2 = new BigDecimal(deleteComma(val2));
+
+        if (num2.compareTo(BigDecimal.ZERO) == 0) {
+            return "0";
+        }
 
         BigDecimal division = num1.divide(num2, 0, roundingMode);
         return division.toPlainString();
@@ -98,6 +106,7 @@ public class CalUtil {
      * @return
      */
     private static String deleteComma(String val) {
+        if("".equals(val)) return "";
         NumberFormat format = NumberFormat.getInstance();
         try {
             Number number = format.parse(val);

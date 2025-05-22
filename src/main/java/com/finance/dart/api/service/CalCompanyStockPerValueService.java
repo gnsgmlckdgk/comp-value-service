@@ -11,6 +11,7 @@ import com.finance.dart.common.util.DateUtil;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -75,21 +76,30 @@ public class CalCompanyStockPerValueService {
         // 2. 재무제표 조회 (전전기, 전기, 당기)
         Map<String, FinancialStatementDTO> fss03 = getTwoYearsPriorFinancialStatements(year, corpCode, context);
         if (fss03 == null) {
-            return setReturnMessage(result, "전전기 재무제표 정보가 존재하지 않습니다.");
+            String errMessage = "전전기 재무제표 정보가 존재하지 않습니다.";
+            result.set결과메시지(errMessage);
+            return setReturnMessage(result, errMessage);
         }
         Thread.sleep(500); // 0.5초 딜레이
         Map<String, FinancialStatementDTO> fss02 = getPriorYearFinancialStatements(year, corpCode, context);
         if (fss02 == null) {
-            return setReturnMessage(result, "전기 재무제표 정보가 존재하지 않습니다.");
+            String errMessage = "전기 재무제표 정보가 존재하지 않습니다.";
+            result.set결과메시지(errMessage);
+            return setReturnMessage(result, errMessage);
         }
         Thread.sleep(500); // 0.5초 딜레이
         Map<String, FinancialStatementDTO> fss01 = getCurrentYearFinancialStatements(year, corpCode, context);
         if (fss01 == null) {
-            return setReturnMessage(result, "당기 재무제표 정보가 존재하지 않습니다.");
+            String errMessage = "당기 재무제표 정보가 존재하지 않습니다.";
+            result.set결과메시지(errMessage);
+            return setReturnMessage(result, errMessage);
         }
 
         // 3. 한 주당 가치 계산
         String perShareValue = calCompanyValue(corpCode, year, fss01, fss02, fss03, context);
+        if("0".equals(perShareValue)) {
+            result.set결과메시지(StringUtils.defaultString(context.getResultDetail().get예외메시지_발행주식수()));
+        }
         result.set주당가치(perShareValue);
         result.set상세정보(context.getResultDetail());
 
@@ -221,6 +231,12 @@ public class CalCompanyStockPerValueService {
             totalShares = getCommonStockTotalShareIssue(sharesRes);
             context.resultDetail.set예외메시지_발행주식수("2분기 보고서 발행주식수 정보가 없어서 1분기 발행주식수 정보 조회");
         }
+
+        if (totalShares.isEmpty() && selectedReportCode.equals(ReprtCode.분기보고서_1.getCode())) {
+            context.resultDetail.set예외메시지_발행주식수("1분기 보고서 발행주식수 정보가 없어서 계산 불가");
+            return "0";
+        }
+
         context.resultDetail.set발행주식수(totalShares);
 
         // 기업 가치 및 한 주당 가치 계산
