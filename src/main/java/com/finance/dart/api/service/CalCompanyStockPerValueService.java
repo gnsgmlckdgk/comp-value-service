@@ -154,9 +154,9 @@ public class CalCompanyStockPerValueService {
                 return String.valueOf(Math.round(meta.getRegularMarketPrice()));
             } else if ("1".equals(validation)) {
                 // 재시도: 코스피와 코스닥을 교차 조회
-                if (ExchangeCd.코스피.getUrlCode().equals(exchangeCd)) {
+                if (ExchangeCd.코스피.getCode().equals(exchangeCd)) {
                     return getCurrentValue(stockCode, ExchangeCd.코스닥.getCode());
-                } else if (ExchangeCd.코스닥.getUrlCode().equals(exchangeCd)) {
+                } else if (ExchangeCd.코스닥.getCode().equals(exchangeCd)) {
                     return getCurrentValue(stockCode, ExchangeCd.코스피.getCode());
                 }
             }
@@ -368,6 +368,13 @@ public class CalCompanyStockPerValueService {
     private Map<String, FinancialStatementDTO> getPriorYearFinancialStatements(String year, String corpCode, CalculationContext context) {
         int tYear = Integer.parseInt(year);
         FinancialStatementResDTO resDTO = getFinancialStatement(corpCode, String.valueOf(tYear - 2), ReprtCode.사업보고서, context.selectedFsDiv);
+        if(resDTO.getList() == null) {
+            context.selectedFsDiv = FsDiv.개별;
+            resDTO = getFinancialStatement(corpCode, String.valueOf(tYear - 2), ReprtCode.사업보고서, context.selectedFsDiv);
+            if (resDTO.getList() == null) {
+                return null;
+            }
+        }
         return cleanUpFinancialStatement(resDTO);
     }
 

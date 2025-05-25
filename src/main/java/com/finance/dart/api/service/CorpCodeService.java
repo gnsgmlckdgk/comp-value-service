@@ -3,9 +3,6 @@ package com.finance.dart.api.service;
 import com.finance.dart.api.dto.CorpCodeDTO;
 import com.finance.dart.api.dto.CorpCodeResDTO;
 import com.finance.dart.common.config.SingleOrArrayDeserializer;
-import com.finance.dart.common.service.ConfigService;
-import com.finance.dart.common.service.HttpClientService;
-import com.finance.dart.common.util.ClientUtil;
 import com.finance.dart.common.util.XmlUtil;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -14,7 +11,7 @@ import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.json.JSONObject;
 import org.json.XML;
-import org.springframework.http.*;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import java.lang.reflect.Type;
@@ -27,9 +24,7 @@ import java.util.List;
 @Service
 @AllArgsConstructor
 public class CorpCodeService {
-
-    private final HttpClientService httpClientService;
-    private final ConfigService configService;
+    private final  CorpCodeCacheService corpCodeCacheService;
 
     /**
      * 고유번호 조회
@@ -38,11 +33,8 @@ public class CorpCodeService {
      * @return CorpCodeResDTO 객체
      */
     public CorpCodeResDTO getCorpCode(boolean publicCompanyYn) {
-        final String apiKey = configService.getDartAPI_Key();
-        final HttpEntity<?> entity = ClientUtil.createHttpEntity(MediaType.APPLICATION_XML);
-        final String url = "https://opendart.fss.or.kr/api/corpCode.xml?crtfc_key=" + apiKey;
 
-        ResponseEntity<byte[]> response = httpClientService.exchangeSync(url, HttpMethod.GET, entity, byte[].class);
+        ResponseEntity<byte[]> response = corpCodeCacheService.getCoprCodeFile();
         byte[] zipFile = response.getBody();
 
         return getZipData(zipFile, publicCompanyYn);
@@ -56,11 +48,8 @@ public class CorpCodeService {
      * @return 해당 기업 정보를 담은 CorpCodeDTO (찾지 못하면 null)
      */
     public CorpCodeDTO getCorpCodeFindName(boolean publicCompanyYn, String corpName) {
-        final String apiKey = configService.getDartAPI_Key();
-        final HttpEntity<?> entity = ClientUtil.createHttpEntity(MediaType.APPLICATION_XML);
-        final String url = "https://opendart.fss.or.kr/api/corpCode.xml?crtfc_key=" + apiKey;
 
-        ResponseEntity<byte[]> response = httpClientService.exchangeSync(url, HttpMethod.GET, entity, byte[].class);
+        ResponseEntity<byte[]> response = corpCodeCacheService.getCoprCodeFile();
         byte[] zipFile = response.getBody();
 
         CorpCodeResDTO corpCodeResDTO = getZipData(zipFile, publicCompanyYn);

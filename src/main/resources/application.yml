@@ -39,6 +39,10 @@ spring:
         physical-strategy: org.hibernate.boot.model.naming.PhysicalNamingStrategyStandardImpl
     database:
       platform: org.hibernate.dialect.PostgreSQLDialect
+  cache:
+    type: caffeine
+    caffeine:
+      spec: maximumSize=1000,expireAfterWrite=60m
 
 logging:
   level:
