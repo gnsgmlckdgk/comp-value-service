@@ -10,4 +10,12 @@ public class StringUtil {
         return value.toString();
     }
 
+
+    public static boolean isStringEmpty(Object value) {
+        if(value == null) return true;
+        if("".equals(value.toString().trim())) return true;
+
+        return false;
+    }
+
 }

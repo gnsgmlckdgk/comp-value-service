@@ -1,5 +1,6 @@
 package com.finance.dart.member.dto;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import jakarta.validation.constraints.NotBlank;
 import lombok.Data;
@@ -16,4 +17,6 @@ public class LoginDTO {
 
     private String sessionKey;
 
+    @JsonIgnore
+    public static final String redisSessionPrefix = "session:";
 }
