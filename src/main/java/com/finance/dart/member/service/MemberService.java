@@ -1,48 +1,53 @@
 package com.finance.dart.member.service;
 
-import com.finance.dart.common.service.RedisService;
+import com.finance.dart.common.constant.ResponseEnum;
+import com.finance.dart.common.dto.CommonResponse;
 import com.finance.dart.common.util.StringUtil;
-import com.finance.dart.member.dto.LoginDTO;
 import com.finance.dart.member.entity.Member;
 import com.finance.dart.member.repository.MemberRepository;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-
-import java.util.UUID;
-import java.util.concurrent.TimeUnit;
 
 
 @Slf4j
 @AllArgsConstructor
 @Service
-public class SessionService {
+public class MemberService {
 
     private final MemberRepository memberRepository;
-    private final RedisService redisService;
-
-    private final String redisKeyPre = "session:";  // 세션 키 접두어
+    private final PasswordEncoder passwordEncoder;
 
 
     /**
-     * 로그인
-     * @param loginDTO
-     * @return "" : 로그인 실패, "세션키" : 로그인 성공
+     * 회원가입
+     * @param member
+     * @return
      */
-    public String login(LoginDTO loginDTO) {
+    public CommonResponse<Member> join(Member member) {
 
-        Member member = memberRepository.findByUsernameAndPassword(loginDTO.getUsername(), loginDTO.getPassword());
-        if(member == null) {
-            return "";
+        CommonResponse<Member> commonResponse = new CommonResponse();
+
+        //@ 중복체크
+        Member alreadyMember = memberRepository.findByUsername(member.getUsername());
+        if(alreadyMember != null) {
+            commonResponse.setResponeInfo(ResponseEnum.JOIN_DUPLICATE_USERNAME);
+            return commonResponse;
         }
 
-        String sessionKey = UUID.randomUUID().toString();
-        String redisKey = redisKeyPre + sessionKey;
+        //@ 비밀번호 암호화
+        String encryptedPw = passwordEncoder.encode(member.getPassword());
+        member.setPassword(encryptedPw);
 
-        redisService.saveValueWithTtl(redisKey, StringUtil.defaultString(member.getId()), 30, TimeUnit.MINUTES);
+        //@ 회원가입
+        Member joinMember = memberRepository.save(member);
+        joinMember.setPassword(null); // 비밀번호 입력값은 삭제
 
-        return sessionKey;
+        commonResponse.setResponse(joinMember);
+
+        return commonResponse;
     }
-
 
 }

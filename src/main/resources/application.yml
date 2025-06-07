@@ -39,6 +39,11 @@ spring:
         physical-strategy: org.hibernate.boot.model.naming.PhysicalNamingStrategyStandardImpl
     database:
       platform: org.hibernate.dialect.PostgreSQLDialect
+    data:
+      redis:
+        host: localhost  # 또는 redis-service (쿠버네티스 내부일 경우 : k8s yml 에서 설정)
+        port: 6380
+        timeout: 2000ms
   cache:
     type: caffeine
     caffeine:

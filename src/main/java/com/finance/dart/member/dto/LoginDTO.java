@@ -1,2 +1,19 @@
-package com.finance.dart.member.dto;public class LoginDto {
+package com.finance.dart.member.dto;
+
+import com.fasterxml.jackson.annotation.JsonInclude;
+import jakarta.validation.constraints.NotBlank;
+import lombok.Data;
+
+@Data
+public class LoginDTO {
+
+    @NotBlank
+    private String username;
+
+    @NotBlank
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    private String password;
+
+    private String sessionKey;
+
 }
