@@ -7,6 +7,7 @@ import com.finance.dart.member.dto.LoginDTO;
 import com.finance.dart.member.entity.Member;
 import com.finance.dart.member.service.MemberService;
 import com.finance.dart.member.service.SessionService;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -51,9 +52,9 @@ public class MemberController {
     }
 
     @DeleteMapping("/logout")
-    public ResponseEntity<CommonResponse> logout(@RequestParam("sessionId") String sessionId) {
+    public ResponseEntity<CommonResponse> logout(HttpServletRequest request) {
 
-        sessionService.logout(sessionId);
+        String sessionId = sessionService.logout(request);
 
         ResponseCookie cookie = sessionService.deleteSessionCookie(sessionId);
 
@@ -73,6 +74,25 @@ public class MemberController {
         CommonResponse<Member> response = memberService.join(member);
 
         return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+    /**
+     * <pre>
+     * 로그인 여부 체크
+     * </pre>
+     * @return
+     */
+    @GetMapping("/me")
+    public ResponseEntity<CommonResponse> me(HttpServletRequest request) {
+
+        CommonResponse response = null;
+        if(sessionService.sessionCheck(request)) {
+            response = new CommonResponse(ResponseEnum.OK);
+        } else {
+            response = new CommonResponse(ResponseEnum.LOGIN_SESSION_EXPIRED);
+        }
+
+        return new ResponseEntity<>(response, ResponseEnum.OK.getHttpStatus());
     }
 
 }

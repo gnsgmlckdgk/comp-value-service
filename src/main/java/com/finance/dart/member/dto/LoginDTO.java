@@ -17,6 +17,8 @@ public class LoginDTO {
 
     private String sessionKey;
 
+    private String nickName = "";
+
     @JsonIgnore
     public static final String redisSessionPrefix = "session:";
 }

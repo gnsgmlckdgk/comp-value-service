@@ -23,7 +23,7 @@ public class AuthInterceptor implements HandlerInterceptor {
         if(log.isDebugEnabled()) log.debug("선처리");
 
         //@ 세션 확인
-        sessionService.sessionCheck(request, response);
+        sessionService.sessionCheckErrResponse(request, response);
 
         return true;
     }

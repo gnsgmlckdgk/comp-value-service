@@ -65,6 +65,7 @@ public class SessionService {
         redisService.saveValueWithTtl(redisKey, StringUtil.defaultString(member.getId()), TIMEOUT_MINUTES, TimeUnit.MINUTES);
         loginDTO.setSessionKey(sessionKey);
         loginDTO.setPassword(null);   // 비밀번호 입력값은 삭제
+        loginDTO.setNickName(member.getNickname());
 
         //@ 응답 조립
         response.setResponse(loginDTO);
@@ -92,11 +93,17 @@ public class SessionService {
 
     /**
      * 로그아웃
-     * @param sessionId
+     * @param request
+     * @return 삭제한 세션ID
      */
-    public void logout(String sessionId) {
+    public String logout(HttpServletRequest request) {
+
+        String sessionId = getSessionId(request);
+
         String redisKey = LoginDTO.redisSessionPrefix + sessionId;
         redisService.deleteKey(redisKey);
+
+        return sessionId;
     }
 
     /**
@@ -113,11 +120,11 @@ public class SessionService {
     }
 
     /**
-     * 세션 확인
+     * 세션 키 추출(쿠키)
      * @param request
-     * @param response
+     * @return
      */
-    public void sessionCheck(HttpServletRequest request, HttpServletResponse response) {
+    public String getSessionId(HttpServletRequest request) {
 
         String sessionId = null;
 
@@ -129,6 +136,19 @@ public class SessionService {
                 }
             }
         }
+
+        return sessionId;
+    }
+
+    /**
+     * 로그인 세션 확인 및 오류응답
+     * @param request
+     * @param response
+     */
+    public void sessionCheckErrResponse(HttpServletRequest request, HttpServletResponse response) {
+
+        // 쿠키에서 세션ID 추출
+        String sessionId = getSessionId(request);
 
         if (sessionId == null || !isValidSession(sessionId)) {
 
@@ -144,6 +164,19 @@ public class SessionService {
             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED); // 401
             throw new UnauthorizedException(ResponseEnum.LOGIN_SESSION_EXPIRED.getMessage());
         }
+    }
+
+    /**
+     * 로그인 세션 확인
+     * @param request
+     * @return true: 로그인인증정상
+     */
+    public boolean sessionCheck(HttpServletRequest request) {
+        String sessionId = getSessionId(request);
+        if (sessionId == null || !isValidSession(sessionId)) {
+            return false;
+        }
+        return true;
     }
 
     private boolean isValidSession(String sessionId) {
