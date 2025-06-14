@@ -20,6 +20,12 @@ public class DisclosureController {
     private final DisclosuerInfoService disclosuerInfoService;
     private final CorpCodeService corpCodeService;
 
+
+    /**
+     * 공시정보 목록 조회
+     * @param disclosuerInfoReqDTO
+     * @return
+     */
     @PostMapping("/disc/list")
     public ResponseEntity<Object> getDisclosureInfoList(@RequestBody DisclosuerInfoReqDTO disclosuerInfoReqDTO) {
         return new ResponseEntity<>(disclosuerInfoService.getDisclosuerInfo(disclosuerInfoReqDTO), HttpStatus.OK);

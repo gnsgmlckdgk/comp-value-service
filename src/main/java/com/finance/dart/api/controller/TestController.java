@@ -1,5 +1,6 @@
-package com.finance.dart.common.test;
+package com.finance.dart.api.controller;
 
+import com.finance.dart.api.service.schedule.CalCompanyStockPerValueTotalService;
 import com.finance.dart.common.service.RedisService;
 import com.finance.dart.common.util.StringUtil;
 import lombok.AllArgsConstructor;
@@ -17,6 +18,7 @@ public class TestController {
 
 
     private final RedisService redisService;
+    private final CalCompanyStockPerValueTotalService calCompanyStockPerValueTotalService;
 
 
 
@@ -52,6 +54,14 @@ public class TestController {
         };
 
         return new ResponseEntity<>(result, HttpStatus.OK);
+    }
+
+    @GetMapping("/schedule")
+    public ResponseEntity<Object> scheduleTest() {
+
+        calCompanyStockPerValueTotalService.startScheduledTask();
+
+        return new ResponseEntity<>("스케줄 실행됨!!(로그 확인)", HttpStatus.OK);
     }
 
 }
