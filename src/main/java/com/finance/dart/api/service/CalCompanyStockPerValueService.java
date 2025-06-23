@@ -104,7 +104,7 @@ public class CalCompanyStockPerValueService {
         result.set상세정보(context.getResultDetail());
 
         // 4. 현재 가격 조회
-        String currentStockPrice = getCurrentValue(corpCodeDTO.getStockCode(), ExchangeCd.코스피.getCode());
+        String currentStockPrice = getCurrentValue(corpCodeDTO.getStockCode(), ExchangeCd.코스피.getCode(), false);
         result.set현재가격(currentStockPrice);
 
         // 5. 확인 시간 설정
@@ -128,7 +128,7 @@ public class CalCompanyStockPerValueService {
         }
     }
 
-    private String getCurrentValue(String stockCode, String exchangeCd) {
+    private String getCurrentValue(String stockCode, String exchangeCd, boolean isReSelect) {
         final String symbol = stockCode + "." + exchangeCd;
         final String url = "https://query1.finance.yahoo.com/v8/finance/chart/" + symbol;
 
@@ -154,10 +154,12 @@ public class CalCompanyStockPerValueService {
                 return String.valueOf(Math.round(meta.getRegularMarketPrice()));
             } else if ("1".equals(validation)) {
                 // 재시도: 코스피와 코스닥을 교차 조회
-                if (ExchangeCd.코스피.getCode().equals(exchangeCd)) {
-                    return getCurrentValue(stockCode, ExchangeCd.코스닥.getCode());
-                } else if (ExchangeCd.코스닥.getCode().equals(exchangeCd)) {
-                    return getCurrentValue(stockCode, ExchangeCd.코스피.getCode());
+                if(!isReSelect) {   // 재조회가 아닌경우
+                    if (ExchangeCd.코스피.getCode().equals(exchangeCd)) {
+                        return getCurrentValue(stockCode, ExchangeCd.코스닥.getCode(), true);
+                    } else if (ExchangeCd.코스닥.getCode().equals(exchangeCd)) {
+                        return getCurrentValue(stockCode, ExchangeCd.코스피.getCode(), true);
+                    }
                 }
             }
         } catch (Exception e) {

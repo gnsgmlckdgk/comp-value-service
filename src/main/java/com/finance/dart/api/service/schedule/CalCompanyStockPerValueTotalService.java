@@ -20,7 +20,7 @@ public class CalCompanyStockPerValueTotalService {
     private final CalCompanyStockPerValueTotalWorker calCompanyStockPerValueTotalWorker;
 
 
-    @Scheduled(cron = "0 0 9 * * *") // 24시간 형식, 초 분 시 일 월 요일 TODO: 시간대 새벽으로 변경 예정
+    @Scheduled(cron = "0 0 1 * * *") // 24시간 형식, 초 분 시 일 월 요일
     public void startScheduledTask() {
         executorService.submit(this::processDataInBackground);
     }
@@ -35,11 +35,11 @@ public class CalCompanyStockPerValueTotalService {
         if(log.isDebugEnabled()) log.debug("[가치계산 스케줄러] ExecutorService 종료");
         try {
             if (!executorService.awaitTermination(10, TimeUnit.SECONDS)) {
-                if(log.isDebugEnabled()) log.debug("[가치계산 스케줄러] ExecutorService 강제 종료");
+                log.error("[가치계산 스케줄러] ExecutorService 강제 종료");
                 executorService.shutdownNow();
             }
         } catch (InterruptedException e) {
-            if(log.isDebugEnabled()) log.debug("[가치계산 스케줄러] ExecutorService 종료 오류");
+            log.error("[가치계산 스케줄러] ExecutorService 종료 오류");
             executorService.shutdownNow();
             Thread.currentThread().interrupt();
         }
