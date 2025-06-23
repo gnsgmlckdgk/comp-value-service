@@ -40,7 +40,6 @@ public class CalCompanyStockPerValueTotalWorker {
 
         for (int i = 0; i < compCount; i++) {
 
-//            if(i == 4) break;  // TODO: 테스트
             CorpCodeDTO comp = compList.get(i);
             if(log.isInfoEnabled()) log.info("[가치계산 스케줄러] {} 검색중...({}/{}) [{}]", comp.getCorpName(), (i+1), compCount, DateUtil.getToday());
 
@@ -109,7 +108,7 @@ public class CalCompanyStockPerValueTotalWorker {
 
         param.setPerShareValue(주당가치);
         param.setCurrentPrice(현재가격);
-        param.setDifference(현재가격-주당가치);
+        param.setDifference(주당가치-현재가격);
 
         param.setResultMessage(StringUtil.cutStringDelete(stockValueResultDTO.get결과메시지(), 200, "UTF-8"));
         param.setNote("");

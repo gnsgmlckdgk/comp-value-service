@@ -135,19 +135,21 @@ public class CalCompanyStockPerValueService {
         Map<String, String> headersData = new LinkedHashMap<>();
         headersData.put("User-Agent", "Mozilla/5.0");
 
-        ResponseEntity<StockPriceDTO> response = httpClientService.exchangeSync(
-                url, HttpMethod.GET,
-                ClientUtil.createHttpEntity(MediaType.APPLICATION_JSON, headersData),
-                StockPriceDTO.class
-        );
-
         try {
-            Thread.sleep(1000); // 과도한 요청방지
-        } catch (InterruptedException e) {
-            throw new RuntimeException(e);
-        }
+            ResponseEntity<StockPriceDTO> response = httpClientService.exchangeSync(
+                    url, HttpMethod.GET,
+                    ClientUtil.createHttpEntity(MediaType.APPLICATION_JSON, headersData),
+                    StockPriceDTO.class
+            );
 
-        try {
+            try {
+                Thread.sleep(1000); // 과도한 요청방지
+            } catch (InterruptedException e) {
+                throw new RuntimeException(e);
+            }
+
+            if(response == null || response.getBody() == null) return "";
+
             StockPriceDTO.Meta meta = response.getBody().getChart().getResult().get(0).getMeta();
             String validation = validationResponse(meta);
             if (validation.isEmpty()) {
@@ -162,9 +164,12 @@ public class CalCompanyStockPerValueService {
                     }
                 }
             }
-        } catch (Exception e) {
-            log.error("현재 가격 조회 중 예외 발생", e);
+
+        } catch(Exception e) {
+            log.error("현재 가격 조회 중 예외 발생 = {}", e.getMessage());
+            return "";
         }
+
         return "";
     }
 
