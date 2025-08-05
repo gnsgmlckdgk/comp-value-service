@@ -1,7 +1,9 @@
 package com.finance.dart.api.abroad.controller;
 
+import com.finance.dart.api.abroad.dto.CompanyProfileDataResDto;
 import com.finance.dart.api.abroad.dto.FindCompanySymbolResDto;
-import com.finance.dart.api.abroad.service.CompanySearchService;
+import com.finance.dart.api.abroad.service.CompanyProfileSearchService;
+import com.finance.dart.api.abroad.service.CompanySymbolSearchService;
 import com.finance.dart.common.dto.CommonResponse;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -23,21 +25,33 @@ import java.util.List;
 @RequestMapping("abroad/company/search")
 public class CompanySearchController {
 
-    private final CompanySearchService companySearchService;
+    private final CompanySymbolSearchService companySymbolSearchService;
+    private final CompanyProfileSearchService companyProfileSearchService;
 
     /**
-     * <pre>
      * 해외기업 심볼 검색
-     * </pre>
      * @param companyName 기업명
      * @return
      */
     @GetMapping("/symbol")
     public ResponseEntity<CommonResponse<List<FindCompanySymbolResDto>>> findSymbolByCompanyName(@RequestParam(name = "cn") String companyName) {
 
-        List<FindCompanySymbolResDto> companySymbolList = companySearchService.findSymbolListByCompanyName(companyName);
+        List<FindCompanySymbolResDto> companySymbolList = companySymbolSearchService.findSymbolListByCompanyName(companyName);
 
         return new ResponseEntity<>(new CommonResponse<>(companySymbolList), HttpStatus.OK);
+    }
+
+    /**
+     * 해외기업 프로파일 검색
+     * @param symbol 기업심볼
+     * @return
+     */
+    @GetMapping("/profile")
+    public ResponseEntity<CommonResponse<List<CompanyProfileDataResDto>>> findProfileBySymbol(@RequestParam(name = "symbol") String symbol) {
+
+        List<CompanyProfileDataResDto> profileList = companyProfileSearchService.findProfileListBySymbol(symbol);
+
+        return new ResponseEntity<>(new CommonResponse<>(profileList), HttpStatus.OK);
     }
 
 }

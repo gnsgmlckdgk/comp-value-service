@@ -7,7 +7,6 @@ import com.finance.dart.api.abroad.enums.FmpApiList;
 import com.finance.dart.common.service.ConfigService;
 import com.finance.dart.common.service.HttpClientService;
 import com.finance.dart.common.util.ClientUtil;
-import com.finance.dart.common.util.ConvertUtil;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.ParameterizedTypeReference;
@@ -17,12 +16,14 @@ import org.springframework.stereotype.Service;
 
 import java.util.Arrays;
 import java.util.List;
-import java.util.Map;
 
+/**
+ * 기업 심볼검색 서비스
+ */
 @Slf4j
 @AllArgsConstructor
 @Service
-public class CompanySearchService {
+public class CompanySymbolSearchService {
 
     private final ConfigService configService;
     private final HttpClientService httpClientService;
@@ -36,11 +37,10 @@ public class CompanySearchService {
 
         //@ 요청 데이터 세팅
         String apiKey = configService.getFmpApiKey();
-        String url = FmpApiList.CompanyNameSearch.url;
+        String url = FmpApiList.CompanyStockSymbolSearch.url;
 
         FindCompanySymbolReqDto paramDto = FindCompanySymbolReqDto.ofQuery(apiKey, companyName);
-        Map<String, Object> paramMap = ConvertUtil.toMap(paramDto, false);
-        url = ClientUtil.addQueryParams(url, ConvertUtil.toStringMap(paramMap, false));
+        url = ClientUtil.addQueryParams(url, paramDto, true);
 
         //@ 요청
         ResponseEntity<List<FindCompanySymbolResDto>> response =

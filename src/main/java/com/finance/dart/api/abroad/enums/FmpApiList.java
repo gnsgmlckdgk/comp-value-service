@@ -6,13 +6,21 @@ import org.springframework.http.HttpMethod;
 public enum FmpApiList {
 
 
-    CompanyNameSearch(
-            "Company Name Search API",
-            "https://financialmodelingprep.com/stable/search-name",
+    CompanyStockSymbolSearch(
+            "Stock Symbol Search API",
+            "https://financialmodelingprep.com/stable/search-symbol",
             HttpMethod.GET,
-            "https://site.financialmodelingprep.com/developer/docs/stable/search-name",
-            "기업명 조회 API"),
+            "https://site.financialmodelingprep.com/developer/docs/stable/search-symbol",
+            "기업 주식심볼 조회 API"
+    ),
 
+    CompanyProfileData(
+            "Company Profile Data API",
+            "https://financialmodelingprep.com/stable/profile",
+            HttpMethod.GET,
+            "https://site.financialmodelingprep.com/developer/docs/stable/profile-symbol",
+            "기업 프로파일 조회 API"
+    )
 
     ;
 

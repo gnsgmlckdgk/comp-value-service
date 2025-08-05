@@ -53,6 +53,18 @@ public class ClientUtil {
     /**
      * URL 쿼리파라미터 추가
      * @param url
+     * @param paramDto
+     * @param emptyKeyDelete
+     * @return
+     */
+    public static String addQueryParams(String url, Object paramDto, boolean emptyKeyDelete) {
+        Map<String, String> paramMap = ConvertUtil.toStringMap(ConvertUtil.toMap(paramDto, false), false);
+        return addQueryParams(url, paramMap, emptyKeyDelete);
+    }
+
+    /**
+     * URL 쿼리파라미터 추가
+     * @param url
      * @param paramData
      * @param emptyKeyDelete true: 빈 데이터 키 삭제
      * @return
@@ -63,7 +75,7 @@ public class ClientUtil {
 
         for(String key : paramData.keySet()) {
             String data = paramData.get(key);
-            if(data == null || "".equals(data)) {
+            if(emptyKeyDelete && (data == null || "".equals(data))) {
                 continue;
             }
             newParamData.put(key, data);
