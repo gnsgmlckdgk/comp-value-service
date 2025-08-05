@@ -35,7 +35,7 @@ public class DisclosuerInfoService {
      * @return 공시정보 응답 DTO
      */
     public DisclosuerInfoResDTO getDisclosuerInfo(DisclosuerInfoReqDTO request) {
-        final String apiKey = configService.getDartAPI_Key();
+        final String apiKey = configService.getDartApiKey();
         final HttpEntity<?> httpEntity = ClientUtil.createHttpEntity(MediaType.APPLICATION_JSON);
         String url = "https://opendart.fss.or.kr/api/list.json";
 

@@ -33,7 +33,7 @@ public class CorpCodeCacheService {
 
         log.debug("📡 캐시에 없음 → 외부 API 호출 [corpCodeFile]");
 
-        final String apiKey = configService.getDartAPI_Key();
+        final String apiKey = configService.getDartApiKey();
         final HttpEntity<?> entity = ClientUtil.createHttpEntity(MediaType.APPLICATION_XML);
         final String url = "https://opendart.fss.or.kr/api/corpCode.xml?crtfc_key=" + apiKey;
 

@@ -36,7 +36,7 @@ public class FinancialStatementServiceTest {
 
     @BeforeEach
     void setUp() {
-        when(configService.getDartAPI_Key()).thenReturn(dummyApiKey);
+        when(configService.getDartApiKey()).thenReturn(dummyApiKey);
         when(httpClientService.exchangeSync(anyString(), eq(HttpMethod.GET), any(HttpEntity.class), eq(String.class)))
                 .thenReturn(ResponseEntity.ok(dummyResponseJson));
     }

@@ -55,6 +55,7 @@ logging:
 #    root: DEBUG
 #    com.finance.dart: DEBUG  # 특정 패키지
 #    com.finance.dart.common.util: DEBUG
+    com.finance.dart.api.abroad: DEBUG  # 해외
     org.testcontainers: DEBUG
     org.springframework.test: DEBUG
 

@@ -47,7 +47,7 @@ public class DisclosuerInfoServiceTest {
         dummyResponse = new DisclosuerInfoResDTO();
         // 예: dummyResponse.setSomeResult("resultValue");
 
-        when(configService.getDartAPI_Key()).thenReturn(dummyApiKey);
+        when(configService.getDartApiKey()).thenReturn(dummyApiKey);
 
         // httpClientService.exchangeSync() 호출 시 dummyResponse를 포함한 ResponseEntity 반환
         when(httpClientService.exchangeSync(anyString(), eq(HttpMethod.GET), any(HttpEntity.class), eq(DisclosuerInfoResDTO.class)))

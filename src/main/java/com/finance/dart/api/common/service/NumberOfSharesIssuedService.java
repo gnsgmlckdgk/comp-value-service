@@ -37,7 +37,7 @@ public class NumberOfSharesIssuedService {
      * @return NumberOfSharesIssuedResDTO 객체
      */
     public NumberOfSharesIssuedResDTO getNumberOfSharesIssued(String corpCode, String bsnsYear, String reprtCode) {
-        final String apiKey = configService.getDartAPI_Key();
+        final String apiKey = configService.getDartApiKey();
         final HttpEntity<?> httpEntity = ClientUtil.createHttpEntity(MediaType.APPLICATION_JSON);
         String url = "https://opendart.fss.or.kr/api/stockTotqySttus.json";
 

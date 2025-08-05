@@ -38,7 +38,7 @@ public class FinancialStatementService {
      * @return FinancialStatementResDTO 객체
      */
     public FinancialStatementResDTO getCompanyFinancialStatement(String corpCode, String bsnsYear, String reprtCode, String fsDiv) {
-        final String apiKey = configService.getDartAPI_Key();
+        final String apiKey = configService.getDartApiKey();
         HttpEntity<?> entity = ClientUtil.createHttpEntity(MediaType.APPLICATION_JSON);
         String url = "https://opendart.fss.or.kr/api/fnlttSinglAcntAll.json";
 

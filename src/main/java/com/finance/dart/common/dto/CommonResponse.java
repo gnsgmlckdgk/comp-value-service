@@ -22,8 +22,20 @@ public class CommonResponse<T> {
         this.message = ResponseEnum.OK.getMessage();
     }
 
+    public CommonResponse(T response) {
+        this.isSuccess = ResponseEnum.OK.isSuccess();
+        this.code = ResponseEnum.OK.getCode();
+        this.message = ResponseEnum.OK.getMessage();
+        this.response = response;
+    }
+
     public CommonResponse(ResponseEnum responseEnum) {
         setResponeInfo(responseEnum);
+    }
+
+    public CommonResponse(ResponseEnum responseEnum, T response) {
+        setResponeInfo(responseEnum);
+        this.response = response;
     }
 
     @JsonIgnore

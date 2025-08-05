@@ -57,7 +57,7 @@ class CorpCodeServiceTest {
     @BeforeEach
     void setUp() throws IOException {
         MockitoAnnotations.openMocks(this);
-        when(configService.getDartAPI_Key()).thenReturn(dummyApiKey);
+        when(configService.getDartApiKey()).thenReturn(dummyApiKey);
         // 실제 압축된 XML 데이터를 dummyZipBytes로 생성
         byte[] dummyZipBytes = createZipBytes("dummy.xml", dummyXml);
         // httpClientService.exchangeSync() 호출 시 dummyZipBytes를 반환하도록 설정

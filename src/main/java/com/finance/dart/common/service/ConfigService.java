@@ -17,7 +17,15 @@ public class ConfigService {
      * OPEN DART API KEY
      * @return
      */
-    public String getDartAPI_Key() {
+    public String getDartApiKey() {
         return env.getProperty("OPEN_DART_API_KEY");
+    }
+
+    /**
+     * FMP API KEY
+     * @return
+     */
+    public String getFmpApiKey() {
+        return env.getProperty("FMP_API_KEY");
     }
 }
