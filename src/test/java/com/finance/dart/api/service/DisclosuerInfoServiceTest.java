@@ -1,7 +1,8 @@
 package com.finance.dart.api.service;
 
-import com.finance.dart.api.dto.DisclosuerInfoReqDTO;
-import com.finance.dart.api.dto.DisclosuerInfoResDTO;
+import com.finance.dart.api.domestic.dto.DisclosuerInfoReqDTO;
+import com.finance.dart.api.domestic.dto.DisclosuerInfoResDTO;
+import com.finance.dart.api.domestic.service.DisclosuerInfoService;
 import com.finance.dart.common.service.ConfigService;
 import com.finance.dart.common.service.HttpClientService;
 import com.google.gson.Gson;

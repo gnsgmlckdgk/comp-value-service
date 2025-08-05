@@ -1,6 +1,7 @@
 package com.finance.dart.api.service;
 
-import com.finance.dart.api.dto.CorpCodeDTO;
+import com.finance.dart.api.domestic.dto.CorpCodeDTO;
+import com.finance.dart.api.domestic.service.CorpCodeService;
 import com.finance.dart.common.service.ConfigService;
 import com.finance.dart.common.service.HttpClientService;
 import org.junit.jupiter.api.BeforeEach;

@@ -1,6 +1,7 @@
 package com.finance.dart.api.service;
 
-import com.finance.dart.api.dto.StockValueManualReqDTO;
+import com.finance.dart.api.domestic.dto.StockValueManualReqDTO;
+import com.finance.dart.api.domestic.service.CalCompanyStockPerValueManualService;
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 
