@@ -1,4 +1,4 @@
-package com.finance.dart.api.abroad.dto;
+package com.finance.dart.api.abroad.dto.company;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.finance.dart.api.abroad.dto.common.RequireParamDto;

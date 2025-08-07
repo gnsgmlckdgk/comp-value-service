@@ -1,8 +1,8 @@
 package com.finance.dart.api.abroad.service;
 
-import com.finance.dart.api.abroad.dto.FindCompanySymbolReqDto;
-import com.finance.dart.api.abroad.dto.FindCompanySymbolResDto;
-import com.finance.dart.api.abroad.enums.ExchangeConst;
+import com.finance.dart.api.abroad.dto.company.FindCompanySymbolReqDto;
+import com.finance.dart.api.abroad.dto.company.FindCompanySymbolResDto;
+import com.finance.dart.api.abroad.consts.ExchangeConst;
 import com.finance.dart.api.abroad.enums.FmpApiList;
 import com.finance.dart.common.service.ConfigService;
 import com.finance.dart.common.service.HttpClientService;

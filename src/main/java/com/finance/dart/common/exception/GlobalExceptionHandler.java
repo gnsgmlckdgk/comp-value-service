@@ -9,13 +9,25 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 @ControllerAdvice
 public class GlobalExceptionHandler {
 
+    @ExceptionHandler(Exception.class)
+    public ResponseEntity<CommonResponse> handleException(Exception e) {
+
+        CommonResponse response = new CommonResponse(ResponseEnum.INTERNAL_SERVER_ERROR);
+        response.setResponse(e.getMessage());
+
+        return ResponseEntity
+                .status(response.getHttpStatus())
+                .body(response);
+    }
+
+
     @ExceptionHandler(UnauthorizedException.class)
     public ResponseEntity<CommonResponse> handleUnauthorized(UnauthorizedException ex) {
 
         CommonResponse response = new CommonResponse(ResponseEnum.LOGIN_SESSION_EXPIRED);
 
         return ResponseEntity
-                .status(ResponseEnum.LOGIN_SESSION_EXPIRED.getHttpStatus())
+                .status(response.getHttpStatus())
                 .body(response);
     }
 }

@@ -1,7 +1,7 @@
 package com.finance.dart.api.abroad.service;
 
-import com.finance.dart.api.abroad.dto.CompanyProfileDataReqDto;
-import com.finance.dart.api.abroad.dto.CompanyProfileDataResDto;
+import com.finance.dart.api.abroad.dto.company.CompanyProfileDataReqDto;
+import com.finance.dart.api.abroad.dto.company.CompanyProfileDataResDto;
 import com.finance.dart.api.abroad.enums.FmpApiList;
 import com.finance.dart.common.service.ConfigService;
 import com.finance.dart.common.service.HttpClientService;

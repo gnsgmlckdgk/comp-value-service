@@ -1,4 +1,4 @@
-package com.finance.dart.api.abroad.dto;
+package com.finance.dart.api.abroad.dto.company;
 
 import lombok.Data;
 

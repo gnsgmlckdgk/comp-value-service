@@ -1,4 +1,4 @@
-package com.finance.dart.api.abroad.enums;
+package com.finance.dart.api.abroad.consts;
 
 /**
  * 거래소 상수

@@ -1,7 +1,7 @@
 package com.finance.dart.api.abroad.controller;
 
-import com.finance.dart.api.abroad.dto.CompanyProfileDataResDto;
-import com.finance.dart.api.abroad.dto.FindCompanySymbolResDto;
+import com.finance.dart.api.abroad.dto.company.CompanyProfileDataResDto;
+import com.finance.dart.api.abroad.dto.company.FindCompanySymbolResDto;
 import com.finance.dart.api.abroad.service.CompanyProfileSearchService;
 import com.finance.dart.api.abroad.service.CompanySymbolSearchService;
 import com.finance.dart.common.dto.CommonResponse;
