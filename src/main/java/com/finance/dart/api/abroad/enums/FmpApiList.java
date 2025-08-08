@@ -5,13 +5,13 @@ import org.springframework.http.HttpMethod;
 
 public enum FmpApiList {
 
-    /** 기업 주식심볼 조회 **/
+    /** 기업명으로 거래소심볼 조회 **/
     CompanyStockSymbolSearch(
-            "Stock Symbol Search API",
-            "https://financialmodelingprep.com/stable/search-symbol",
+            "Company Name Search API",
+            "https://financialmodelingprep.com/stable/search-name",
             HttpMethod.GET,
-            "https://site.financialmodelingprep.com/developer/docs/stable/search-symbol",
-            "기업 주식심볼 조회 API"
+            "https://site.financialmodelingprep.com/developer/docs/stable/search-name",
+            "기업명으로 거래소심볼 조회 API"
     ),
 
     /** 기업 프로파일 조회 **/
