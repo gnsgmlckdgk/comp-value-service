@@ -139,7 +139,7 @@ public class CalCompanyStockPerValueService {
         try {
             ResponseEntity<StockPriceDTO> response = httpClientService.exchangeSync(
                     url, HttpMethod.GET,
-                    ClientUtil.createHttpEntity(MediaType.APPLICATION_JSON, headersData),
+                    ClientUtil.createHttpEntity(MediaType.APPLICATION_JSON, headersData, null),
                     StockPriceDTO.class
             );
 

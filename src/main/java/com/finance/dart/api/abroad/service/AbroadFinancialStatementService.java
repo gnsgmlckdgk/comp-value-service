@@ -74,7 +74,7 @@ public class AbroadFinancialStatementService {
 
         //@ 요청
         ResponseEntity<T> response =
-                httpClientService.exchangeSync(url, HttpMethod.GET, headers, typeRef);
+                httpClientService.exchangeSync(url, HttpMethod.GET, headers, null, typeRef);
 
         //@ 응답데이터 가공
         T responseBody = response.getBody();

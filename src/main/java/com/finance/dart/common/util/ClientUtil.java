@@ -31,9 +31,10 @@ public class ClientUtil {
      * HttpEntity 생성
      * @param mediaType
      * @param headerDatas
+     * @param body
      * @return
      */
-    public static HttpEntity createHttpEntity(MediaType mediaType, Map<String, String> headerDatas) {
+    public static HttpEntity createHttpEntity(MediaType mediaType, Map<String, String> headerDatas, Object body) {
 
         // 요청 헤더 설정
         HttpHeaders headers = new HttpHeaders();
@@ -43,9 +44,8 @@ public class ClientUtil {
             headers.add(key, headerDatas.get(key));
         }
 
-
         // HTTP 엔티티 생성
-        HttpEntity<String> entity = new HttpEntity<>(headers);
+        HttpEntity<Object> entity = new HttpEntity<>(body, headers);
 
         return entity;
     }

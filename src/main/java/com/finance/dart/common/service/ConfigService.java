@@ -28,4 +28,12 @@ public class ConfigService {
     public String getFmpApiKey() {
         return env.getProperty("FMP_API_KEY");
     }
+
+    /**
+     * 오픈 API API KEY
+     * @return
+     */
+    public String getOpenAiApiKey() {
+        return env.getProperty("OPEN_AI_API_KEY");
+    }
 }
