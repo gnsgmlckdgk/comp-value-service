@@ -4,12 +4,13 @@ import lombok.Getter;
 import lombok.ToString;
 
 /**
- * 유동자산 합계 조회 결과 DTO
+ * 재무제표 조회 결과 DTO
  * SEC XBRL companyconcept API (/api/xbrl/companyconcept/...) 응답 기반
  */
 @Getter
 @ToString
-public class AssetsCurrent {
+public class CommonFinancialStatementDto {
+
     /** SEC 고유 기업 식별자 (CIK - Central Index Key) */
     private Long cik;
 

@@ -1,19 +1,19 @@
 package com.finance.dart.api.service;
 
-import com.finance.dart.api.domestic.dto.StockValueManualReqDTO;
-import com.finance.dart.api.domestic.service.CalCompanyStockPerValueManualService;
+import com.finance.dart.api.common.dto.CompanySharePriceCalculator;
+import com.finance.dart.api.common.service.CompanySharePriceCalculatorService;
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 
-class CalCompanyStockPerValueManualServiceTest {
+class CompanySharePriceCalculatorServiceTest {
 
     // 의존성이 없는 서비스라 new로 인스턴스 생성 가능
-    private final CalCompanyStockPerValueManualService service = new CalCompanyStockPerValueManualService();
+    private final CompanySharePriceCalculatorService service = new CompanySharePriceCalculatorService();
 
     @Test
     void testCalPerValue() {
         // 테스트용 DTO 값 설정 (예시 값)
-        StockValueManualReqDTO req = new StockValueManualReqDTO();
+        CompanySharePriceCalculator req = new CompanySharePriceCalculator();
         req.setOperatingProfitPrePre("100");
         req.setOperatingProfitPre("150");
         req.setOperatingProfitCurrent("200");

@@ -31,7 +31,7 @@ public class CorpCodeCacheService {
     @Cacheable(value = "corpCodeFile", key = "'corpCodeFile'")
     public ResponseEntity<byte[]> getCoprCodeFile() {
 
-        log.debug("📡 캐시에 없음 → 외부 API 호출 [corpCodeFile]");
+        if(log.isDebugEnabled()) log.debug("📡 캐시에 없음 → 외부 API 호출 [corpCodeFile]");
 
         final String apiKey = configService.getDartApiKey();
         final HttpEntity<?> entity = ClientUtil.createHttpEntity(MediaType.APPLICATION_XML);

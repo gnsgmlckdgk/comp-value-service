@@ -1,10 +1,13 @@
-package com.finance.dart.api.domestic.dto;
+package com.finance.dart.api.common.dto;
 
 import com.google.gson.annotations.SerializedName;
 import lombok.Data;
 
+/**
+ * 한주당 가치계산 DTO
+ */
 @Data
-public class StockValueManualReqDTO {
+public class CompanySharePriceCalculator {
 
     /**
      * 단위

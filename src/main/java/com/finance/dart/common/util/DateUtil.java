@@ -31,4 +31,25 @@ public class DateUtil {
                 .format(DateTimeFormatter.ofPattern(pattern));
     }
 
+    /**
+     * 날짜 비교 (yyyy-MM-dd)
+     * @param dateStr1 A
+     * @param dateStr2 B
+     * @return -1(A가 B이전), 0(같은 날짜), 1(A가 B이후)
+     */
+    public static int compareDate(String dateStr1, String dateStr2) {
+
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+        LocalDate date1 = LocalDate.parse(dateStr1, formatter);
+        LocalDate date2 = LocalDate.parse(dateStr2, formatter);
+
+        if (date1.isBefore(date2)) {
+            return -1;
+        } else if (date1.isAfter(date2)) {
+            return 1;
+        } else {
+            return 0;
+        }
+    }
+
 }

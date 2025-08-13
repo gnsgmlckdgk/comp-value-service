@@ -1,9 +1,10 @@
 package com.finance.dart.api.common.controller;
 
-import com.finance.dart.api.domestic.dto.StockValueManualReqDTO;
+import com.finance.dart.api.abroad.service.OverseasStockValueService;
+import com.finance.dart.api.common.dto.CompanySharePriceCalculator;
 import com.finance.dart.api.domestic.dto.StockValueResultDTO;
 import com.finance.dart.api.domestic.service.CalCompanyStockPerValueService;
-import com.finance.dart.api.domestic.service.CalCompanyStockPerValueManualService;
+import com.finance.dart.api.common.service.CompanySharePriceCalculatorService;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -19,8 +20,11 @@ import java.util.Map;
 @RestController
 public class MainController {
 
-    private final CalCompanyStockPerValueService calCompanyStockPerValueService;
-    private final CalCompanyStockPerValueManualService calCompanyStockPerValueManualService;
+    // TODO: 클래스명, 패키지명 리팩토링 예정 (main -> 각 패키지로 이동, 클래스명 국내, 해외 명확하게)
+    private final CalCompanyStockPerValueService calCompanyStockPerValueService;            // 국내주식계산 서비스
+    private final OverseasStockValueService overseasStockValueService;                      // 해외주식계산 서비스
+    private final CompanySharePriceCalculatorService companySharePriceCalculatorService;    // 가치계산 서비스
+
 
     /**
      * 헬스체크
@@ -33,20 +37,23 @@ public class MainController {
     }
 
     /**
+     * <pre>
+     * 국내기업
      * 한 기업의 한주당 가치 계산
+     * </pre>
      * @param year
      * @param corpCode
      * @param corpName
      * @return
      */
     @GetMapping("/cal/per_value")
-    public ResponseEntity<StockValueResultDTO> calCompanyStockPerValue(
+    public ResponseEntity<StockValueResultDTO> calDomesticCompanyStockPerValue(
             @RequestParam("year") String year,
             @RequestParam(value = "corp_code", defaultValue = "") String corpCode,
             @RequestParam(value = "corp_name", defaultValue = "") String corpName
     ) {
 
-        log.debug("year={}, corp_code={}, corp_name={}", year, corpCode, corpName);
+        if(log.isDebugEnabled()) log.debug("year={}, corp_code={}, corp_name={}", year, corpCode, corpName);
 
         StockValueResultDTO response = null;
         try {
@@ -54,24 +61,41 @@ public class MainController {
         } catch (InterruptedException e) {
             throw new RuntimeException(e);
         }
-        log.debug("response = {}", response);
+        if(log.isDebugEnabled()) log.debug("response = {}", response);
 
         return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+    /**
+     * <pre>
+     * 해외기업
+     * 한 기업의 한주당 가치 계산
+     * </pre>
+     * @param symbol
+     * @return
+     */
+    @GetMapping("/cal/per_value/abroad")
+    public ResponseEntity<Object> calAbroadCompanyStockPerValue(@RequestParam("symbol") String symbol) {
+
+        // TODO: 개발중
+        overseasStockValueService.calPerValue(symbol);
+
+        return null;
     }
 
 
     /**
      * 한 기업의 한주당 가치 수동 계산
-     * @param stockValueManualReqDTO
+     * @param companySharePriceCalculator
      * @return
      */
     @PostMapping("/cal/per_value/manual")
     public ResponseEntity<Map> calCompanyStockPerValueManual(
-            @RequestBody StockValueManualReqDTO stockValueManualReqDTO
+            @RequestBody CompanySharePriceCalculator companySharePriceCalculator
             ) {
 
-        String response = calCompanyStockPerValueManualService.calPerValue(stockValueManualReqDTO);
-        log.debug("response = {}", response);
+        String response = companySharePriceCalculatorService.calPerValue(companySharePriceCalculator);
+        if(log.isDebugEnabled()) log.debug("response = {}", response);
 
         Map<String, Object> responseMap = new LinkedHashMap<>();
         responseMap.put("result", response);

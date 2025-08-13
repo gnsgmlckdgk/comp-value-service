@@ -28,7 +28,10 @@ public class CompanyProfileSearchService {
 
 
     /**
+     * <pre>
      * 기업 프로파일 목록 조회
+     * 2025.08.12 : 배열로 받지만 한개의 정보만 조회되는게 정상
+     * </pre>
      * @param symbol
      * @return
      */

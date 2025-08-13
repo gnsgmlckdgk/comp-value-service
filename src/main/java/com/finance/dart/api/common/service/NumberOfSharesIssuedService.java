@@ -48,11 +48,11 @@ public class NumberOfSharesIssuedService {
         params.put("reprt_code", reprtCode);
 
         url = ClientUtil.addQueryParams(url, params);
-        log.debug("Request URL: {}", url);
+        if(log.isDebugEnabled()) log.debug("Request URL: {}", url);
 
         ResponseEntity<String> response = httpClientService.exchangeSync(url, HttpMethod.GET, httpEntity, String.class);
         String responseBody = response.getBody();
-        log.debug("Response Body: {}", responseBody);
+        if(log.isDebugEnabled()) log.debug("Response Body: {}", responseBody);
 
         return gson.fromJson(responseBody, NumberOfSharesIssuedResDTO.class);
     }

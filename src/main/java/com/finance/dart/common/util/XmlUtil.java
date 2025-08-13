@@ -45,10 +45,10 @@ public class XmlUtil {
 
             ZipEntry entry;
             while ((entry = zis.getNextEntry()) != null) {
-                log.debug("🔍 ZIP entry: " + entry.getName());
+                if(log.isDebugEnabled()) log.debug("🔍 ZIP entry: " + entry.getName());
 
                 byte[] data = zis.readAllBytes();
-                log.debug("📦 Entry size: " + data.length);
+                if(log.isDebugEnabled()) log.debug("📦 Entry size: " + data.length);
                 
                 // 원하는 파일만 파싱하거나, 모든 파일 이어붙이기
                 if (entry.getName().endsWith(".xml")) {

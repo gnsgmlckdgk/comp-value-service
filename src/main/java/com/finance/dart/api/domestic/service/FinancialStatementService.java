@@ -50,11 +50,11 @@ public class FinancialStatementService {
         params.put("fs_div", fsDiv);
 
         url = ClientUtil.addQueryParams(url, params);
-        log.debug("Request URL: {}", url);
+        if(log.isDebugEnabled()) log.debug("Request URL: {}", url);
 
         ResponseEntity<String> response = httpClientService.exchangeSync(url, HttpMethod.GET, entity, String.class);
         String responseBody = response.getBody();
-        log.debug("Response Body: {}", responseBody);
+        if(log.isDebugEnabled()) log.debug("Response Body: {}", responseBody);
 
         return gson.fromJson(responseBody, FinancialStatementResDTO.class);
     }

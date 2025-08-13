@@ -25,7 +25,8 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * 한 기업의 주당 가치 계산
+ * 한 기업의 주당 가치 자동 계산
+ * 국내기업
  */
 @Slf4j
 @RequiredArgsConstructor
