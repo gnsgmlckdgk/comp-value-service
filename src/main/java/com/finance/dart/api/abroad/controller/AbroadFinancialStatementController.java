@@ -79,22 +79,22 @@ public class AbroadFinancialStatementController {
 
         //@1. 장기매도 가능 증권
         CommonFinancialStatementDto response1 =
-                abroadFinancialStatementService.findFS_AvailableForSaleSecuritiesNoncurrent(cik);
+                abroadFinancialStatementService.findFS_NI_AvailableForSaleSecuritiesNoncurrent(cik);
         response.put("1. 장기매도 가능 증권", response1);
 
         //@2. 지분법 투자
         CommonFinancialStatementDto response2 =
-                abroadFinancialStatementService.findFS_LongTermInvestments(cik);
+                abroadFinancialStatementService.findFS_NI_LongTermInvestments(cik);
         response.put("2. 지분법 투자", response2);
 
         //@3. 기타 장기투자
         CommonFinancialStatementDto response3 =
-                abroadFinancialStatementService.findFS_OtherInvestments(cik);
+                abroadFinancialStatementService.findFS_NI_OtherInvestments(cik);
         response.put("3. 기타 장기투자", response3);
 
         //@4. 투자 및 대여금
         CommonFinancialStatementDto response4 =
-                abroadFinancialStatementService.findFS_InvestmentsAndAdvances(cik);
+                abroadFinancialStatementService.findFS_NI_InvestmentsAndAdvances(cik);
         response.put("4. 투자 및 대여금", response4);
 
         return new ResponseEntity<>(new CommonResponse<>(response), HttpStatus.OK);

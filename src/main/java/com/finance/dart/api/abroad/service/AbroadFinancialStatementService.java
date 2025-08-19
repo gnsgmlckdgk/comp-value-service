@@ -68,7 +68,7 @@ public class AbroadFinancialStatementService {
      * @param cik
      * @return
      */
-    public CommonFinancialStatementDto findFS_AvailableForSaleSecuritiesNoncurrent(String cik) {
+    public CommonFinancialStatementDto findFS_NI_AvailableForSaleSecuritiesNoncurrent(String cik) {
         CommonFinancialStatementDto financialStatement =
                 findFinancialStatementDetail(cik, SecApiList.AvailableForSaleSecuritiesNoncurrent, new ParameterizedTypeReference<>() {});
         return financialStatement;
@@ -82,7 +82,7 @@ public class AbroadFinancialStatementService {
      * @param cik
      * @return
      */
-    public CommonFinancialStatementDto findFS_LongTermInvestments(String cik) {
+    public CommonFinancialStatementDto findFS_NI_LongTermInvestments(String cik) {
         CommonFinancialStatementDto financialStatement =
                 findFinancialStatementDetail(cik, SecApiList.LongTermInvestments, new ParameterizedTypeReference<>() {});
         return financialStatement;
@@ -96,7 +96,7 @@ public class AbroadFinancialStatementService {
      * @param cik
      * @return
      */
-    public CommonFinancialStatementDto findFS_OtherInvestments(String cik) {
+    public CommonFinancialStatementDto findFS_NI_OtherInvestments(String cik) {
         CommonFinancialStatementDto financialStatement =
                 findFinancialStatementDetail(cik, SecApiList.OtherInvestments, new ParameterizedTypeReference<>() {});
         return financialStatement;
@@ -110,7 +110,7 @@ public class AbroadFinancialStatementService {
      * @param cik
      * @return
      */
-    public CommonFinancialStatementDto findFS_InvestmentsAndAdvances(String cik) {
+    public CommonFinancialStatementDto findFS_NI_InvestmentsAndAdvances(String cik) {
         CommonFinancialStatementDto financialStatement =
                 findFinancialStatementDetail(cik, SecApiList.InvestmentsAndAdvances, new ParameterizedTypeReference<>() {});
         return financialStatement;

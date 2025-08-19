@@ -1,6 +1,7 @@
 package com.finance.dart.api.abroad.util;
 
 import com.finance.dart.api.abroad.dto.financial.statement.CommonFinancialStatementDto;
+import com.finance.dart.api.abroad.dto.financial.statement.Shares;
 import com.finance.dart.api.abroad.dto.financial.statement.USD;
 import com.finance.dart.api.abroad.dto.financial.statement.Units;
 import com.finance.dart.common.util.DateUtil;
@@ -102,6 +103,34 @@ public class SecUtil {
             if (f.matches(".*Q[1-4]YTD$")) return false;  // CY2025Q2YTD 등은 누적
         }
         return false;
+    }
+
+
+    /**
+     * CommonFinancialStatementDto → Units → shares 리스트를 null-safe 하게 추출한다.
+     * 값이 없으면 빈 리스트를 반환한다.
+     */
+    public static List<Shares> getSharesList(CommonFinancialStatementDto dto) {
+        return Optional.ofNullable(dto)
+                .map(CommonFinancialStatementDto::getUnits)
+                .map(Units::getShares)
+                .orElse(Collections.emptyList());
+    }
+
+    /**
+     * sharesList 에서 날짜 기준으로 가장 최근(offset=0), 바로 이전(offset=1), 그 이전(offset=2) 데이터를 반환
+     * @param sharesList USD 리스트
+     * @param offset  0=최근, 1=바로 이전, 2=그 이전...
+     * @return 해당 위치의 USD, 없으면 null
+     */
+    public static Shares getSharesByOffset(List<Shares> sharesList, int offset) {
+        if (sharesList == null || sharesList.isEmpty() || offset < 0) return null;
+
+        return sharesList.stream()
+                .sorted((u1, u2) -> DateUtil.compareDate(u2.getEnd(), u1.getEnd())) // 최신순 정렬 (음수면 앞에 배치)
+                .skip(offset) // offset 만큼 건너뛰기
+                .findFirst()
+                .orElse(null);
     }
 
 }

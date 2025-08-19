@@ -98,6 +98,18 @@ public class CalUtil {
         return comparison;
     }
 
+    /**
+     * 소수점 크기 변환
+     * @param val
+     * @param roundScale
+     * @param roundingMode
+     * @return
+     */
+    public static String scale(String val, int roundScale, RoundingMode roundingMode) {
+        BigDecimal num1 = new BigDecimal(deleteComma(val));
+        BigDecimal result = num1.setScale(roundScale, roundingMode);
+        return result.toPlainString();
+    }
 
     /**
      * 콤마 삭제
