@@ -75,7 +75,9 @@ public class OverseasStockValueService {
         // 영업이익
         Thread.sleep(delay);
         USD[] incomeLossArr = getOperatingIncomeLoss(cik);
-        if(log.isDebugEnabled()) log.debug("영업이익 최근 분기별(3) : {}", incomeLossArr);
+        for(int i = 0; i< incomeLossArr.length; i++) {
+            if(log.isDebugEnabled()) log.debug("영업이익 최근 분기별({}) : {}", i, incomeLossArr[i]);
+        }
 
         // 유동자산 합계
         Thread.sleep(delay);
@@ -227,10 +229,12 @@ public class OverseasStockValueService {
     private String getCurrentRatioPct(String assetsCurrent, String liabilitiesCurrent) {
         // 유동비율 ( 유동비율(%) = (유동자산 ÷ 유동부채) × 100 )
         if(StringUtil.isStringEmpty(liabilitiesCurrent) || liabilitiesCurrent.equals("0")) return null;
-        String ratio = CalUtil.divide(assetsCurrent, liabilitiesCurrent, 6, RoundingMode.HALF_UP);
-        String currentRatioPct = CalUtil.scale(CalUtil.multi(ratio, "100"), 2, RoundingMode.HALF_UP);
+//        String ratio = CalUtil.divide(assetsCurrent, liabilitiesCurrent, 6, RoundingMode.HALF_UP);
+//        String currentRatioPct = CalUtil.scale(CalUtil.multi(ratio, "100"), 2, RoundingMode.HALF_UP);
 
-        return currentRatioPct;
+        String ratio = CalUtil.divide(assetsCurrent, liabilitiesCurrent, 2, RoundingMode.HALF_UP);  // 백분율은 제외
+
+        return ratio;
     }
 
     /**
