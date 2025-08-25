@@ -1,5 +1,7 @@
 package com.finance.dart.api.domestic.service;
 
+import com.finance.dart.api.common.dto.CompanySharePriceResult;
+import com.finance.dart.api.common.dto.CompanySharePriceResultDetail;
 import com.finance.dart.api.common.service.NumberOfSharesIssuedService;
 import com.finance.dart.api.domestic.dto.*;
 import com.finance.dart.api.domestic.enums.ExchangeCd;
@@ -44,12 +46,12 @@ public class CalCompanyStockPerValueService {
     public static class CalculationContext {
         private FsDiv selectedFsDiv;
         private String selectedFinanceBungiCode;
-        private final StockValueResultDetailDTO resultDetail;
+        private final CompanySharePriceResultDetail resultDetail;
 
         public CalculationContext() {
             this.selectedFsDiv = FsDiv.연결; // 기본값
             this.selectedFinanceBungiCode = ReprtCode.사업보고서.getCode();
-            this.resultDetail = new StockValueResultDetailDTO();
+            this.resultDetail = new CompanySharePriceResultDetail("100,000,000");
         }
     }
 
@@ -61,9 +63,9 @@ public class CalCompanyStockPerValueService {
      * @param corpName 기업 명
      * @return 계산 결과 DTO
      */
-    public StockValueResultDTO calPerValue(String year, String corpCode, String corpName) throws InterruptedException {
+    public CompanySharePriceResult calPerValue(String year, String corpCode, String corpName) throws InterruptedException {
         final CalculationContext context = new CalculationContext();
-        StockValueResultDTO result = new StockValueResultDTO("정상 처리되었습니다.");
+        CompanySharePriceResult result = new CompanySharePriceResult("정상 처리되었습니다.");
 
         // 1. 회사 정보 설정
         CorpCodeDTO corpCodeDTO = setCompanyInfo(corpCode, corpName);
@@ -115,7 +117,7 @@ public class CalCompanyStockPerValueService {
         return result;
     }
 
-    private StockValueResultDTO setReturnMessage(StockValueResultDTO result, String message) {
+    private CompanySharePriceResult setReturnMessage(CompanySharePriceResult result, String message) {
         result.set주당가치("");
         result.set결과메시지(message);
         return result;

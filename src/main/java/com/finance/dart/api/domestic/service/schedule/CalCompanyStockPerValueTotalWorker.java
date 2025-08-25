@@ -4,7 +4,7 @@ package com.finance.dart.api.domestic.service.schedule;
 import com.finance.dart.api.domestic.component.StockValueComponent;
 import com.finance.dart.api.domestic.dto.CorpCodeDTO;
 import com.finance.dart.api.domestic.dto.CorpCodeResDTO;
-import com.finance.dart.api.domestic.dto.StockValueResultDTO;
+import com.finance.dart.api.common.dto.CompanySharePriceResult;
 import com.finance.dart.api.common.entity.StockValuationResultEntity;
 import com.finance.dart.api.domestic.service.CalCompanyStockPerValueService;
 import com.finance.dart.api.domestic.service.CorpCodeService;
@@ -75,12 +75,12 @@ public class CalCompanyStockPerValueTotalWorker {
         String year = DateUtil.getToday("yyyy");
         try {
             //@ 기업가치 계산
-            StockValueResultDTO stockValueResultDTO =
+            CompanySharePriceResult companySharePriceResult =
                     calCompanyStockPerValueService.calPerValue(year, comp.getCorpCode(), comp.getCorpName());
-            if(log.isDebugEnabled()) log.debug("[가치계산 스케줄러] 기업가치 계산 결과 [{}] = {}", comp.getCorpName(), stockValueResultDTO);
+            if(log.isDebugEnabled()) log.debug("[가치계산 스케줄러] 기업가치 계산 결과 [{}] = {}", comp.getCorpName(), companySharePriceResult);
 
             //@ 결과 DB 저장
-            StockValuationResultEntity param = setParam(stockValueResultDTO);
+            StockValuationResultEntity param = setParam(companySharePriceResult);
             if(log.isDebugEnabled()) log.debug("[가치계산 스케줄러] 조회값 저장 [{}] = {}", comp.getCorpName(), param);
             stockValueComponent.createCompStockValue(param);
 
@@ -92,27 +92,27 @@ public class CalCompanyStockPerValueTotalWorker {
 
     /**
      * DB 데이터 조립
-     * @param stockValueResultDTO
+     * @param companySharePriceResult
      * @return
      */
-    private StockValuationResultEntity setParam(StockValueResultDTO stockValueResultDTO) {
+    private StockValuationResultEntity setParam(CompanySharePriceResult companySharePriceResult) {
 
         StockValuationResultEntity param = new StockValuationResultEntity();
 
         param.setBaseDate(DateUtil.getToday("yyyyMMdd"));
 
-        param.setCompanyName(StringUtil.defaultString(stockValueResultDTO.get기업명()));
-        param.setCompanyCode(StringUtil.defaultString(stockValueResultDTO.get기업코드()));
-        param.setStockCode(StringUtil.defaultString(stockValueResultDTO.get주식코드()));
+        param.setCompanyName(StringUtil.defaultString(companySharePriceResult.get기업명()));
+        param.setCompanyCode(StringUtil.defaultString(companySharePriceResult.get기업코드()));
+        param.setStockCode(StringUtil.defaultString(companySharePriceResult.get주식코드()));
 
-        long 주당가치 = StringUtil.defaultLong(stockValueResultDTO.get주당가치());
-        long 현재가격 = StringUtil.defaultLong(stockValueResultDTO.get현재가격());
+        long 주당가치 = StringUtil.defaultLong(companySharePriceResult.get주당가치());
+        long 현재가격 = StringUtil.defaultLong(companySharePriceResult.get현재가격());
 
         param.setPerShareValue(주당가치);
         param.setCurrentPrice(현재가격);
         param.setDifference(주당가치-현재가격);
 
-        param.setResultMessage(StringUtil.cutStringDelete(stockValueResultDTO.get결과메시지(), 200, "UTF-8"));
+        param.setResultMessage(StringUtil.cutStringDelete(companySharePriceResult.get결과메시지(), 200, "UTF-8"));
         param.setNote("");
 
         return param;

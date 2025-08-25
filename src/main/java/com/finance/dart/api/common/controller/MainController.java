@@ -2,9 +2,10 @@ package com.finance.dart.api.common.controller;
 
 import com.finance.dart.api.abroad.service.OverseasStockValueService;
 import com.finance.dart.api.common.dto.CompanySharePriceCalculator;
-import com.finance.dart.api.domestic.dto.StockValueResultDTO;
-import com.finance.dart.api.domestic.service.CalCompanyStockPerValueService;
+import com.finance.dart.api.common.dto.CompanySharePriceResult;
 import com.finance.dart.api.common.service.CompanySharePriceCalculatorService;
+import com.finance.dart.api.domestic.service.CalCompanyStockPerValueService;
+import com.finance.dart.common.dto.CommonResponse;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -47,7 +48,7 @@ public class MainController {
      * @return
      */
     @GetMapping("/cal/per_value")
-    public ResponseEntity<StockValueResultDTO> calDomesticCompanyStockPerValue(
+    public ResponseEntity<CompanySharePriceResult> calDomesticCompanyStockPerValue(
             @RequestParam("year") String year,
             @RequestParam(value = "corp_code", defaultValue = "") String corpCode,
             @RequestParam(value = "corp_name", defaultValue = "") String corpName
@@ -55,7 +56,7 @@ public class MainController {
 
         if(log.isDebugEnabled()) log.debug("year={}, corp_code={}, corp_name={}", year, corpCode, corpName);
 
-        StockValueResultDTO response = null;
+        CompanySharePriceResult response = null;
         try {
             response = calCompanyStockPerValueService.calPerValue(year, corpCode, corpName);
         } catch (InterruptedException e) {
@@ -77,10 +78,9 @@ public class MainController {
     @GetMapping("/cal/per_value/abroad")
     public ResponseEntity<Object> calAbroadCompanyStockPerValue(@RequestParam("symbol") String symbol) {
 
-        // TODO: 개발중
-        overseasStockValueService.calPerValue(symbol);
+        CompanySharePriceResult responseBody =  overseasStockValueService.calPerValue(symbol);
 
-        return null;
+        return new ResponseEntity<>(new CommonResponse<>(responseBody), HttpStatus.OK);
     }
 
 

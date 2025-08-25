@@ -1,5 +1,7 @@
 package com.finance.dart.api.common.service;
 
+import com.finance.dart.api.common.constants.RequestContextConst;
+import com.finance.dart.api.common.context.RequestContext;
 import com.finance.dart.api.common.dto.CompanySharePriceCalculator;
 import com.finance.dart.common.util.CalUtil;
 import lombok.RequiredArgsConstructor;
@@ -16,6 +18,8 @@ import java.math.RoundingMode;
 @Service
 public class CompanySharePriceCalculatorService {
 
+    private final RequestContext requestContext;
+
     /**
      * 한 주당 가치를 계산한다.
      *
@@ -23,6 +27,7 @@ public class CompanySharePriceCalculatorService {
      * @return 한 주 가격
      */
     public String calPerValue(CompanySharePriceCalculator req) {
+
         if(log.isDebugEnabled()) log.debug("CompanySharePriceCalculator = {}", req);
 
         // 1. 영업이익 평균 계산
@@ -46,20 +51,24 @@ public class CompanySharePriceCalculatorService {
         // 사업가치: 영업이익 평균 * 10
         final String businessValue = CalUtil.multi(operatingProfitAvg, "10");
         if(log.isDebugEnabled()) log.debug("1. 사업가치 = {}", businessValue);
+        requestContext.setAttribute(RequestContextConst.계산_사업가치, businessValue);
 
         // 재산가치: 유동자산 - (유동부채 * 유동비율) + 투자자산
         final String liabilityProduct = CalUtil.multi(liabilitiesTotal, currentRatio);
         final String assetDifference = CalUtil.sub(assetsTotal, liabilityProduct);
         final String assetValue = CalUtil.add(assetDifference, investmentAssets);
         if(log.isDebugEnabled()) log.debug("2. 재산가치 = {}", assetValue);
+        requestContext.setAttribute(RequestContextConst.계산_재산가치, assetValue);
 
         // 부채: 고정부채 (비유동부채)
         final String debt = fixedLiabilities;
         if(log.isDebugEnabled()) log.debug("3. 부채 = {}", debt);
+        requestContext.setAttribute(RequestContextConst.계산_부채, debt);
 
         // 기업가치: 사업가치 + 재산가치 - 부채
         final String companyValue = CalUtil.sub(CalUtil.add(businessValue, assetValue), debt);
         if(log.isDebugEnabled()) log.debug("4. 기업가치 = {}", companyValue);
+        requestContext.setAttribute(RequestContextConst.계산_기업가치, companyValue);
 
         // 3. 한 주 가격 계산: (기업가치 * 단위복원) / 발행주식수
         return CalUtil.divide(
@@ -80,6 +89,11 @@ public class CompanySharePriceCalculatorService {
     private String calOperatingProfitAvg(String profitPrePre, String profitPre, String profitCurrent) {
         // 전전기 + 전기 + 당기를 한 번에 더한 후 평균 계산
         final String sum = CalUtil.add(CalUtil.add(profitPrePre, profitPre), profitCurrent);
-        return CalUtil.divide(sum, "3", 2, RoundingMode.HALF_UP);
+        final String avg = CalUtil.divide(sum, "3", 2, RoundingMode.HALF_UP);
+
+        requestContext.setAttribute(RequestContextConst.영업이익_합계, sum);
+        requestContext.setAttribute(RequestContextConst.영업이익_평균, avg);
+
+        return avg;
     }
 }

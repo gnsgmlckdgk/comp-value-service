@@ -1,5 +1,6 @@
 package com.finance.dart.api.service;
 
+import com.finance.dart.api.common.dto.CompanySharePriceResult;
 import com.finance.dart.api.common.service.NumberOfSharesIssuedService;
 import com.finance.dart.api.domestic.dto.*;
 import com.finance.dart.api.domestic.enums.ExchangeCd;
@@ -127,7 +128,7 @@ class CalCompanyStockPerValueServiceTest {
                 .thenReturn(ResponseEntity.ok(dummyStockPriceDTO));
 
         // 실제 메서드 실행
-        StockValueResultDTO result = null;
+        CompanySharePriceResult result = null;
         try {
             result = service.calPerValue(year, corpCode, corpName);
         } catch (InterruptedException e) {
