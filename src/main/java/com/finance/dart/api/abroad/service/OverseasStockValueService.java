@@ -34,6 +34,7 @@ public class OverseasStockValueService {
     private final CompanyProfileSearchService profileSearchService;                 // 해외기업 정보조회 서비스
     private final AbroadFinancialStatementService financialStatementService;        // 해외기업 재무제표 조회 서비스
 
+    private final String ERROR_DV_CD = "ERROR"; // 오류 구분코드(해당 값으로 응답시 오류로 판단)
 
     /**
      * 주당 가치 계산
@@ -60,7 +61,7 @@ public class OverseasStockValueService {
         }
 
         //@3. 결과 조립
-        result.set결과메시지("정상 처리되었습니다.");
+        if(StringUtil.isStringEmpty(result.get결과메시지())) result.set결과메시지("정상 처리되었습니다.");
         result.set기업코드(companyProfile.getCik());
         result.set기업명(companyProfile.getCompanyName());
         result.set주식코드(companyProfile.getSymbol());
@@ -133,10 +134,13 @@ public class OverseasStockValueService {
         String nocurrentInvestments = noncurrentInvestments(cik, sharePriceCalculator, resultDetail);
         if(log.isDebugEnabled()) log.debug("투자자산(비유동자산내) 합계: {}", nocurrentInvestments);
 
-        //@ 고정부채(비유동부채)
+        //@ 고정부채(비유동부채) TODO: 비유동부채도 비유동투자자산 처럼 여러 항목이 있을 수 있어서 조회시 없는 항목 있을 수 있음 수정 필요함
+        // TODO: 비유동부채 = 총부채(Liabilities) − 유동부채(LiabilitiesCurrent)
+        // TODO: 다른 항목도 오류처리 추가 예정
         Thread.sleep(DELAY);
         String liabilitiesNoncurrent = getLiabilitiesNoncurrent(cik, sharePriceCalculator, resultDetail);
         if(log.isDebugEnabled()) log.debug("고정부채(비유동부채) 합계: {}", liabilitiesNoncurrent);
+        if(liabilitiesNoncurrent.equals(this.ERROR_DV_CD)) return errorProcess(result, "고정부채(비유동부채) 조회 중 오류가 발생했습니다.");
 
         //@ 발행주식수
         Thread.sleep(DELAY);
@@ -188,8 +192,6 @@ public class OverseasStockValueService {
         rstDetail.set영업이익_전전기(StringUtil.defaultString(lastUsdB2.getVal()));
         rstDetail.set영업이익_전기(StringUtil.defaultString(lastUsdB1.getVal()));
         rstDetail.set영업이익_당기(StringUtil.defaultString(lastUsd.getVal()));
-        rstDetail.set영업이익_합계("추후 추가예정...");
-        rstDetail.set영업이익_평균("추후 추가예정...");
 
         return usdArr;
     }
@@ -326,6 +328,8 @@ public class OverseasStockValueService {
         List<USD> usdList = SecUtil.getUsdList(liabilitiesNoncurrent);
         USD usd = SecUtil.getUsdByOffset(usdList, 0);
 
+        if(usd == null) return this.ERROR_DV_CD;
+
         String result = StringUtil.defaultString(usd.getVal());
         spc.setFixedLiabilities(result);
         rstDetail.set고정부채(result);
@@ -364,5 +368,18 @@ public class OverseasStockValueService {
         resultDetail.set계산_부채(requestContext.getAttributeAsString(RequestContextConst.계산_부채));
         resultDetail.set계산_기업가치(requestContext.getAttributeAsString(RequestContextConst.계산_기업가치));
     }
+
+    /**
+     * 오류 처리
+     * @param result
+     * @param message
+     * @return
+     */
+    private CompanySharePriceResult errorProcess(CompanySharePriceResult result, String message) {
+        result.set결과메시지(message);
+        result.set정상처리여부(false);
+        return result;
+    }
+
 }
 

@@ -10,6 +10,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class CompanySharePriceResult {
 
+    private boolean 정상처리여부 = true;
     private String 결과메시지 = "";
 
     private String 기업코드 = "";
