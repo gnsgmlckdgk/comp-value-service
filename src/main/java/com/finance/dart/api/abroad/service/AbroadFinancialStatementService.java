@@ -1,7 +1,10 @@
 package com.finance.dart.api.abroad.service;
 
 import com.finance.dart.api.abroad.dto.financial.statement.CommonFinancialStatementDto;
+import com.finance.dart.api.abroad.dto.financial.statement.USD;
+import com.finance.dart.api.abroad.dto.financial.statement.Units;
 import com.finance.dart.api.abroad.enums.SecApiList;
+import com.finance.dart.api.abroad.util.DebtCalculator;
 import com.finance.dart.api.abroad.util.SecUtil;
 import com.finance.dart.common.service.ConfigService;
 import com.finance.dart.common.service.HttpClientService;
@@ -13,6 +16,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -117,13 +121,55 @@ public class AbroadFinancialStatementService {
     }
 
     /**
+     * 총 부채 조회
+     * @param cik
+     * @return
+     */
+    public CommonFinancialStatementDto findFS_Liabilities(String cik) {
+
+        CommonFinancialStatementDto financialStatement =
+                findFinancialStatementDetail(cik, SecApiList.Liabilities, new ParameterizedTypeReference<>() {});
+
+        return financialStatement;
+    }
+
+    /**
      * 고정부채 합계 조회
      * @param cik
      * @return
      */
     public CommonFinancialStatementDto findFS_LiabilitiesNoncurrent(String cik) {
+
+        // 고정부채 조회 (고정부채만 조회, 기업에 따라 데이터가 없는 경우도 있음)
         CommonFinancialStatementDto financialStatement =
                 findFinancialStatementDetail(cik, SecApiList.LiabilitiesNoncurrent, new ParameterizedTypeReference<>() {});
+
+        if(financialStatement == null) {
+            /**
+             * 값 검증도 다시 ( 애플 : "고정부채": "124545000000" )
+             * LiabilitiesNoncurrent(고정부채) = Liabilities - LiabilitiesCurrent
+             * 	•	us-gaap:Liabilities → 총부채 (Current + Non-current)
+             * 	•	us-gaap:LiabilitiesCurrent → 유동부채
+             */
+
+            CommonFinancialStatementDto liabilities = findFS_Liabilities(cik);  // 총부채
+            CommonFinancialStatementDto liabilitiesCurrent =  findFS_LiabilitiesCurrent(cik);   // 유동부채
+
+            Units liabilitiesUnits = liabilities.getUnits();
+            Units liabilitiesCurrentUnits = liabilitiesCurrent.getUnits();
+
+            //@ 고정부채 계산
+            List<USD> liabilitiesNoncurrentUsd =
+                    DebtCalculator.calculateNonCurrentLiabilitiesRobust(liabilitiesUnits.getUsd(), liabilitiesCurrentUnits.getUsd());
+
+            //@ 고정부채로 값 변경
+            Units noncurrentUnits = new Units();
+            noncurrentUnits.setUsd(liabilitiesNoncurrentUsd);
+            liabilities.setUnits(noncurrentUnits); // 총부채 -> 고정부채 데이터로 변경
+
+            return liabilities;
+        }
+
         return financialStatement;
     }
 

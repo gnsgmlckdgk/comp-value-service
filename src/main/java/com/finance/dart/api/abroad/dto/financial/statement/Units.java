@@ -3,6 +3,7 @@ package com.finance.dart.api.abroad.dto.financial.statement;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Getter;
+import lombok.Setter;
 import lombok.ToString;
 
 import java.util.List;
@@ -12,6 +13,7 @@ import java.util.List;
  * 예: "units": { "USD": [ { fy, fp, val, ... }, ... ] }
  */
 @Getter
+@Setter
 @ToString
 public class Units {
 

@@ -101,6 +101,19 @@ public class AbroadFinancialStatementController {
     }
 
     /**
+     * 총 부채 조회
+     * @param cik
+     * @return
+     */
+    @GetMapping("/statement/detail/liabilities")
+    public ResponseEntity<CommonResponse<CommonFinancialStatementDto>> findFS_Liabilities(@RequestParam(name = "cik") String cik) {
+        CommonFinancialStatementDto response =
+                abroadFinancialStatementService.findFS_Liabilities(cik);
+
+        return new ResponseEntity<>(new CommonResponse<>(response), HttpStatus.OK);
+    }
+
+    /**
      * 고정부채 합계 조회
      * @param cik
      * @return

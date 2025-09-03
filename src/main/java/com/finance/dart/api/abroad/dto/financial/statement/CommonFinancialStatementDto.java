@@ -1,6 +1,7 @@
 package com.finance.dart.api.abroad.dto.financial.statement;
 
 import lombok.Getter;
+import lombok.Setter;
 import lombok.ToString;
 
 /**
@@ -8,6 +9,7 @@ import lombok.ToString;
  * SEC XBRL companyconcept API (/api/xbrl/companyconcept/...) 응답 기반
  */
 @Getter
+@Setter
 @ToString
 public class CommonFinancialStatementDto {
 

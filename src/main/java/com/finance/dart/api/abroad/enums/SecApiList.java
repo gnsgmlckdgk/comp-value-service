@@ -84,6 +84,15 @@ public enum SecApiList {
 
     /** ---------------------------------------------- **/
 
+    /** 총 부채 조회 **/
+    Liabilities(
+            "XBRL 재무제표항목 Liabilities API",
+            "https://data.sec.gov/api/xbrl/companyconcept/CIK{cik}/us-gaap/Liabilities.json",
+            HttpMethod.GET,
+            "https://www.sec.gov/search-filings/edgar-application-programming-interfaces",
+            "XBRL 총부채 조회 API",
+            "https://data.sec.gov/api/xbrl/companyconcept/CIK0000789019/us-gaap/Liabilities.json"
+    ),
 
     /** 고정부채 합계 조회 **/
     LiabilitiesNoncurrent(
