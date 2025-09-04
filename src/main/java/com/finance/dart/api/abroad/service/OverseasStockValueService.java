@@ -134,9 +134,7 @@ public class OverseasStockValueService {
         String nocurrentInvestments = noncurrentInvestments(cik, sharePriceCalculator, resultDetail);
         if(log.isDebugEnabled()) log.debug("투자자산(비유동자산내) 합계: {}", nocurrentInvestments);
 
-        //@ 고정부채(비유동부채) TODO: 비유동부채도 비유동투자자산 처럼 여러 항목이 있을 수 있어서 조회시 없는 항목 있을 수 있음 수정 필요함
-        // TODO: 비유동부채 = 총부채(Liabilities) − 유동부채(LiabilitiesCurrent)
-        // TODO: 다른 항목도 오류처리 추가 예정
+        //@ 고정부채(비유동부채)
         Thread.sleep(DELAY);
         String liabilitiesNoncurrent = getLiabilitiesNoncurrent(cik, sharePriceCalculator, resultDetail);
         if(log.isDebugEnabled()) log.debug("고정부채(비유동부채) 합계: {}", liabilitiesNoncurrent);
@@ -325,6 +323,8 @@ public class OverseasStockValueService {
      */
     private String getLiabilitiesNoncurrent(String cik, CompanySharePriceCalculator spc, CompanySharePriceResultDetail rstDetail) {
         CommonFinancialStatementDto liabilitiesNoncurrent = financialStatementService.findFS_LiabilitiesNoncurrent(cik);
+        if(liabilitiesNoncurrent == null) return this.ERROR_DV_CD;
+
         List<USD> usdList = SecUtil.getUsdList(liabilitiesNoncurrent);
         USD usd = SecUtil.getUsdByOffset(usdList, 0);
 
