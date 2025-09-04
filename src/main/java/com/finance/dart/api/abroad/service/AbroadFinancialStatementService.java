@@ -5,6 +5,7 @@ import com.finance.dart.api.abroad.dto.financial.statement.USD;
 import com.finance.dart.api.abroad.dto.financial.statement.Units;
 import com.finance.dart.api.abroad.enums.SecApiList;
 import com.finance.dart.api.abroad.util.DebtCalculator;
+import com.finance.dart.api.abroad.util.EquityCalculator;
 import com.finance.dart.api.abroad.util.SecUtil;
 import com.finance.dart.common.service.ConfigService;
 import com.finance.dart.common.service.HttpClientService;
@@ -140,29 +141,46 @@ public class AbroadFinancialStatementService {
      */
     public CommonFinancialStatementDto findFS_LiabilitiesNoncurrent(String cik) {
 
-        // 고정부채 조회 (고정부채만 조회, 기업에 따라 데이터가 없는 경우도 있음)
+        /**
+         * 값 검증도 다시 ( 애플 : "고정부채": "124545000000" )
+         * LiabilitiesNoncurrent(고정부채) = Liabilities - LiabilitiesCurrent
+         * 	•	us-gaap:Liabilities → 총부채 (Current + Non-current)
+         * 	•	us-gaap:LiabilitiesCurrent → 유동부채
+         *
+         * 여기서 총부채값이 없는 경우도 있어서
+         * 자산(Assets) = 부채(Liabilities) + 지분(Equity)
+         * => 지분 : StockholdersEquityIncludingPortionAttributableToNoncontrollingInterest (전체지분)
+         *          없으면 StockholdersEquity (지배배주주몫의 지분) + NoncontrollingInterest (비지배지분) : 이것도 둘중하나만 있을 수 있음 그럼 둘 중 하나만 사용
+         *          셋 다 없는경우는 계산 실패 처리
+         * 부채(Liabilities) = 자산(Assets) − 지분(Equity)
+         * 고정부채(Noncurrent Liabilities) = 총부채(Liabilities) − 유동부채(Current Liabilities)
+         * 로 계산
+         */
+
+        //@1. 고정부채 조회 (고정부채만 조회, 기업에 따라 데이터가 없는 경우도 있음)
         CommonFinancialStatementDto financialStatement =
                 findFinancialStatementDetail(cik, SecApiList.LiabilitiesNoncurrent, new ParameterizedTypeReference<>() {});
 
-        if(financialStatement == null) {
-            /**
-             * 값 검증도 다시 ( 애플 : "고정부채": "124545000000" )
-             * LiabilitiesNoncurrent(고정부채) = Liabilities - LiabilitiesCurrent
-             * 	•	us-gaap:Liabilities → 총부채 (Current + Non-current)
-             * 	•	us-gaap:LiabilitiesCurrent → 유동부채
-             */
+        if(financialStatement != null) return financialStatement;
 
-            CommonFinancialStatementDto liabilities = findFS_Liabilities(cik);  // 총부채
-            CommonFinancialStatementDto liabilitiesCurrent =  findFS_LiabilitiesCurrent(cik);   // 유동부채
+        // 유동부채
+        CommonFinancialStatementDto liabilitiesCurrent =  findFS_LiabilitiesCurrent(cik);
+        if(log.isDebugEnabled()) log.debug("[findFS_LiabilitiesNoncurrent] 유동부채 = {}", liabilitiesCurrent);
+
+        //@2. 고정부채 = 총부채 - 유동부채
+        CommonFinancialStatementDto liabilities = findFS_Liabilities(cik);  // 총부채
+        if(log.isDebugEnabled()) log.debug("[findFS_LiabilitiesNoncurrent] 총부채 = {}", liabilities);
+        if(liabilities != null) {   // 총부채 데이터가 없는 경우도 있음
 
             Units liabilitiesUnits = liabilities.getUnits();
             Units liabilitiesCurrentUnits = liabilitiesCurrent.getUnits();
 
-            //@ 고정부채 계산
+            // 고정부채 계산
             List<USD> liabilitiesNoncurrentUsd =
                     DebtCalculator.calculateNonCurrentLiabilitiesRobust(liabilitiesUnits.getUsd(), liabilitiesCurrentUnits.getUsd());
+            if(log.isDebugEnabled()) log.debug("[findFS_LiabilitiesNoncurrent] 고정부채 = 총부채-유동부채 계산값 : {}", liabilitiesNoncurrentUsd);
 
-            //@ 고정부채로 값 변경
+            // 고정부채로 값 변경
             Units noncurrentUnits = new Units();
             noncurrentUnits.setUsd(liabilitiesNoncurrentUsd);
             liabilities.setUnits(noncurrentUnits); // 총부채 -> 고정부채 데이터로 변경
@@ -170,7 +188,66 @@ public class AbroadFinancialStatementService {
             return liabilities;
         }
 
-        return financialStatement;
+        //@3. 고정부채 = 부채파생(총부채) - 유동부채
+        //@ 부채 = 자산 - 지분
+        // 자산
+        CommonFinancialStatementDto assets =
+                findFinancialStatementDetail(cik, SecApiList.Assets, new ParameterizedTypeReference<>() {});
+        if(log.isDebugEnabled()) log.debug("[findFS_LiabilitiesNoncurrent] 자산 = {}", assets);
+
+        // 전체지분
+        CommonFinancialStatementDto totalEquity =
+                findFinancialStatementDetail(cik, SecApiList.StockholdersEquityIncludingPortionAttributableToNoncontrollingInterest, new ParameterizedTypeReference<>() {});
+        if(log.isDebugEnabled()) log.debug("[findFS_LiabilitiesNoncurrent] 전체지분 = {}", totalEquity);
+
+        //# 전체지분이 조회가 안되면 지분정보를 조회해서 전체지분을 파생
+        if(totalEquity == null) {   // 전체지분 데이터가 없는 경우
+            // 지배주주 지분
+            CommonFinancialStatementDto holdersEquity =
+                    findFinancialStatementDetail(cik, SecApiList.StockholdersEquity, new ParameterizedTypeReference<>() {});
+            if(log.isDebugEnabled()) log.debug("[findFS_LiabilitiesNoncurrent] 지배주주 = {}", holdersEquity);
+
+            // 비지배주주 지분
+            CommonFinancialStatementDto nocontrollingInterest =
+                    findFinancialStatementDetail(cik, SecApiList.NoncontrollingInterest, new ParameterizedTypeReference<>() {});
+            if(log.isDebugEnabled()) log.debug("[findFS_LiabilitiesNoncurrent] 비지배주주 = {}", nocontrollingInterest);
+
+            if(holdersEquity == null && nocontrollingInterest == null) {    // 계산 불가
+                return null;
+            } else if (holdersEquity == null) {
+                totalEquity.setUnits(nocontrollingInterest.getUnits());
+            } else if (nocontrollingInterest == null) {
+                totalEquity.setUnits(holdersEquity.getUnits());
+            } else {
+                // 계산
+                List<USD> holdersEquityUsd = holdersEquity.getUnits().getUsd();
+                List<USD> nocontrollingInterestUsd = nocontrollingInterest.getUnits().getUsd();
+                List<USD> totalUsd = EquityCalculator.calculateTotalEquityRobust(holdersEquityUsd, nocontrollingInterestUsd);
+                if(log.isDebugEnabled()) log.debug("[findFS_LiabilitiesNoncurrent] 전체지분 = 지배주주지분+비지배주주지분 계산값 : {}", totalUsd);
+
+                Units totlaUnits = totalEquity.getUnits();
+                totlaUnits.setUsd(totalUsd);
+                totalEquity.setUnits(totlaUnits);
+            }
+        }
+
+        //# 자산과 전체지분을 통해서 전체부채를 파생
+        List<USD> totalDebtUsd =
+                DebtCalculator.calculateLiabilitiesFromAssetsAndEquityRobust(assets.getUnits().getUsd(), totalEquity.getUnits().getUsd());
+        if(log.isDebugEnabled()) log.debug("[findFS_LiabilitiesNoncurrent] 전체부채 = 자산-전체지분 계산값 : {}", totalDebtUsd);
+
+        //# 전체부채에서 유동부채를 빼서 고정부채를 파생
+        List<USD> nonCurrentLibUsd =
+                DebtCalculator.calculateNonCurrentLiabilitiesRobust(totalDebtUsd, liabilitiesCurrent.getUnits().getUsd());
+        if(log.isDebugEnabled()) log.debug("[findFS_LiabilitiesNoncurrent] 고정부채 = 전체부채-유동부채 계산값 : {}", nonCurrentLibUsd);
+
+        // 자산 조회한 데이터에 고정부채 데이터로 변경 후 return
+        Units assetsUnits = assets.getUnits();
+        assetsUnits.setUsd(nonCurrentLibUsd);
+        assets.setUnits(assetsUnits);
+        if(log.isDebugEnabled()) log.debug("[findFS_LiabilitiesNoncurrent] 고정부채 = {}", assets);
+
+        return assets;
     }
 
     /**

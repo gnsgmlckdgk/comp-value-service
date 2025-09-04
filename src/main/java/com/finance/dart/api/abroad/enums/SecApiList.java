@@ -84,6 +84,46 @@ public enum SecApiList {
 
     /** ---------------------------------------------- **/
 
+    /** 자산 조회 **/
+    Assets(
+            "XBRL 재무제표항목 Assets API",
+            "https://data.sec.gov/api/xbrl/companyconcept/CIK{cik}/us-gaap/Assets.json",
+            HttpMethod.GET,
+            "https://www.sec.gov/search-filings/edgar-application-programming-interfaces",
+            "XBRL 자산 조회 API",
+            "https://data.sec.gov/api/xbrl/companyconcept/CIK0000789019/us-gaap/Assets.json"
+    ),
+
+    /** 전체 지분 조회(지배주주 지분 + 비지배주주 지분) **/
+    StockholdersEquityIncludingPortionAttributableToNoncontrollingInterest(
+            "XBRL 재무제표항목 StockholdersEquityIncludingPortionAttributableToNoncontrollingInterest API",
+            "https://data.sec.gov/api/xbrl/companyconcept/CIK{cik}/us-gaap/StockholdersEquityIncludingPortionAttributableToNoncontrollingInterest.json",
+            HttpMethod.GET,
+            "https://www.sec.gov/search-filings/edgar-application-programming-interfaces",
+            "XBRL 전체 지분 조회 API",
+            "https://data.sec.gov/api/xbrl/companyconcept/CIK0000021344/us-gaap/StockholdersEquityIncludingPortionAttributableToNoncontrollingInterest.json"
+    ),
+
+    /** 지배주주 몫 지분 조회 **/
+    StockholdersEquity(
+            "XBRL 재무제표항목 StockholdersEquity API",
+            "https://data.sec.gov/api/xbrl/companyconcept/CIK{cik}/us-gaap/StockholdersEquity.json",
+            HttpMethod.GET,
+            "https://www.sec.gov/search-filings/edgar-application-programming-interfaces",
+            "XBRL 지배주주 몫 지분 조회 API",
+            "https://data.sec.gov/api/xbrl/companyconcept/CIK0000021344/us-gaap/StockholdersEquity.json"
+    ),
+
+    /** 비지배주주 몫 지분 조회 (상장사가 태깅을 안하는건지 조회되는 기업을 못찾음, NoncontrollingInterest 이게 아닐수도 있음) **/
+    NoncontrollingInterest(
+            "XBRL 재무제표항목 NoncontrollingInterest API",
+            "https://data.sec.gov/api/xbrl/companyconcept/CIK{cik}/us-gaap/NoncontrollingInterest.json",
+            HttpMethod.GET,
+            "https://www.sec.gov/search-filings/edgar-application-programming-interfaces",
+            "XBRL 비지배주주 몫 지분 조회 API",
+            "https://data.sec.gov/api/xbrl/companyconcept/CIK0000093410/us-gaap/NoncontrollingInterest.json"
+    ),
+
     /** 총 부채 조회 **/
     Liabilities(
             "XBRL 재무제표항목 Liabilities API",

@@ -16,7 +16,7 @@ public class CommonResponse<T> {
     @JsonIgnore
     private HttpStatus httpStatus;
 
-    @JsonInclude(JsonInclude.Include.NON_NULL)
+//    @JsonInclude(JsonInclude.Include.NON_NULL)
     private T response;
 
 
