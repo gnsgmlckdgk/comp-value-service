@@ -1,5 +1,7 @@
 package com.finance.dart.common.config;
 
+import lombok.AllArgsConstructor;
+import org.springframework.boot.autoconfigure.data.redis.RedisProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
@@ -11,8 +13,8 @@ import org.springframework.data.redis.serializer.StringRedisSerializer;
 public class RedisConfig {
 
     @Bean
-    public RedisConnectionFactory redisConnectionFactory() {
-        return new LettuceConnectionFactory(); // localhost:6379(6380) 설정은 application.yml에서 읽음
+    public RedisConnectionFactory redisConnectionFactory(RedisProperties redisProperties) {
+        return new LettuceConnectionFactory(redisProperties.getHost(), redisProperties.getPort());
     }
 
     @Bean

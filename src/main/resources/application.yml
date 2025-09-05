@@ -39,11 +39,13 @@ spring:
         physical-strategy: org.hibernate.boot.model.naming.PhysicalNamingStrategyStandardImpl
     database:
       platform: org.hibernate.dialect.PostgreSQLDialect
-    data:
-      redis:
-        host: localhost  # 또는 redis-service (쿠버네티스 내부일 경우 : k8s yml 에서 설정)
-        port: 6380
-        timeout: 2000ms
+  data:
+    redis:
+      host: 127.0.0.1
+      port: 6380  # k8s 설정에선 6379 로 할 예정(로컬 redis 가 따로 있어서 로컬에선 6380 k8s redis로 포트포워딩 함)
+      timeout: 2s
+      database: 9 # 디폴트 0인데 개발 환경에선 9로 분리(k8s 올릴때 환경변수는 0으로 설정)
+      client-name: finreport-k8s-pf
   cache:
     type: caffeine
     caffeine:
