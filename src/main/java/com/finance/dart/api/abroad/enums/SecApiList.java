@@ -154,7 +154,7 @@ public enum SecApiList {
             "https://data.sec.gov/api/xbrl/companyconcept/CIK0000789019/us-gaap/LiabilitiesNoncurrent.json"
     ),
 
-    /** 발행주식수 조회 **/
+    /** 발행주식수 조회 : 2025.09.11 발행주식수가 특정 태그에 고정적으로 있지 않아서 조회방식 변경해서 이 API 는 사용 안함 **/
     EntityCommonStockSharesOutstanding(
             "XBRL 기업메타데이터 EntityCommonStockSharesOutstanding API",
             "https://data.sec.gov/api/xbrl/companyconcept/CIK{cik}/dei/EntityCommonStockSharesOutstanding.json",

@@ -145,11 +145,11 @@ public class AbroadFinancialStatementController {
      * @param cik
      * @return
      */
-    @GetMapping("/statement/detail/entityCommonStockSharesOutstanding")
-    public ResponseEntity<CommonResponse<CommonFinancialStatementDto>> findFS_EntityCommonStockSharesOutstanding(@RequestParam(name = "cik") String cik) {
+    @GetMapping("/statement/detail/stockSharesOutstanding")
+    public ResponseEntity<CommonResponse<String>> findFS_EntityCommonStockSharesOutstanding(@RequestParam(name = "cik") String cik) {
 
-        CommonFinancialStatementDto response =
-                abroadFinancialStatementService.findFS_EntityCommonStockSharesOutstanding(cik);
+        String response =
+                abroadFinancialStatementService.getStockSharesOutstanding(cik);
 
         return new ResponseEntity<>(new CommonResponse<>(response), HttpStatus.OK);
     }

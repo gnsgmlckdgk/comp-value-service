@@ -7,6 +7,7 @@ import com.finance.dart.api.abroad.enums.SecApiList;
 import com.finance.dart.api.abroad.util.DebtCalculator;
 import com.finance.dart.api.abroad.util.EquityCalculator;
 import com.finance.dart.api.abroad.util.SecUtil;
+import com.finance.dart.api.abroad.util.SharesOutstandingExtractor;
 import com.finance.dart.common.service.ConfigService;
 import com.finance.dart.common.service.HttpClientService;
 import lombok.AllArgsConstructor;
@@ -266,10 +267,28 @@ public class AbroadFinancialStatementService {
      * @param cik
      * @return
      */
-    public CommonFinancialStatementDto findFS_EntityCommonStockSharesOutstanding(String cik) {
-        CommonFinancialStatementDto financialStatement =
-                findFinancialStatementDetail(cik, SecApiList.EntityCommonStockSharesOutstanding, new ParameterizedTypeReference<>() {});
-        return financialStatement;
+    public String getStockSharesOutstanding(String cik) {
+
+        /** 2025.09.11 : 발행주식수 정보가 특정 태그에 확정적으로 고정이 안되어있어서
+         *  회사 전체 facts에서 최신 outstanding을 우선 탐색하고,
+         *  실패 시 기존 단일 태그(EntityCommonStockSharesOutstanding) 방식으로 폴백한다.
+         **/
+        String result = "";
+
+        //@ 전체 제무정보 조회
+        Map<String, Object> companyfacts = findFS_Companyfacts(cik);
+
+        //@ 전체 facts에서 최신 발행주식수 탐색 (차원합산 허용, 보통주 우선)
+        SharesOutstandingExtractor.SharesResult r =
+                SharesOutstandingExtractor.extractLatestShares(companyfacts, true, true);
+
+        if (r != null) {
+            // shares는 정수 취급: double -> long으로 반올림 변환
+            long sharesVal = Math.round(r.value);
+            result = String.valueOf(sharesVal);
+        }
+
+        return result;
     }
 
     // private ---------------------------------------------------------------------
