@@ -23,6 +23,19 @@ public class AbroadFinancialStatementController {
 
     private final AbroadFinancialStatementService abroadFinancialStatementService;
 
+    /**
+     * 기업 제무재표 전체 조회
+     * @param cik
+     * @return
+     */
+    @GetMapping("/statement/detail/companyfacts")
+    public ResponseEntity<CommonResponse<Map<String, Object>>> findFS_Companyfacts(@RequestParam(name = "cik") String cik) {
+
+        Map<String, Object> response =
+                abroadFinancialStatementService.findFS_Companyfacts(cik);
+
+        return new ResponseEntity<>(new CommonResponse<>(response), HttpStatus.OK);
+    }
 
     /**
      * 영업이익 조회

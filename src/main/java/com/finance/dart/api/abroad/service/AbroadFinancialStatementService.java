@@ -33,6 +33,17 @@ public class AbroadFinancialStatementService {
 
 
     /**
+     * 기업 제무정보 전체 조회
+     * @param cik
+     * @return
+     */
+    public Map<String, Object> findFS_Companyfacts(String cik) {
+        Map<String, Object> financialStatement =
+                findFinancialStatementDetail(cik, SecApiList.Companyfacts, new ParameterizedTypeReference<>() {});
+        return financialStatement;
+    }
+
+    /**
      * 영업이익 조회
      * @param cik
      * @return

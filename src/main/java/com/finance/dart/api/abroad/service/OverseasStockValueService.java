@@ -2,9 +2,9 @@ package com.finance.dart.api.abroad.service;
 
 import com.finance.dart.api.abroad.dto.company.CompanyProfileDataResDto;
 import com.finance.dart.api.abroad.dto.financial.statement.CommonFinancialStatementDto;
-import com.finance.dart.api.abroad.dto.financial.statement.Shares;
 import com.finance.dart.api.abroad.dto.financial.statement.USD;
 import com.finance.dart.api.abroad.util.SecUtil;
+import com.finance.dart.api.abroad.util.SharesOutstandingExtractor;
 import com.finance.dart.api.common.constants.RequestContextConst;
 import com.finance.dart.api.common.context.RequestContext;
 import com.finance.dart.api.common.dto.CompanySharePriceCalculator;
@@ -20,6 +20,7 @@ import org.springframework.stereotype.Service;
 
 import java.math.RoundingMode;
 import java.util.List;
+import java.util.Map;
 
 /**
  * 해외기업 주식가치 계산 서비스
@@ -144,6 +145,7 @@ public class OverseasStockValueService {
         Thread.sleep(DELAY);
         String stock = getEntityCommonStockSharesOutstanding(cik, sharePriceCalculator, resultDetail);
         if(log.isDebugEnabled()) log.debug("발행주식수: {}", stock);
+        if(stock.equals("")) return errorProcess(result, "발행주식수 정보가 조회되지 않았습니다.");
 
         //@ 최종 계산
         if(log.isDebugEnabled()) log.debug("계산정보 DTO = {}", sharePriceCalculator);
@@ -345,13 +347,38 @@ public class OverseasStockValueService {
      * @return
      */
     private String getEntityCommonStockSharesOutstanding(String cik, CompanySharePriceCalculator spc, CompanySharePriceResultDetail rstDetail) {
-        CommonFinancialStatementDto stock = financialStatementService.findFS_EntityCommonStockSharesOutstanding(cik);
-        List<Shares> sharesList = SecUtil.getSharesList(stock);
-        Shares shares = SecUtil.getSharesByOffset(sharesList, 0);
 
-        String result = StringUtil.defaultString(shares.getVal());
-        spc.setIssuedShares(result);
-        rstDetail.set발행주식수(result);
+        /** 2025.09.11 : 발행주식수 정보가 특정 태그에 확정적으로 고정이 안되어있어서
+         *  회사 전체 facts에서 최신 outstanding을 우선 탐색하고,
+         *  실패 시 기존 단일 태그(EntityCommonStockSharesOutstanding) 방식으로 폴백한다.
+         **/
+
+        String result = "";
+
+        //@ 전체 제무정보 조회
+        Map<String, Object> companyfacts = financialStatementService.findFS_Companyfacts(cik);
+
+        //@ 전체 facts에서 최신 발행주식수 탐색 (차원합산 허용, 보통주 우선)
+        SharesOutstandingExtractor.SharesResult r =
+                SharesOutstandingExtractor.extractLatestShares(companyfacts, true, true);
+
+        if (r != null) {
+            // shares는 정수 취급: double -> long으로 반올림 변환
+            long sharesVal = Math.round(r.value);
+            result = String.valueOf(sharesVal);
+
+            spc.setIssuedShares(result);    // 계산 정보 객체에 발행주식수 세팅
+            rstDetail.set발행주식수(result);
+        }
+
+        // TODO: 전체 정보에서 최신 발행주식수 정보 찾는 방식으로 변경중
+//        CommonFinancialStatementDto stock = financialStatementService.findFS_EntityCommonStockSharesOutstanding(cik);
+//        List<Shares> sharesList = SecUtil.getSharesList(stock);
+//        Shares shares = SecUtil.getSharesByOffset(sharesList, 0);
+//
+//        String result = StringUtil.defaultString(shares.getVal());
+//        spc.setIssuedShares(result);
+//        rstDetail.set발행주식수(result);
 
         return result;
     }

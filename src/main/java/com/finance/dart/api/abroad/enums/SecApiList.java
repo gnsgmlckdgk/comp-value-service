@@ -10,6 +10,16 @@ public enum SecApiList {
 
     /* 테스트 CIK : 0000789019 (MICROSOFT CORPORATION) */
 
+    /** 기업 제무정보 통합조회 **/
+    Companyfacts(
+    "XBRL 재무제표항목 Companyfacts API",
+      "https://data.sec.gov/api/xbrl/companyfacts/CIK{cik}.json",
+          HttpMethod.GET,
+    "https://www.sec.gov/search-filings/edgar-application-programming-interfaces",
+    "XBRL Company Facts API 조회 API",
+    "https://data.sec.gov/api/xbrl/companyfacts/CIK0000789019.json"
+    ),
+
     /** 영업이익 조회 **/
     OperatingIncomeLoss(
             "XBRL 재무제표항목 OperatingIncomeLoss API",
