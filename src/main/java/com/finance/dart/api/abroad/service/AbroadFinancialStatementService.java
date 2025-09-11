@@ -275,6 +275,21 @@ public class AbroadFinancialStatementService {
          **/
         String result = "";
 
+        // 값이 int 인지 최대값으로 조회되는경우가 있음 그래서 그냥 사용 안함
+//        //@ dei:EntityCommonStockSharesOutstanding 먼저 조회 후 없으면 전체 제무제표 정보에서 검색
+//        CommonFinancialStatementDto financialStatement =
+//                findFinancialStatementDetail(cik, SecApiList.EntityCommonStockSharesOutstanding, new ParameterizedTypeReference<>() {});
+//
+//        if(financialStatement != null && financialStatement.getUnits() != null) {
+//            List<Shares> sharesList = SecUtil.getSharesList(financialStatement);
+//            Shares shares = SecUtil.getSharesByOffset(sharesList, 0);   // 가장 최근 데이터
+//
+//            long sharesVal = Math.round(shares.getVal());
+//            result = String.valueOf(sharesVal);
+//
+//            return result;
+//        }
+
         //@ 전체 제무정보 조회
         Map<String, Object> companyfacts = findFS_Companyfacts(cik);
 
