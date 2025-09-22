@@ -6,7 +6,7 @@ import com.finance.dart.api.domestic.dto.CorpCodeDTO;
 import com.finance.dart.api.domestic.dto.CorpCodeResDTO;
 import com.finance.dart.api.common.dto.CompanySharePriceResult;
 import com.finance.dart.api.common.entity.StockValuationResultEntity;
-import com.finance.dart.api.domestic.service.CalCompanyStockPerValueService;
+import com.finance.dart.api.domestic.service.DomesticStockCalculationService;
 import com.finance.dart.api.domestic.service.CorpCodeService;
 import com.finance.dart.common.util.DateUtil;
 import com.finance.dart.common.util.StringUtil;
@@ -26,7 +26,7 @@ import java.util.List;
 public class CalCompanyStockPerValueTotalWorker {
 
     private final CorpCodeService corpCodeService;
-    private final CalCompanyStockPerValueService calCompanyStockPerValueService;
+    private final DomesticStockCalculationService domesticStockCalculationService;
     private final StockValueComponent stockValueComponent;
 
 
@@ -76,7 +76,7 @@ public class CalCompanyStockPerValueTotalWorker {
         try {
             //@ 기업가치 계산
             CompanySharePriceResult companySharePriceResult =
-                    calCompanyStockPerValueService.calPerValue(year, comp.getCorpCode(), comp.getCorpName());
+                    domesticStockCalculationService.calPerValue(year, comp.getCorpCode(), comp.getCorpName());
             if(log.isDebugEnabled()) log.debug("[가치계산 스케줄러] 기업가치 계산 결과 [{}] = {}", comp.getCorpName(), companySharePriceResult);
 
             //@ 결과 DB 저장

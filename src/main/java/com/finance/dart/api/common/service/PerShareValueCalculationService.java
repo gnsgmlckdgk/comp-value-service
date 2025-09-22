@@ -16,7 +16,7 @@ import java.math.RoundingMode;
 @Slf4j
 @RequiredArgsConstructor
 @Service
-public class CompanySharePriceCalculatorService {
+public class PerShareValueCalculationService {
 
     private final RequestContext requestContext;
 

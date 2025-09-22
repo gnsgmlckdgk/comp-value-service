@@ -9,7 +9,7 @@ import com.finance.dart.api.common.context.RequestContext;
 import com.finance.dart.api.common.dto.CompanySharePriceCalculator;
 import com.finance.dart.api.common.dto.CompanySharePriceResult;
 import com.finance.dart.api.common.dto.CompanySharePriceResultDetail;
-import com.finance.dart.api.common.service.CompanySharePriceCalculatorService;
+import com.finance.dart.api.common.service.PerShareValueCalculationService;
 import com.finance.dart.common.util.CalUtil;
 import com.finance.dart.common.util.DateUtil;
 import com.finance.dart.common.util.StringUtil;
@@ -26,10 +26,10 @@ import java.util.List;
 @Slf4j
 @AllArgsConstructor
 @Service
-public class OverseasStockValueService {
+public class USStockCalculationService {
 
     private final RequestContext requestContext;
-    private final CompanySharePriceCalculatorService sharePriceCalculatorService;   // 가치 계산 서비스
+    private final PerShareValueCalculationService sharePriceCalculatorService;   // 가치 계산 서비스
     private final CompanyProfileSearchService profileSearchService;                 // 해외기업 정보조회 서비스
     private final AbroadFinancialStatementService financialStatementService;        // 해외기업 재무제표 조회 서비스
 

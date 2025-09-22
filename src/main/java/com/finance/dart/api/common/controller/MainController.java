@@ -1,10 +1,10 @@
 package com.finance.dart.api.common.controller;
 
-import com.finance.dart.api.abroad.service.OverseasStockValueService;
+import com.finance.dart.api.abroad.service.USStockCalculationService;
 import com.finance.dart.api.common.dto.CompanySharePriceCalculator;
 import com.finance.dart.api.common.dto.CompanySharePriceResult;
-import com.finance.dart.api.common.service.CompanySharePriceCalculatorService;
-import com.finance.dart.api.domestic.service.CalCompanyStockPerValueService;
+import com.finance.dart.api.common.service.PerShareValueCalculationService;
+import com.finance.dart.api.domestic.service.DomesticStockCalculationService;
 import com.finance.dart.common.dto.CommonResponse;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -21,10 +21,9 @@ import java.util.Map;
 @RestController
 public class MainController {
 
-    // TODO: 클래스명, 패키지명 리팩토링 예정 (main -> 각 패키지로 이동, 클래스명 국내, 해외 명확하게)
-    private final CalCompanyStockPerValueService calCompanyStockPerValueService;            // 국내주식계산 서비스
-    private final OverseasStockValueService overseasStockValueService;                      // 해외주식계산 서비스
-    private final CompanySharePriceCalculatorService companySharePriceCalculatorService;    // 가치계산 서비스
+    private final DomesticStockCalculationService domesticStockCalculationService;  // 국내주식계산 서비스
+    private final USStockCalculationService USStockCalculationService;              // 미국주식계산 서비스
+    private final PerShareValueCalculationService perShareValueCalculationService;  // 가치계산 서비스
 
 
     /**
@@ -58,7 +57,7 @@ public class MainController {
 
         CompanySharePriceResult response = null;
         try {
-            response = calCompanyStockPerValueService.calPerValue(year, corpCode, corpName);
+            response = domesticStockCalculationService.calPerValue(year, corpCode, corpName);
         } catch (InterruptedException e) {
             throw new RuntimeException(e);
         }
@@ -78,7 +77,7 @@ public class MainController {
     @GetMapping("/cal/per_value/abroad")
     public ResponseEntity<Object> calAbroadCompanyStockPerValue(@RequestParam("symbol") String symbol) {
 
-        CompanySharePriceResult responseBody =  overseasStockValueService.calPerValue(symbol);
+        CompanySharePriceResult responseBody =  USStockCalculationService.calPerValue(symbol);
 
         return new ResponseEntity<>(new CommonResponse<>(responseBody), HttpStatus.OK);
     }
@@ -94,7 +93,7 @@ public class MainController {
             @RequestBody CompanySharePriceCalculator companySharePriceCalculator
             ) {
 
-        String response = companySharePriceCalculatorService.calPerValue(companySharePriceCalculator);
+        String response = perShareValueCalculationService.calPerValue(companySharePriceCalculator);
         if(log.isDebugEnabled()) log.debug("response = {}", response);
 
         Map<String, Object> responseMap = new LinkedHashMap<>();

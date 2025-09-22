@@ -4,7 +4,7 @@ import com.finance.dart.api.common.dto.CompanySharePriceResult;
 import com.finance.dart.api.common.service.NumberOfSharesIssuedService;
 import com.finance.dart.api.domestic.dto.*;
 import com.finance.dart.api.domestic.enums.ExchangeCd;
-import com.finance.dart.api.domestic.service.CalCompanyStockPerValueService;
+import com.finance.dart.api.domestic.service.DomesticStockCalculationService;
 import com.finance.dart.api.domestic.service.CorpCodeService;
 import com.finance.dart.api.domestic.service.FinancialStatementService;
 import com.finance.dart.common.service.HttpClientService;
@@ -28,7 +28,7 @@ import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
-class CalCompanyStockPerValueServiceTest {
+class DomesticStockCalculationServiceTest {
 
     @Mock
     private CorpCodeService corpCodeService;
@@ -43,7 +43,7 @@ class CalCompanyStockPerValueServiceTest {
     private HttpClientService httpClientService;
 
     @InjectMocks
-    private CalCompanyStockPerValueService service;
+    private DomesticStockCalculationService service;
 
     private CorpCodeDTO dummyCorpCodeDTO;
     private FinancialStatementResDTO dummyFsRes;

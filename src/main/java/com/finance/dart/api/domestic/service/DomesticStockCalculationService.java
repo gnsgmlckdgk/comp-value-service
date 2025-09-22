@@ -33,7 +33,7 @@ import java.util.Map;
 @Slf4j
 @RequiredArgsConstructor
 @Service
-public class CalCompanyStockPerValueService {
+public class DomesticStockCalculationService {
 
     private static final String EXEC_ACCT_ID = "-표준계정코드 미사용-";
 

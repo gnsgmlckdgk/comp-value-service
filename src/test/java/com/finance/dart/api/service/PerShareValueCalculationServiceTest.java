@@ -2,7 +2,7 @@ package com.finance.dart.api.service;
 
 import com.finance.dart.api.common.context.RequestContext;
 import com.finance.dart.api.common.dto.CompanySharePriceCalculator;
-import com.finance.dart.api.common.service.CompanySharePriceCalculatorService;
+import com.finance.dart.api.common.service.PerShareValueCalculationService;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -12,13 +12,13 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import static org.junit.jupiter.api.Assertions.*;
 
 @ExtendWith(MockitoExtension.class)
-class CompanySharePriceCalculatorServiceTest {
+class PerShareValueCalculationServiceTest {
 
     @Mock
     private RequestContext requestContext; // 의존성 목 객체
 
     @InjectMocks
-    private CompanySharePriceCalculatorService service; // 목 주입된 서비스
+    private PerShareValueCalculationService service; // 목 주입된 서비스
 
 
     @Test
