@@ -3,6 +3,7 @@ package com.finance.dart.api.abroad.service;
 import com.finance.dart.api.abroad.dto.company.CompanyProfileDataResDto;
 import com.finance.dart.api.abroad.dto.financial.statement.CommonFinancialStatementDto;
 import com.finance.dart.api.abroad.dto.financial.statement.USD;
+import com.finance.dart.api.abroad.util.OperatingIncomeExtractor;
 import com.finance.dart.api.abroad.util.SecUtil;
 import com.finance.dart.api.common.constants.RequestContextConst;
 import com.finance.dart.api.common.context.RequestContext;
@@ -107,7 +108,9 @@ public class USStockCalculationService {
 
         //@ 영업이익
         Thread.sleep(DELAY);
-        USD[] incomeLossArr = getOperatingIncomeLoss(cik, sharePriceCalculator, resultDetail);
+        //USD[] incomeLossArr = getOperatingIncomeLoss(cik, sharePriceCalculator, resultDetail);
+        String[] incomeLossArr = getOperatingIncomeLoss(cik, sharePriceCalculator, resultDetail);
+        if(incomeLossArr == null) return errorProcess(result, "영업이익 조회에 실패했습니다.");
         for(int i = 0; i< incomeLossArr.length; i++) {  // 로그출력용 반복
             if(log.isDebugEnabled()) log.debug("영업이익 최근 분기별({}) : {}", i, incomeLossArr[i]);
         }
@@ -116,34 +119,37 @@ public class USStockCalculationService {
         Thread.sleep(DELAY);
         String assetsCurrent = getAssetsCurrent(cik, sharePriceCalculator, resultDetail);
         if(log.isDebugEnabled()) log.debug("유동자산 합계: {}", assetsCurrent);
+        if(StringUtil.isStringEmpty(assetsCurrent)) return errorProcess(result, "유동자산합계 조회에 실패했습니다.");
 
         //@ 유동부채 합계
         Thread.sleep(DELAY);
         String liabilitiesCurrent = getLiabilitiesCurrent(cik, sharePriceCalculator, resultDetail);
         if(log.isDebugEnabled()) log.debug("유동부채 합계: {}", liabilitiesCurrent);
+        if(StringUtil.isStringEmpty(liabilitiesCurrent)) return errorProcess(result, "유동부채 합계 조회에 실패했습니다.");
 
         //@ 유동비율 ( 유동비율(%) = (유동자산 ÷ 유동부채) × 100 )
         Thread.sleep(DELAY);
         String currentRatioPct = getCurrentRatioPct(assetsCurrent, liabilitiesCurrent, sharePriceCalculator, resultDetail);
         if(log.isDebugEnabled()) log.debug("유동비율: {}", currentRatioPct);
-        if(currentRatioPct == null) return null;
+        if(StringUtil.isStringEmpty(currentRatioPct)) return errorProcess(result, "유동비율 계산에 실패했습니다.");
 
         //@ 투자자산(비유동자산내)
         Thread.sleep(DELAY);
         String nocurrentInvestments = noncurrentInvestments(cik, sharePriceCalculator, resultDetail);
         if(log.isDebugEnabled()) log.debug("투자자산(비유동자산내) 합계: {}", nocurrentInvestments);
+        if(StringUtil.isStringEmpty(nocurrentInvestments)) return errorProcess(result, "투자자산(비유동자산내) 합계 조회에 실패했습니다.");
 
         //@ 고정부채(비유동부채)
         Thread.sleep(DELAY);
         String liabilitiesNoncurrent = getLiabilitiesNoncurrent(cik, sharePriceCalculator, resultDetail);
         if(log.isDebugEnabled()) log.debug("고정부채(비유동부채) 합계: {}", liabilitiesNoncurrent);
-        if(liabilitiesNoncurrent.equals(this.ERROR_DV_CD)) return errorProcess(result, "고정부채(비유동부채) 조회 중 오류가 발생했습니다.");
+        if(liabilitiesNoncurrent.equals(this.ERROR_DV_CD)) return errorProcess(result, "고정부채(비유동부채) 조회에 실패했습니다.");
 
         //@ 발행주식수
         Thread.sleep(DELAY);
         String stock = getEntityCommonStockSharesOutstanding(cik, sharePriceCalculator, resultDetail);
         if(log.isDebugEnabled()) log.debug("발행주식수: {}", stock);
-        if(stock.equals("")) return errorProcess(result, "발행주식수 정보가 조회되지 않았습니다.");
+        if(StringUtil.isStringEmpty(stock)) return errorProcess(result, "발행주식수 정보 조회에 실패했습니다.");
 
         //@ 최종 계산
         if(log.isDebugEnabled()) log.debug("계산정보 DTO = {}", sharePriceCalculator);
@@ -165,33 +171,43 @@ public class USStockCalculationService {
      * @param rstDetail
      * @return 0: 당기 / 1: 전기 / 2: 전전기
      */
-    private USD[] getOperatingIncomeLoss(String cik, CompanySharePriceCalculator spc, CompanySharePriceResultDetail rstDetail) {
+    private String[] getOperatingIncomeLoss(String cik, CompanySharePriceCalculator spc, CompanySharePriceResultDetail rstDetail) {
 
-        CommonFinancialStatementDto incomeLoss = financialStatementService.findFS_OperatingIncomeLoss(cik);
+        List<OperatingIncomeExtractor.Result> incomeLoss = financialStatementService.findFS_OperatingIncomeLoss(cik);
         if(log.isDebugEnabled()) log.debug("영업이익 : {}", incomeLoss);
+        if(incomeLoss == null || incomeLoss.size() < 3) return null;
 
-        List<USD> usdList = SecUtil.getUsdList(incomeLoss);
-        USD lastUsd = SecUtil.getQuarterUsdByOffset(usdList, 0);        // 당기
-        USD lastUsdB1 = SecUtil.getQuarterUsdByOffset(usdList, 1);      // 전기
-        USD lastUsdB2 = SecUtil.getQuarterUsdByOffset(usdList, 2);      // 전전기
+        String incomeLoss01 = incomeLoss.get(0).value;  // 당기
+        String incomeLoss02 = incomeLoss.get(1).value;  // 전기
+        String incomeLoss03 = incomeLoss.get(2).value;  // 전전기
 
-        USD[] usdArr = new USD[3];
-        usdArr[0] = lastUsd;
-        usdArr[1] = lastUsdB1;
-        usdArr[2] = lastUsdB2;
+        String[] incomeLossArr = {incomeLoss01, incomeLoss02, incomeLoss03};
+
+//        List<USD> usdList = SecUtil.getUsdList(incomeLoss);
+//        if(usdList.size() == 0) return null;
+//
+//        USD lastUsd = SecUtil.getQuarterUsdByOffset(usdList, 0);        // 당기
+//        if(lastUsd == null) return null;
+//        USD lastUsdB1 = SecUtil.getQuarterUsdByOffset(usdList, 1);      // 전기
+//        USD lastUsdB2 = SecUtil.getQuarterUsdByOffset(usdList, 2);      // 전전기
+
+//        USD[] usdArr = new USD[3];
+//        usdArr[0] = lastUsd;
+//        usdArr[1] = lastUsdB1;
+//        usdArr[2] = lastUsdB2;
 
         //@ DTO 세팅
         // 계산용
-        spc.setOperatingProfitCurrent(StringUtil.defaultString(lastUsd.getVal()));
-        spc.setOperatingProfitPre(StringUtil.defaultString(lastUsdB1.getVal()));
-        spc.setOperatingProfitPrePre(StringUtil.defaultString(lastUsdB2.getVal()));
+        spc.setOperatingProfitCurrent(StringUtil.defaultString(incomeLoss01));
+        spc.setOperatingProfitPre(StringUtil.defaultString(incomeLoss02));
+        spc.setOperatingProfitPrePre(StringUtil.defaultString(incomeLoss03));
 
         // 결과 상세
-        rstDetail.set영업이익_전전기(StringUtil.defaultString(lastUsdB2.getVal()));
-        rstDetail.set영업이익_전기(StringUtil.defaultString(lastUsdB1.getVal()));
-        rstDetail.set영업이익_당기(StringUtil.defaultString(lastUsd.getVal()));
+        rstDetail.set영업이익_전전기(StringUtil.defaultString(incomeLoss01));
+        rstDetail.set영업이익_전기(StringUtil.defaultString(incomeLoss02));
+        rstDetail.set영업이익_당기(StringUtil.defaultString(incomeLoss03));
 
-        return usdArr;
+        return incomeLossArr;
     }
 
     /**

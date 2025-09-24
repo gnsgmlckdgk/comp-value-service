@@ -4,12 +4,10 @@ import com.finance.dart.api.abroad.dto.financial.statement.CommonFinancialStatem
 import com.finance.dart.api.abroad.dto.financial.statement.USD;
 import com.finance.dart.api.abroad.dto.financial.statement.Units;
 import com.finance.dart.api.abroad.enums.SecApiList;
-import com.finance.dart.api.abroad.util.DebtCalculator;
-import com.finance.dart.api.abroad.util.EquityCalculator;
-import com.finance.dart.api.abroad.util.SecUtil;
-import com.finance.dart.api.abroad.util.SharesOutstandingExtractor;
+import com.finance.dart.api.abroad.util.*;
 import com.finance.dart.common.service.ConfigService;
 import com.finance.dart.common.service.HttpClientService;
+import com.finance.dart.common.util.StringUtil;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.ParameterizedTypeReference;
@@ -45,14 +43,24 @@ public class AbroadFinancialStatementService {
     }
 
     /**
+     * <pre>
      * 영업이익 조회
+     * 당기, 전기, 전전기
+     * </pre>
      * @param cik
      * @return
      */
-    public CommonFinancialStatementDto findFS_OperatingIncomeLoss(String cik) {
-        CommonFinancialStatementDto financialStatement =
-                findFinancialStatementDetail(cik, SecApiList.OperatingIncomeLoss, new ParameterizedTypeReference<>() {});
-        return financialStatement;
+    public List<OperatingIncomeExtractor.Result> findFS_OperatingIncomeLoss(String cik) {
+
+//        CommonFinancialStatementDto financialStatement =
+//                findFinancialStatementDetail(cik, SecApiList.OperatingIncomeLoss, new ParameterizedTypeReference<>() {});
+
+        //@ 전체 제무정보 조회
+        Map<String, Object> companyfacts = findFS_Companyfacts(cik);
+
+        List<OperatingIncomeExtractor.Result> result = OperatingIncomeExtractor.extractTriple(companyfacts, true);
+
+        return result;
     }
 
     /**

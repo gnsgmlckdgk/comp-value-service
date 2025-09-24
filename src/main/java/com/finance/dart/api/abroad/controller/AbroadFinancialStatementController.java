@@ -2,6 +2,7 @@ package com.finance.dart.api.abroad.controller;
 
 import com.finance.dart.api.abroad.dto.financial.statement.CommonFinancialStatementDto;
 import com.finance.dart.api.abroad.service.AbroadFinancialStatementService;
+import com.finance.dart.api.abroad.util.OperatingIncomeExtractor;
 import com.finance.dart.common.dto.CommonResponse;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -13,6 +14,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 
 @Slf4j
@@ -43,9 +45,9 @@ public class AbroadFinancialStatementController {
      * @return
      */
     @GetMapping("/statement/detail/operatingIncomeLoss")
-    public ResponseEntity<CommonResponse<CommonFinancialStatementDto>> findFS_OperatingIncomeLoss(@RequestParam(name = "cik") String cik) {
+    public ResponseEntity<CommonResponse<List<OperatingIncomeExtractor.Result>>> findFS_OperatingIncomeLoss(@RequestParam(name = "cik") String cik) {
 
-        CommonFinancialStatementDto response =
+        List<OperatingIncomeExtractor.Result> response =
                 abroadFinancialStatementService.findFS_OperatingIncomeLoss(cik);
 
         return new ResponseEntity<>(new CommonResponse<>(response), HttpStatus.OK);
