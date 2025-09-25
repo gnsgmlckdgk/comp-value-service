@@ -58,6 +58,7 @@ public class AbroadFinancialStatementService {
         //@ 전체 제무정보 조회
         Map<String, Object> companyfacts = findFS_Companyfacts(cik);
 
+        // TODO: 외국기업은 us-gaap 에 데이터가 없고 ifrs 같은데에 있어서 해당 유틸에서 값이 없으면 ifrs 같은데서 뽑을수있게 추가 필요함
         List<OperatingIncomeExtractor.Result> result = OperatingIncomeExtractor.extractTriple(companyfacts, true);
 
         return result;

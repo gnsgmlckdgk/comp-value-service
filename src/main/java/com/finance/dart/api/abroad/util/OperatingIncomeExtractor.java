@@ -25,13 +25,17 @@ public class OperatingIncomeExtractor {
     // ====== 공개 API ======
 
     /**
-     * @param facts        SEC companyfacts(Map 파싱 결과)에서 필요한 리스트를 꺼내는 어댑터 함수를 함께 사용
+     * @param facts         SEC companyfacts(Map 파싱 결과)에서 필요한 리스트를 꺼내는 어댑터 함수를 함께 사용
      * @param preferQuarter 분기 먼저 시도 (true 권장)
      * @return Result(value, conceptUsed, method, usdMeta 등)
      */
     public static Result extractLatestOperatingIncome(Map<String, Object> facts, boolean preferQuarter) {
         // 1) 표준 태그
         Result r = pickLatestByConcept(facts, "us-gaap", "OperatingIncomeLoss", preferQuarter, Method.DIRECT_USGAAP);
+        if (r != null) return r;
+
+        // 1-b) IFRS 표준 태그 (외국기업)
+        r = pickLatestByConcept(facts, "ifrs-full", "ProfitLossFromOperatingActivities", preferQuarter, Method.DIRECT_IFRS);
         if (r != null) return r;
 
         // 2) 커스텀 탐색 (네임스페이스 전체 검색)
@@ -52,9 +56,10 @@ public class OperatingIncomeExtractor {
     /**
      * Extract multiple recent operating income results up to the specified limit.
      * Uses tiered fallback: us-gaap → custom → approx preTax+Interest → approx components.
-     * @param facts SEC companyfacts map
+     *
+     * @param facts         SEC companyfacts map
      * @param preferQuarter prefer quarter if true, else annual
-     * @param limit max number of results to return
+     * @param limit         max number of results to return
      * @return list of Result objects sorted by filed date descending
      */
     public static List<Result> extractRecentOperatingIncomes(Map<String, Object> facts, boolean preferQuarter, int limit) {
@@ -63,9 +68,24 @@ public class OperatingIncomeExtractor {
         List<Result> usGaapList = seriesByUsGaap(facts, preferQuarter, limit);
         results.addAll(usGaapList);
         if (results.size() >= limit) return results.stream()
-                .sorted((a,b) -> compareDate(coalesce(b.meta.getFiled(), b.meta.getEnd()), coalesce(a.meta.getFiled(), a.meta.getEnd())))
+                .sorted((a, b) -> compareDate(coalesce(b.meta.getFiled(), b.meta.getEnd()), coalesce(a.meta.getFiled(), a.meta.getEnd())))
                 .limit(limit)
                 .collect(Collectors.toList());
+
+        // Try IFRS standard tag series next (foreign filers)
+        if (results.size() < limit) {
+            List<Result> ifrsList = seriesByIfrs(facts, preferQuarter, limit);
+            for (Result ir : ifrsList) {
+                if (results.size() >= limit) break;
+                if (results.stream().noneMatch(existing -> periodKey(existing.meta).equals(periodKey(ir.meta)))) {
+                    results.add(ir);
+                }
+            }
+            if (results.size() >= limit) return results.stream()
+                    .sorted((a, b) -> compareDate(coalesce(b.meta.getFiled(), b.meta.getEnd()), coalesce(a.meta.getFiled(), a.meta.getEnd())))
+                    .limit(limit)
+                    .collect(Collectors.toList());
+        }
 
         List<Result> customList = seriesByCustomOperating(facts, preferQuarter, limit);
         for (Result r : customList) {
@@ -75,7 +95,7 @@ public class OperatingIncomeExtractor {
             }
         }
         if (results.size() >= limit) return results.stream()
-                .sorted((a,b) -> compareDate(coalesce(b.meta.getFiled(), b.meta.getEnd()), coalesce(a.meta.getFiled(), a.meta.getEnd())))
+                .sorted((a, b) -> compareDate(coalesce(b.meta.getFiled(), b.meta.getEnd()), coalesce(a.meta.getFiled(), a.meta.getEnd())))
                 .limit(limit)
                 .collect(Collectors.toList());
 
@@ -87,7 +107,7 @@ public class OperatingIncomeExtractor {
             }
         }
         if (results.size() >= limit) return results.stream()
-                .sorted((a,b) -> compareDate(coalesce(b.meta.getFiled(), b.meta.getEnd()), coalesce(a.meta.getFiled(), a.meta.getEnd())))
+                .sorted((a, b) -> compareDate(coalesce(b.meta.getFiled(), b.meta.getEnd()), coalesce(a.meta.getFiled(), a.meta.getEnd())))
                 .limit(limit)
                 .collect(Collectors.toList());
 
@@ -100,14 +120,15 @@ public class OperatingIncomeExtractor {
         }
 
         return results.stream()
-                .sorted((a,b) -> compareDate(coalesce(b.meta.getFiled(), b.meta.getEnd()), coalesce(a.meta.getFiled(), a.meta.getEnd())))
+                .sorted((a, b) -> compareDate(coalesce(b.meta.getFiled(), b.meta.getEnd()), coalesce(a.meta.getFiled(), a.meta.getEnd())))
                 .limit(limit)
                 .collect(Collectors.toList());
     }
 
     /**
      * Extract up to 3 recent operating income results.
-     * @param facts SEC companyfacts map
+     *
+     * @param facts         SEC companyfacts map
      * @param preferQuarter prefer quarter if true
      * @return list of up to 3 Result objects
      */
@@ -139,7 +160,7 @@ public class OperatingIncomeExtractor {
             for (String concept : e.getValue()) {
                 String lc = concept.toLowerCase(Locale.ROOT);
                 // 영업이익 후보(부정어 필터링)
-                if ((lc.contains("operatingincome") || lc.contains("operatingprofit"))
+                if ((lc.contains("operatingincome") || lc.contains("operatingprofit") || lc.contains("profitlossfromoperatingactivities"))
                         && !lc.contains("nonoperating")) {
                     Result r = pickLatestByConcept(facts, ns, concept, preferQuarter, Method.CUSTOM);
                     if (r != null) return r;
@@ -259,20 +280,28 @@ public class OperatingIncomeExtractor {
     }
 
     private static String preTaxConceptUsed;
+
     private static USD pickFirstAvailableUsGaap(Map<String, Object> facts, List<String> concepts, boolean preferQuarter) {
         for (String c : concepts) {
             USD x = pickFirstUsGaap(facts, c, preferQuarter);
-            if (x != null) { preTaxConceptUsed = c; return x; }
+            if (x != null) {
+                preTaxConceptUsed = c;
+                return x;
+            }
         }
         return null;
     }
 
     private static String interestConceptUsed;
+
     private static USD pickFirstAvailableUsGaapAligned(Map<String, Object> facts, List<String> concepts,
                                                        boolean preferQuarter, USD anchor) {
         for (String c : concepts) {
             USD x = pickUsGaapAligned(facts, c, preferQuarter, anchor);
-            if (x != null) { interestConceptUsed = c; return x; }
+            if (x != null) {
+                interestConceptUsed = c;
+                return x;
+            }
         }
         return null;
     }
@@ -299,12 +328,18 @@ public class OperatingIncomeExtractor {
         return a.compareTo(b);       // 오름차순 (호출부에서 compareDate(db, da)로 최신이 앞으로 옴)
     }
 
-    private static double toDouble(Long v) { return v == null ? 0.0 : v.doubleValue(); }
+    private static double toDouble(Long v) {
+        return v == null ? 0.0 : v.doubleValue();
+    }
 
     // ====== 결과 ======
 
     public enum Method {
-        DIRECT_USGAAP, CUSTOM, APPROX_PRETAX_INTEREST, APPROX_COMPONENTS
+        DIRECT_USGAAP,
+        DIRECT_IFRS,
+        CUSTOM,
+        APPROX_PRETAX_INTEREST,
+        APPROX_COMPONENTS
     }
 
     public static class Result {
@@ -320,9 +355,11 @@ public class OperatingIncomeExtractor {
             this.method = method;
             this.meta = meta;
         }
+
         public static Result of(double v, String c, Method m, USD u) {
             return new Result(toPlainNumberString(v), c, m, u);
         }
+
         public static Result of(Object v, String c, Method m, USD u) {
             return new Result(toPlainNumberString(v), c, m, u);
         }
@@ -368,10 +405,13 @@ public class OperatingIncomeExtractor {
             return false;
         }
 
-        static String nn(String s) { return s == null ? "" : s; }
+        static String nn(String s) {
+            return s == null ? "" : s;
+        }
     }
 
     // ====== FactAdapter ======
+
     /**
      * 프로젝트마다 companyfacts 파싱 구조가 다르니,
      * 아래 어댑터만 당신 환경에 맞게 구현/연결하면 나머지는 그대로 동작.
@@ -385,30 +425,33 @@ public class OperatingIncomeExtractor {
             if (facts == null || namespace == null || concept == null) return Collections.emptyList();
             Object factsObj = facts.get("facts");
             if (!(factsObj instanceof Map)) return Collections.emptyList();
-            Map<String,Object> factsMap = (Map<String,Object>) factsObj;
+            Map<String, Object> factsMap = (Map<String, Object>) factsObj;
             Object nsObj = factsMap.get(namespace);
             if (!(nsObj instanceof Map)) return Collections.emptyList();
-            Map<String,Object> nsMap = (Map<String,Object>) nsObj;
+            Map<String, Object> nsMap = (Map<String, Object>) nsObj;
             Object conceptObj = nsMap.get(concept);
             if (!(conceptObj instanceof Map)) return Collections.emptyList();
-            Map<String,Object> conceptMap = (Map<String,Object>) conceptObj;
+            Map<String, Object> conceptMap = (Map<String, Object>) conceptObj;
             Object unitsObj = conceptMap.get("units");
             if (!(unitsObj instanceof Map)) return Collections.emptyList();
-            Map<String,Object> unitsMap = (Map<String,Object>) unitsObj;
+            Map<String, Object> unitsMap = (Map<String, Object>) unitsObj;
             Object usdObj = unitsMap.get("USD");
             if (!(usdObj instanceof List)) return Collections.emptyList();
             List<Object> arr = (List<Object>) usdObj;
             List<USD> out = new ArrayList<>();
             for (Object o : arr) {
                 if (!(o instanceof Map)) continue;
-                Map<String,Object> m = (Map<String,Object>) o;
+                Map<String, Object> m = (Map<String, Object>) o;
                 USD u = new USD();
                 try {
                     Object valObj = m.get("val");
                     if (valObj instanceof Number) {
-                        u.setVal(((Number)valObj).longValue());
+                        u.setVal(((Number) valObj).longValue());
                     } else if (valObj != null) {
-                        try { u.setVal(Long.parseLong(String.valueOf(valObj))); } catch(Exception ignore) {}
+                        try {
+                            u.setVal(Long.parseLong(String.valueOf(valObj)));
+                        } catch (Exception ignore) {
+                        }
                     }
                     if (m.get("start") != null) u.setStart(String.valueOf(m.get("start")));
                     if (m.get("end") != null) u.setEnd(String.valueOf(m.get("end")));
@@ -418,7 +461,7 @@ public class OperatingIncomeExtractor {
                     if (m.get("filed") != null) u.setFiled(String.valueOf(m.get("filed")));
                     if (m.get("frame") != null) u.setFrame(String.valueOf(m.get("frame")));
                     if (m.get("accn") != null) u.setAccn(String.valueOf(m.get("accn")));
-                } catch(Exception e) {
+                } catch (Exception e) {
                     // ignore parse errors for individual fields
                 }
                 out.add(u);
@@ -435,12 +478,12 @@ public class OperatingIncomeExtractor {
             if (facts == null) return result;
             Object factsObj = facts.get("facts");
             if (!(factsObj instanceof Map)) return result;
-            Map<String,Object> factsMap = (Map<String,Object>) factsObj;
-            for (Map.Entry<String,Object> nsEntry : factsMap.entrySet()) {
+            Map<String, Object> factsMap = (Map<String, Object>) factsObj;
+            for (Map.Entry<String, Object> nsEntry : factsMap.entrySet()) {
                 String ns = nsEntry.getKey();
                 Object nsObj = nsEntry.getValue();
                 if (!(nsObj instanceof Map)) continue;
-                Map<String,Object> nsMap = (Map<String,Object>) nsObj;
+                Map<String, Object> nsMap = (Map<String, Object>) nsObj;
                 result.put(ns, new HashSet<>(nsMap.keySet()));
             }
             return result;
@@ -644,11 +687,17 @@ public class OperatingIncomeExtractor {
                 .limit(limit)
                 .collect(Collectors.toList());
     }
-    /** Convert a double to a non-scientific, trimmed numeric string. */
+
+    /**
+     * Convert a double to a non-scientific, trimmed numeric string.
+     */
     private static String toPlainNumberString(double v) {
         return BigDecimal.valueOf(v).stripTrailingZeros().toPlainString();
     }
-    /** Convert Number/String to a non-scientific numeric string; fallback to raw string or "0". */
+
+    /**
+     * Convert Number/String to a non-scientific numeric string; fallback to raw string or "0".
+     */
     private static String toPlainNumberString(Object v) {
         if (v == null) return "0";
         if (v instanceof String s) {
@@ -663,5 +712,19 @@ public class OperatingIncomeExtractor {
             return new BigDecimal(n.toString()).stripTrailingZeros().toPlainString();
         }
         return v.toString();
+    }
+
+    private static List<Result> seriesByIfrs(Map<String, Object> facts, boolean preferQuarter, int limit) {
+        List<USD> list = FactAdapter.getUsdList(facts, "ifrs-full", "ProfitLossFromOperatingActivities");
+        if (list == null || list.isEmpty()) return Collections.emptyList();
+
+        Predicate<USD> filterPeriod = preferQuarter ? Periods::isQuarter : Periods::isAnnual;
+
+        return list.stream()
+                .filter(filterPeriod)
+                .sorted(BY_FILED_THEN_END_DESC)
+                .limit(limit)
+                .map(u -> Result.of(u.getVal(), "ifrs-full:ProfitLossFromOperatingActivities", Method.DIRECT_IFRS, u))
+                .collect(Collectors.toList());
     }
 }
