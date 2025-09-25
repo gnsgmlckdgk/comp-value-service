@@ -158,10 +158,7 @@ public class OperatingIncomeExtractor {
             if (ns == null || ns.equalsIgnoreCase("us-gaap")) continue;
 
             for (String concept : e.getValue()) {
-                String lc = concept.toLowerCase(Locale.ROOT);
-                // 영업이익 후보(부정어 필터링)
-                if ((lc.contains("operatingincome") || lc.contains("operatingprofit") || lc.contains("profitlossfromoperatingactivities"))
-                        && !lc.contains("nonoperating")) {
+                if (isOperatingIncomeConcept(ns, concept)) {
                     Result r = pickLatestByConcept(facts, ns, concept, preferQuarter, Method.CUSTOM);
                     if (r != null) return r;
                 }
@@ -170,38 +167,119 @@ public class OperatingIncomeExtractor {
         return null;
     }
 
+    // Centralized matcher for operating income concepts (broader, multilingual, IFRS-friendly)
+    private static boolean isOperatingIncomeConcept(String namespace, String concept) {
+        if (concept == null) return false;
+        String ns = namespace == null ? "" : namespace.toLowerCase(Locale.ROOT);
+        String lc = concept.toLowerCase(Locale.ROOT);
+
+        // Positive keywords (영문/IFRS 표현/자주 쓰는 약어 포함)
+        String[] positive = new String[]{
+                "operatingincome", "operatingprofit", "operatingprofitloss",
+                "profitlossfromoperatingactivities", "resultsfromoperatingactivities",
+                "opinc", "operatingearnings", "ebit" // 많은 filer가 EBIT를 운영이익 개념으로 씁니다
+        };
+
+        // Negative filters (비영업/조정/세그먼트 등 배제)
+        String[] negative = new String[]{
+                "nonoperating", "non-operating", "segment", "adjusted", "nonifrs", "non-gaap", "beforetax", "beforetaxes"
+        };
+
+        boolean hit = false;
+        for (String p : positive) {
+            if (lc.contains(p)) { hit = true; break; }
+        }
+        if (!hit) return false;
+
+        for (String n : negative) {
+            if (lc.contains(n)) return false;
+        }
+
+        // 네임스페이스는 호출부에서 us-gaap 제외 후 전체 검색하므로 여기선 true만 반환
+        return true;
+    }
+
     // B. 근사 1: PreTax + InterestExpense ≈ Operating Income
     private static Result approxByPretaxPlusInterest(Map<String, Object> facts, boolean preferQuarter) {
-        // Pre-Tax 후보
-        List<String> pretaxCandidates = List.of(
+        // US GAAP 후보
+        List<String> pretaxGAAP = List.of(
                 "IncomeLossFromContinuingOperationsBeforeIncomeTaxesExtraordinaryItemsNoncontrollingInterest",
                 "IncomeLossFromContinuingOperationsBeforeIncomeTaxes"
         );
-        // 이자비용 후보
-        List<String> interestExpenseCandidates = List.of(
+        List<String> interestGAAP = List.of(
                 "InterestExpense",
                 "InterestAndDebtExpense",
-                "OperatingIncomeLossAndInterestExpense" // 일부 회사 커스텀 대응용 (무시될 수 있음)
+                "OperatingIncomeLossAndInterestExpense"
         );
 
-        // 각각 최신 리스트를 뽑고, 같은 기간으로 align
-        USD preTax = pickFirstAvailableUsGaap(facts, pretaxCandidates, preferQuarter);
-        USD interestExp = pickFirstAvailableUsGaapAligned(facts, interestExpenseCandidates, preferQuarter, preTax);
+        // IFRS 후보 (외국기업)
+        List<String> pretaxIFRS = List.of(
+                "ProfitLossBeforeTax"
+        );
+        List<String> interestIFRS = List.of(
+                "FinanceCosts",       // IFRS에서 이자비용에 해당
+                "InterestExpense"
+        );
+
+        // 1) GAAP 우선으로 Pre-Tax 탐색
+        String usedNsPreTax = "us-gaap";
+        String usedPreTaxConcept = null;
+        USD preTax = null;
+        for (String c : pretaxGAAP) {
+            List<USD> l = FactAdapter.getUsdList(facts, usedNsPreTax, c);
+            USD x = pickLatest(l, preferQuarter);
+            if (x != null) { preTax = x; usedPreTaxConcept = c; break; }
+        }
+
+        // 2) 없으면 IFRS 시도
+        if (preTax == null) {
+            usedNsPreTax = "ifrs-full";
+            for (String c : pretaxIFRS) {
+                List<USD> l = FactAdapter.getUsdList(facts, usedNsPreTax, c);
+                USD x = pickLatest(l, preferQuarter);
+                if (x != null) { preTax = x; usedPreTaxConcept = c; break; }
+            }
+        }
 
         if (preTax == null) return null;
+
         double v = toDouble(preTax.getVal());
 
-        StringBuilder src = new StringBuilder("us-gaap:" + preTaxConceptUsed);
-        Method method = Method.APPROX_PRETAX_INTEREST;
+        // 3) 같은 기간으로 이자비용 정렬 (우선 동일 taxonomy, 실패시 반대 taxonomy)
+        String usedNsInterest = usedNsPreTax;
+        String usedInterestConcept = null;
+        USD interest = null;
 
-        if (interestExp != null) {
-            v += toDouble(interestExp.getVal());
-            src.append(" + ").append("us-gaap:").append(interestConceptUsed);
-        } else {
-            // 이자비용이 없으면 근사 품질 낮음 → 반환은 하되, steps에 메모
+        List<String> firstInterestList = usedNsPreTax.equals("us-gaap") ? interestGAAP : interestIFRS;
+        List<String> secondInterestList = usedNsPreTax.equals("us-gaap") ? interestIFRS : interestGAAP;
+
+        for (String c : firstInterestList) {
+            List<USD> l = FactAdapter.getUsdList(facts, usedNsInterest, c);
+            if (l == null || l.isEmpty()) continue;
+            String key = periodKey(preTax);
+            Optional<USD> aligned = l.stream().filter(u -> periodKey(u).equals(key)).findFirst();
+            if (aligned.isPresent()) { interest = aligned.get(); usedInterestConcept = c; break; }
         }
-        Result r = Result.of(v, src.toString(), method, preTax);
-        r.steps.add("Approx: Operating ≈ PreTax + InterestExpense (동일 기간 정렬)");
+
+        if (interest == null) {
+            usedNsInterest = usedNsPreTax.equals("us-gaap") ? "ifrs-full" : "us-gaap";
+            for (String c : secondInterestList) {
+                List<USD> l = FactAdapter.getUsdList(facts, usedNsInterest, c);
+                if (l == null || l.isEmpty()) continue;
+                String key = periodKey(preTax);
+                Optional<USD> aligned = l.stream().filter(u -> periodKey(u).equals(key)).findFirst();
+                if (aligned.isPresent()) { interest = aligned.get(); usedInterestConcept = c; break; }
+            }
+        }
+
+        StringBuilder src = new StringBuilder(usedNsPreTax + ":" + usedPreTaxConcept);
+        if (interest != null) {
+            v += toDouble(interest.getVal());
+            src.append(" + ").append(usedNsInterest).append(":").append(usedInterestConcept);
+        }
+
+        Result r = Result.of(v, src.toString(), Method.APPROX_PRETAX_INTEREST, preTax);
+        r.steps.add("Approx: Operating ≈ PreTax + InterestExpense (동일 기간 정렬; GAAP/IFRS 혼합 지원)");
         return r;
     }
 
@@ -531,8 +609,7 @@ public class OperatingIncomeExtractor {
             if (ns == null || ns.equalsIgnoreCase("us-gaap")) continue;
 
             for (String concept : e.getValue()) {
-                String lc = concept.toLowerCase(Locale.ROOT);
-                if ((lc.contains("operatingincome") || lc.contains("operatingprofit")) && !lc.contains("nonoperating")) {
+                if (isOperatingIncomeConcept(ns, concept)) {
                     List<USD> list = FactAdapter.getUsdList(facts, ns, concept);
                     if (list != null) {
                         for (USD u : list) {

@@ -57,8 +57,8 @@ spring:
 
 logging:
   level:
-    root: INFO               # 기본 로그레벨
-#    root: DEBUG
+#    root: INFO               # 기본 로그레벨
+    root: DEBUG
 #    com.finance.dart: DEBUG  # 특정 패키지
 #    com.finance.dart.common.util: DEBUG
 #    com.finance.dart.api.abroad: DEBUG  # 해외

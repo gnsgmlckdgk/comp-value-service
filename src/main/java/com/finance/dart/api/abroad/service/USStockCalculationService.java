@@ -3,6 +3,7 @@ package com.finance.dart.api.abroad.service;
 import com.finance.dart.api.abroad.dto.company.CompanyProfileDataResDto;
 import com.finance.dart.api.abroad.dto.financial.statement.CommonFinancialStatementDto;
 import com.finance.dart.api.abroad.dto.financial.statement.USD;
+import com.finance.dart.api.abroad.util.AssetsCurrentExtractor;
 import com.finance.dart.api.abroad.util.OperatingIncomeExtractor;
 import com.finance.dart.api.abroad.util.SecUtil;
 import com.finance.dart.api.common.constants.RequestContextConst;
@@ -20,6 +21,7 @@ import org.springframework.stereotype.Service;
 
 import java.math.RoundingMode;
 import java.util.List;
+import java.util.Map;
 
 /**
  * 해외기업 주식가치 계산 서비스
@@ -221,7 +223,18 @@ public class USStockCalculationService {
      * @return
      */
     private String getAssetsCurrent(String cik, CompanySharePriceCalculator spc, CompanySharePriceResultDetail rstDetail) {
+
         CommonFinancialStatementDto assetsCurrent = financialStatementService.findFS_AssetsCurrent(cik);
+
+        if(assetsCurrent == null) {
+            //@ 전체 제무정보 조회
+            Map<String, Object> companyfacts = financialStatementService.findFS_Companyfacts(cik);
+
+            // us-gaap뿐만 아니라 IFRS 등 관련 태그들 검색함
+            String assetsCurrentValue = AssetsCurrentExtractor.extract(companyfacts);
+            return assetsCurrentValue;
+        }
+
         List<USD> usdList = SecUtil.getUsdList(assetsCurrent);
         USD usd = SecUtil.getUsdByOffset(usdList, 0);   // 가장 최근 데이터
 
@@ -244,6 +257,9 @@ public class USStockCalculationService {
      */
     private String getLiabilitiesCurrent(String cik, CompanySharePriceCalculator spc, CompanySharePriceResultDetail rstDetail) {
         CommonFinancialStatementDto liabilitiesCurrent = financialStatementService.findFS_LiabilitiesCurrent(cik);
+
+        if(liabilitiesCurrent == null) return null;
+
         List<USD> usdList = SecUtil.getUsdList(liabilitiesCurrent);
         USD usd = SecUtil.getUsdByOffset(usdList, 0);
 
