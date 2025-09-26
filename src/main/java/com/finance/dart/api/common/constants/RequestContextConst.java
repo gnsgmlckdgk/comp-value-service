@@ -17,6 +17,7 @@ public class RequestContextConst {
     public static final String 계산_재산가치 = "계산_재산가치";
     public static final String 계산_부채 = "계산_부채";
     public static final String 계산_기업가치 = "계산_기업가치";
+    public static final String PER = "PER";
     // 끝: CompanySharePriceResultDetail --------------------------
 
 }

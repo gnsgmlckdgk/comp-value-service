@@ -33,8 +33,8 @@ public class USStockCalculationService {
 
     private final RequestContext requestContext;
     private final PerShareValueCalculationService sharePriceCalculatorService;   // 가치 계산 서비스
-    private final CompanyProfileSearchService profileSearchService;                 // 해외기업 정보조회 서비스
-    private final AbroadFinancialStatementService financialStatementService;        // 해외기업 재무제표 조회 서비스
+    private final CompanyProfileSearchService profileSearchService;              // 해외기업 정보조회 서비스
+    private final AbroadFinancialStatementService financialStatementService;     // 해외기업 재무제표 조회 서비스
 
     private final String ERROR_DV_CD = "ERROR"; // 오류 구분코드(해당 값으로 응답시 오류로 판단)
 
@@ -105,7 +105,9 @@ public class USStockCalculationService {
         String cik = companyProfile.getCik();
 
         CompanySharePriceCalculator sharePriceCalculator = new CompanySharePriceCalculator();
-        sharePriceCalculator.setUnit(UNIT);    // 1달러
+        sharePriceCalculator.setUnit(UNIT);                         // 1달러
+        sharePriceCalculator.setPrice(companyProfile.getPrice());   // 현재 주가
+        sharePriceCalculator.setCik(cik);                           // CIK
         // -------------------------------------------------------------
 
         //@ 영업이익
@@ -402,6 +404,7 @@ public class USStockCalculationService {
         resultDetail.set계산_재산가치(requestContext.getAttributeAsString(RequestContextConst.계산_재산가치));
         resultDetail.set계산_부채(requestContext.getAttributeAsString(RequestContextConst.계산_부채));
         resultDetail.set계산_기업가치(requestContext.getAttributeAsString(RequestContextConst.계산_기업가치));
+        resultDetail.setPER(requestContext.getAttributeAsString(RequestContextConst.PER));
     }
 
     /**

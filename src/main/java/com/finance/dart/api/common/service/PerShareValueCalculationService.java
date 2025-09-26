@@ -1,14 +1,18 @@
 package com.finance.dart.api.common.service;
 
+import com.finance.dart.api.abroad.service.AbroadFinancialStatementService;
+import com.finance.dart.api.abroad.util.PerCalculator;
 import com.finance.dart.api.common.constants.RequestContextConst;
 import com.finance.dart.api.common.context.RequestContext;
 import com.finance.dart.api.common.dto.CompanySharePriceCalculator;
 import com.finance.dart.common.util.CalUtil;
+import com.finance.dart.common.util.StringUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.math.RoundingMode;
+import java.util.Map;
 
 /**
  * 한 주당 가치 계산 서비스
@@ -19,6 +23,9 @@ import java.math.RoundingMode;
 public class PerShareValueCalculationService {
 
     private final RequestContext requestContext;
+
+    private final AbroadFinancialStatementService financialStatementService;     // 해외기업 재무제표 조회 서비스
+
 
     /**
      * 한 주당 가치를 계산한다.
@@ -48,8 +55,15 @@ public class PerShareValueCalculationService {
 
         // 2. 각 단계별 계산
 
-        // 사업가치: 영업이익 평균 * 10
-        final String businessValue = CalUtil.multi(operatingProfitAvg, "10");
+        // 사업가치: 영업이익 평균 * 10(고정 PER)
+        // 2025.09.26 SEC에 EPS값이 있는경우 PER 계산값 사용
+        String per = "10";
+        if(!StringUtil.isStringEmpty(req.getCik())) {   // CIK(미국 기업고유번호) : 미국 기업 계산할때만 값 존재
+            per = getPer(req.getCik(), req.getPrice());
+            if(per == null) per = "10";
+        }
+        requestContext.setAttribute(RequestContextConst.PER, per);
+        final String businessValue = CalUtil.multi(operatingProfitAvg, per);
         if(log.isDebugEnabled()) log.debug("1. 사업가치 = {}", businessValue);
         requestContext.setAttribute(RequestContextConst.계산_사업가치, businessValue);
 
@@ -96,4 +110,21 @@ public class PerShareValueCalculationService {
 
         return avg;
     }
+
+    /**
+     * PER 조회
+     * @param cik
+     * @param price
+     * @return
+     */
+    private String getPer(String cik, double price) {
+
+        Map<String, Object> companyFatcs = financialStatementService.findFS_Companyfacts(cik);
+
+        Double per = PerCalculator.calculatePER(companyFatcs, price);
+        if(per == null) return null;
+
+        return StringUtil.defaultString(per.doubleValue());
+    }
+
 }

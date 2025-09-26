@@ -68,4 +68,17 @@ public class CompanySharePriceCalculator {
      */
     @SerializedName("issuedShares")
     private String issuedShares;
+
+    /**
+     * 현재 주가
+     */
+    @SerializedName("price")
+    private double price = 0;
+
+    /**
+     * 기업 CIK (해외기업)
+     */
+    @SerializedName("cik")
+    private String cik;
+
 }
