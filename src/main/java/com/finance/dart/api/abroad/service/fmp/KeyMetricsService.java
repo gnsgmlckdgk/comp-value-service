@@ -1,8 +1,8 @@
 package com.finance.dart.api.abroad.service.fmp;
 
 import com.finance.dart.api.abroad.component.FmpClientComponent;
-import com.finance.dart.api.abroad.dto.fmp.incomestatement.IncomeStatReqDto;
-import com.finance.dart.api.abroad.dto.fmp.incomestatement.IncomeStatResDto;
+import com.finance.dart.api.abroad.dto.fmp.keymetrics.KeyMetricsReqDto;
+import com.finance.dart.api.abroad.dto.fmp.keymetrics.KeyMetricsResDto;
 import com.finance.dart.api.abroad.enums.FmpApiList;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -20,14 +20,14 @@ public class KeyMetricsService {
 
 
     /**
-     * 영업이익 조회
+     * 주요 재무지표 조회
      * @param reqDto
      * @return
      */
-    public List<IncomeStatResDto> findIncomeStat(IncomeStatReqDto reqDto) {
+    public List<KeyMetricsResDto> findKeyMetrics(KeyMetricsReqDto reqDto) {
 
-         List<IncomeStatResDto> response = fmpClientComponent.sendGet(
-                 FmpApiList.IncomeStatement,
+         List<KeyMetricsResDto> response = fmpClientComponent.sendGet(
+                 FmpApiList.KeyMetrics,
                  reqDto,
                  new ParameterizedTypeReference<>() {}
          );

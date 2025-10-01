@@ -1,8 +1,8 @@
 package com.finance.dart.api.abroad.service.fmp;
 
 import com.finance.dart.api.abroad.component.FmpClientComponent;
-import com.finance.dart.api.abroad.dto.fmp.incomestatement.IncomeStatReqDto;
-import com.finance.dart.api.abroad.dto.fmp.incomestatement.IncomeStatResDto;
+import com.finance.dart.api.abroad.dto.fmp.balancesheet.BalanceSheetReqDto;
+import com.finance.dart.api.abroad.dto.fmp.balancesheet.BalanceSheetResDto;
 import com.finance.dart.api.abroad.enums.FmpApiList;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -20,14 +20,14 @@ public class BalanceSheetStatementService {
 
 
     /**
-     * 영업이익 조회
+     * 재무상태표 조회
      * @param reqDto
      * @return
      */
-    public List<IncomeStatResDto> findIncomeStat(IncomeStatReqDto reqDto) {
+    public List<BalanceSheetResDto> findBalanceSheet(BalanceSheetReqDto reqDto) {
 
-         List<IncomeStatResDto> response = fmpClientComponent.sendGet(
-                 FmpApiList.IncomeStatement,
+         List<BalanceSheetResDto> response = fmpClientComponent.sendGet(
+                 FmpApiList.BalanceSheetStatement,
                  reqDto,
                  new ParameterizedTypeReference<>() {}
          );

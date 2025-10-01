@@ -1,7 +1,9 @@
 package com.finance.dart.api.abroad.dto.fmp;
 
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
+import lombok.ToString;
 
 
 /**
@@ -9,6 +11,8 @@ import lombok.Setter;
  */
 @Getter
 @Setter
+@ToString
+@NoArgsConstructor
 public class FmpReqCommon {
     /**
      * API KEY

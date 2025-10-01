@@ -3,6 +3,7 @@ package com.finance.dart.api.abroad.dto.fmp.incomestatement;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.finance.dart.api.abroad.dto.fmp.FmpReqCommon;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
 
@@ -13,6 +14,7 @@ import lombok.ToString;
 @Setter
 @Getter
 @ToString
+@NoArgsConstructor
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class IncomeStatReqDto extends FmpReqCommon {
 
@@ -20,7 +22,7 @@ public class IncomeStatReqDto extends FmpReqCommon {
     private String symbol;
 
     /** 최근 몇개까지 조회할지 개수 **/
-    private int limit;
+    private Integer limit;
 
     /**
      * <pre>

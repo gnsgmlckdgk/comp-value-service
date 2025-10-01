@@ -20,8 +20,8 @@ import java.util.Map;
 @Slf4j
 @RestController
 @AllArgsConstructor
-@RequestMapping("abroad/company/financial")
-public class AbroadFinancialStatementController {
+@RequestMapping("abroad/company/financial/sec")
+public class FinStatSecController {
 
     private final SecFinStatementService secFinStatementService;
 

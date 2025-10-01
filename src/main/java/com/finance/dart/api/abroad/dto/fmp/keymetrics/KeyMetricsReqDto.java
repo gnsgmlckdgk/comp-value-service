@@ -2,19 +2,21 @@ package com.finance.dart.api.abroad.dto.fmp.keymetrics;
 
 import com.finance.dart.api.abroad.dto.fmp.FmpReqCommon;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
 
 @Setter
 @Getter
 @ToString
+@NoArgsConstructor
 public class KeyMetricsReqDto extends FmpReqCommon {
 
     /** 검색명 (필수) **/
     private String symbol;
 
     /** 최근 몇개까지 조회할지 개수 **/
-    private int limit;
+    private Integer limit;
 
     /**
      * <pre>
@@ -23,6 +25,7 @@ public class KeyMetricsReqDto extends FmpReqCommon {
      * </pre>
      */
     private String period;
+
 
     private KeyMetricsReqDto(String apiKey, String symbol) {
         super(apiKey);
