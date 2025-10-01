@@ -50,6 +50,23 @@ public enum FmpApiList {
             "주요 재무지표 조회 API"
     ),
 
+    /** 기업가치 조회 **/
+    EnterpriseValues(
+            "Enterprise Values Data API",
+            "https://financialmodelingprep.com/stable/enterprise-values",
+            HttpMethod.GET,
+            "https://site.financialmodelingprep.com/developer/docs#enterprise-values",
+            "기업가치 조회 API"
+    ),
+
+    /** 재무비율지표 조회 **/
+    FinancialRatios(
+            "Financial Ratios Data API",
+            "https://financialmodelingprep.com/stable/ratios",
+            HttpMethod.GET,
+            "https://site.financialmodelingprep.com/developer/docs#ratios",
+            "재무비율지표 조회 API"
+    ),
 
 
     ;

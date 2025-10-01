@@ -14,7 +14,7 @@ public class CompanySharePriceResult {
     private String 결과메시지 = "";
 
     private String 기업코드 = "";
-
+    private String 기업심볼 = "";
     private String 기업명 = "";
 
     private String 주식코드 = "";

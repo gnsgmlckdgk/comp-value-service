@@ -1,5 +1,6 @@
 package com.finance.dart.api.common.controller;
 
+import com.finance.dart.api.abroad.service.US_StockCalFromFpmService;
 import com.finance.dart.api.abroad.service.US_StockCalFromSecService;
 import com.finance.dart.api.common.dto.CompanySharePriceCalculator;
 import com.finance.dart.api.common.dto.CompanySharePriceResult;
@@ -22,7 +23,8 @@ import java.util.Map;
 public class MainController {
 
     private final DomesticStockCalculationService domesticStockCalculationService;  // 국내주식계산 서비스
-    private final US_StockCalFromSecService US_StockCalFromSecService;              // 미국주식계산 서비스
+    private final US_StockCalFromSecService US_StockCalFromSecService;              // 미국주식계산 서비스(SEC)
+    private final US_StockCalFromFpmService US_StockCalFromFmpService;              // 미국주식계산 서비스(FMP)
     private final PerShareValueCalculationService perShareValueCalculationService;  // 가치계산 서비스
 
 
@@ -75,9 +77,11 @@ public class MainController {
      * @return
      */
     @GetMapping("/cal/per_value/abroad")
-    public ResponseEntity<Object> calAbroadCompanyStockPerValue(@RequestParam("symbol") String symbol) {
+    public ResponseEntity<Object> calAbroadCompanyStockPerValue(@RequestParam("symbol") String symbol)
+            throws Exception {
 
-        CompanySharePriceResult responseBody =  US_StockCalFromSecService.calPerValue(symbol);
+//        CompanySharePriceResult responseBody =  US_StockCalFromSecService.calPerValue(symbol);  // SEC
+        CompanySharePriceResult responseBody = US_StockCalFromFmpService.calPerValue(symbol);   // FMP
 
         return new ResponseEntity<>(new CommonResponse<>(responseBody), HttpStatus.OK);
     }

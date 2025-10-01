@@ -2,10 +2,7 @@ package com.finance.dart.api.abroad.dto.fmp.incomestatement;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.finance.dart.api.abroad.dto.fmp.FmpReqCommon;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
-import lombok.ToString;
+import lombok.*;
 
 /**
  * FMP 영업이익 조회 요청 DTO
@@ -15,6 +12,7 @@ import lombok.ToString;
 @Getter
 @ToString
 @NoArgsConstructor
+@AllArgsConstructor
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class IncomeStatReqDto extends FmpReqCommon {
 
@@ -31,21 +29,5 @@ public class IncomeStatReqDto extends FmpReqCommon {
      * </pre>
      */
     private String period;
-
-
-    private IncomeStatReqDto(String apiKey, String symbol) {
-        super(apiKey);
-        this.symbol = symbol;
-    }
-
-    /**
-     * IncomeStatReqDto create
-     * @param apiKey
-     * @param symbol
-     * @return
-     */
-    public IncomeStatReqDto of(String apiKey, String symbol) {
-        return new IncomeStatReqDto(apiKey, symbol);
-    }
 
 }

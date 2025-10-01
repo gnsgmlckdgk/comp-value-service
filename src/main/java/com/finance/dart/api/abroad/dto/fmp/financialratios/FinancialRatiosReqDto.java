@@ -1,14 +1,14 @@
-package com.finance.dart.api.abroad.dto.fmp.balancesheet;
+package com.finance.dart.api.abroad.dto.fmp.financialratios;
 
 import com.finance.dart.api.abroad.dto.fmp.FmpReqCommon;
 import lombok.*;
 
-@Getter
 @Setter
+@Getter
 @ToString
 @NoArgsConstructor
 @AllArgsConstructor
-public class BalanceSheetReqDto extends FmpReqCommon {
+public class FinancialRatiosReqDto extends FmpReqCommon {
 
     /** 검색명 (필수) **/
     private String symbol;

@@ -69,6 +69,15 @@ public class CompanySharePriceCalculator {
     @SerializedName("issuedShares")
     private String issuedShares;
 
+
+
+    // ---------------------- 필수값 아님
+    /**
+     * PER
+     */
+    @SerializedName("per")
+    private String per;
+
     /**
      * 현재 주가
      */

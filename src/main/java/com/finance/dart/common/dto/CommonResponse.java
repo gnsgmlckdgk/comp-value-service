@@ -1,14 +1,17 @@
 package com.finance.dart.common.dto;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.finance.dart.common.constant.ResponseEnum;
 import lombok.Data;
 import org.springframework.http.HttpStatus;
 
 @Data
+@JsonPropertyOrder({ "success", "code", "message", "response" })
 public class CommonResponse<T> {
 
+    @JsonProperty("success")
     private boolean isSuccess;  // success
     private String code;
     private String message;

@@ -1,7 +1,6 @@
 package com.finance.dart.api.common.service;
 
 import com.finance.dart.api.abroad.service.sec.SecFinStatementService;
-import com.finance.dart.api.abroad.util.sec.PerCalculator;
 import com.finance.dart.api.common.constants.RequestContextConst;
 import com.finance.dart.api.common.context.RequestContext;
 import com.finance.dart.api.common.dto.CompanySharePriceCalculator;
@@ -12,7 +11,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.math.RoundingMode;
-import java.util.Map;
 
 /**
  * 한 주당 가치 계산 서비스
@@ -56,12 +54,7 @@ public class PerShareValueCalculationService {
         // 2. 각 단계별 계산
 
         // 사업가치: 영업이익 평균 * 10(고정 PER)
-        // 2025.09.26 SEC에 EPS값이 있는경우 PER 계산값 사용
-        String per = "10";
-        if(!StringUtil.isStringEmpty(req.getCik())) {   // CIK(미국 기업고유번호) : 미국 기업 계산할때만 값 존재
-            per = getPer(req.getCik(), req.getPrice());
-            if(per == null) per = "10";
-        }
+        String per = StringUtil.isStringEmpty(req.getPer()) ? "10" : StringUtil.defaultString(req.getPer());
         requestContext.setAttribute(RequestContextConst.PER, per);
         final String businessValue = CalUtil.multi(operatingProfitAvg, per);
         if(log.isDebugEnabled()) log.debug("1. 사업가치 = {}", businessValue);
@@ -109,22 +102,6 @@ public class PerShareValueCalculationService {
         requestContext.setAttribute(RequestContextConst.영업이익_평균, avg);
 
         return avg;
-    }
-
-    /**
-     * PER 조회
-     * @param cik
-     * @param price
-     * @return
-     */
-    private String getPer(String cik, double price) {
-
-        Map<String, Object> companyFatcs = financialStatementService.findFS_Companyfacts(cik);
-
-        Double per = PerCalculator.calculatePER(companyFatcs, price);
-        if(per == null) return null;
-
-        return StringUtil.defaultString(per.doubleValue());
     }
 
 }

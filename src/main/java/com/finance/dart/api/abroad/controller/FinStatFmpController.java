@@ -2,11 +2,17 @@ package com.finance.dart.api.abroad.controller;
 
 import com.finance.dart.api.abroad.dto.fmp.balancesheet.BalanceSheetReqDto;
 import com.finance.dart.api.abroad.dto.fmp.balancesheet.BalanceSheetResDto;
+import com.finance.dart.api.abroad.dto.fmp.enterprisevalues.EnterpriseValuesReqDto;
+import com.finance.dart.api.abroad.dto.fmp.enterprisevalues.EnterpriseValuesResDto;
+import com.finance.dart.api.abroad.dto.fmp.financialratios.FinancialRatiosReqDto;
+import com.finance.dart.api.abroad.dto.fmp.financialratios.FinancialRatiosResDto;
 import com.finance.dart.api.abroad.dto.fmp.incomestatement.IncomeStatReqDto;
 import com.finance.dart.api.abroad.dto.fmp.incomestatement.IncomeStatResDto;
 import com.finance.dart.api.abroad.dto.fmp.keymetrics.KeyMetricsReqDto;
 import com.finance.dart.api.abroad.dto.fmp.keymetrics.KeyMetricsResDto;
+import com.finance.dart.api.abroad.service.FinancialRatiosService;
 import com.finance.dart.api.abroad.service.fmp.BalanceSheetStatementService;
+import com.finance.dart.api.abroad.service.fmp.EnterpriseValueService;
 import com.finance.dart.api.abroad.service.fmp.IncomeStatementService;
 import com.finance.dart.api.abroad.service.fmp.KeyMetricsService;
 import com.finance.dart.common.dto.CommonResponse;
@@ -30,6 +36,8 @@ public class FinStatFmpController {
     private final IncomeStatementService incomeStatementService;
     private final BalanceSheetStatementService balanceSheetStatementService;
     private final KeyMetricsService keyMetricsService;
+    private final EnterpriseValueService enterpriseValueService;
+    private final FinancialRatiosService financialRatiosService;
 
 
     /**
@@ -71,5 +79,30 @@ public class FinStatFmpController {
         return new ResponseEntity<>(new CommonResponse<>(response), HttpStatus.OK);
     }
 
+    /**
+     * 기업가치 조회
+     * @param requestDto
+     * @return
+     */
+    @PostMapping("/enterpriseValues")
+    public ResponseEntity<CommonResponse<List<EnterpriseValuesResDto>>> enterpriseValues(@RequestBody EnterpriseValuesReqDto requestDto) {
+
+        List<EnterpriseValuesResDto> response = enterpriseValueService.findEnterpriseValue(requestDto);
+
+        return new ResponseEntity<>(new CommonResponse<>(response), HttpStatus.OK);
+    }
+
+    /**
+     * 재무비율지표 조회
+     * @param requestDto
+     * @return
+     */
+    @PostMapping("/financialRatios")
+    public ResponseEntity<CommonResponse<List<FinancialRatiosResDto>>> financialRatios(@RequestBody FinancialRatiosReqDto requestDto) {
+
+        List<FinancialRatiosResDto> response = financialRatiosService.findFinancialRatios(requestDto);
+
+        return new ResponseEntity<>(new CommonResponse<>(response), HttpStatus.OK);
+    }
 
 }
