@@ -1,8 +1,8 @@
 package com.finance.dart.api.abroad.controller;
 
-import com.finance.dart.api.abroad.dto.financial.statement.CommonFinancialStatementDto;
-import com.finance.dart.api.abroad.service.AbroadFinancialStatementService;
-import com.finance.dart.api.abroad.util.OperatingIncomeExtractor;
+import com.finance.dart.api.abroad.dto.sec.statement.CommonFinancialStatementDto;
+import com.finance.dart.api.abroad.service.sec.SecFinStatementService;
+import com.finance.dart.api.abroad.util.sec.OperatingIncomeExtractor;
 import com.finance.dart.common.dto.CommonResponse;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -23,7 +23,7 @@ import java.util.Map;
 @RequestMapping("abroad/company/financial")
 public class AbroadFinancialStatementController {
 
-    private final AbroadFinancialStatementService abroadFinancialStatementService;
+    private final SecFinStatementService secFinStatementService;
 
     /**
      * 기업 제무재표 전체 조회
@@ -34,7 +34,7 @@ public class AbroadFinancialStatementController {
     public ResponseEntity<CommonResponse<Map<String, Object>>> findFS_Companyfacts(@RequestParam(name = "cik") String cik) {
 
         Map<String, Object> response =
-                abroadFinancialStatementService.findFS_Companyfacts(cik);
+                secFinStatementService.findFS_Companyfacts(cik);
 
         return new ResponseEntity<>(new CommonResponse<>(response), HttpStatus.OK);
     }
@@ -48,7 +48,7 @@ public class AbroadFinancialStatementController {
     public ResponseEntity<CommonResponse<List<OperatingIncomeExtractor.Result>>> findFS_OperatingIncomeLoss(@RequestParam(name = "cik") String cik) {
 
         List<OperatingIncomeExtractor.Result> response =
-                abroadFinancialStatementService.findFS_OperatingIncomeLoss(cik);
+                secFinStatementService.findFS_OperatingIncomeLoss(cik);
 
         return new ResponseEntity<>(new CommonResponse<>(response), HttpStatus.OK);
     }
@@ -62,7 +62,7 @@ public class AbroadFinancialStatementController {
     public ResponseEntity<CommonResponse<CommonFinancialStatementDto>> findFS_AssetsCurrent(@RequestParam(name = "cik") String cik) {
 
         CommonFinancialStatementDto response =
-                abroadFinancialStatementService.findFS_AssetsCurrent(cik);
+                secFinStatementService.findFS_AssetsCurrent(cik);
 
         return new ResponseEntity<>(new CommonResponse<>(response), HttpStatus.OK);
     }
@@ -76,7 +76,7 @@ public class AbroadFinancialStatementController {
     public ResponseEntity<CommonResponse<CommonFinancialStatementDto>> findFS_LiabilitiesCurrent(@RequestParam(name = "cik") String cik) {
 
         CommonFinancialStatementDto response =
-                abroadFinancialStatementService.findFS_LiabilitiesCurrent(cik);
+                secFinStatementService.findFS_LiabilitiesCurrent(cik);
 
         return new ResponseEntity<>(new CommonResponse<>(response), HttpStatus.OK);
     }
@@ -94,22 +94,22 @@ public class AbroadFinancialStatementController {
 
         //@1. 장기매도 가능 증권
         CommonFinancialStatementDto response1 =
-                abroadFinancialStatementService.findFS_NI_AvailableForSaleSecuritiesNoncurrent(cik);
+                secFinStatementService.findFS_NI_AvailableForSaleSecuritiesNoncurrent(cik);
         response.put("1. 장기매도 가능 증권", response1);
 
         //@2. 지분법 투자
         CommonFinancialStatementDto response2 =
-                abroadFinancialStatementService.findFS_NI_LongTermInvestments(cik);
+                secFinStatementService.findFS_NI_LongTermInvestments(cik);
         response.put("2. 지분법 투자", response2);
 
         //@3. 기타 장기투자
         CommonFinancialStatementDto response3 =
-                abroadFinancialStatementService.findFS_NI_OtherInvestments(cik);
+                secFinStatementService.findFS_NI_OtherInvestments(cik);
         response.put("3. 기타 장기투자", response3);
 
         //@4. 투자 및 대여금
         CommonFinancialStatementDto response4 =
-                abroadFinancialStatementService.findFS_NI_InvestmentsAndAdvances(cik);
+                secFinStatementService.findFS_NI_InvestmentsAndAdvances(cik);
         response.put("4. 투자 및 대여금", response4);
 
         return new ResponseEntity<>(new CommonResponse<>(response), HttpStatus.OK);
@@ -123,7 +123,7 @@ public class AbroadFinancialStatementController {
     @GetMapping("/statement/detail/liabilities")
     public ResponseEntity<CommonResponse<CommonFinancialStatementDto>> findFS_Liabilities(@RequestParam(name = "cik") String cik) {
         CommonFinancialStatementDto response =
-                abroadFinancialStatementService.findFS_Liabilities(cik);
+                secFinStatementService.findFS_Liabilities(cik);
 
         return new ResponseEntity<>(new CommonResponse<>(response), HttpStatus.OK);
     }
@@ -137,7 +137,7 @@ public class AbroadFinancialStatementController {
     public ResponseEntity<CommonResponse<CommonFinancialStatementDto>> findFS_LiabilitiesNoncurrent(@RequestParam(name = "cik") String cik) {
 
         CommonFinancialStatementDto response =
-                abroadFinancialStatementService.findFS_LiabilitiesNoncurrent(cik);
+                secFinStatementService.findFS_LiabilitiesNoncurrent(cik);
 
         return new ResponseEntity<>(new CommonResponse<>(response), HttpStatus.OK);
     }
@@ -151,7 +151,7 @@ public class AbroadFinancialStatementController {
     public ResponseEntity<CommonResponse<String>> findFS_EntityCommonStockSharesOutstanding(@RequestParam(name = "cik") String cik) {
 
         String response =
-                abroadFinancialStatementService.getStockSharesOutstanding(cik);
+                secFinStatementService.getStockSharesOutstanding(cik);
 
         return new ResponseEntity<>(new CommonResponse<>(response), HttpStatus.OK);
     }

@@ -1,9 +1,9 @@
 package com.finance.dart.api.abroad.controller;
 
-import com.finance.dart.api.abroad.dto.company.CompanyProfileDataResDto;
-import com.finance.dart.api.abroad.dto.company.FindCompanySymbolResDto;
-import com.finance.dart.api.abroad.service.CompanyProfileSearchService;
-import com.finance.dart.api.abroad.service.CompanySymbolSearchService;
+import com.finance.dart.api.abroad.dto.fmp.company.CompanyProfileDataResDto;
+import com.finance.dart.api.abroad.dto.fmp.company.FindCompanySymbolResDto;
+import com.finance.dart.api.abroad.service.fmp.CompanyProfileSearchService;
+import com.finance.dart.api.abroad.service.fmp.CompanySymbolSearchService;
 import com.finance.dart.common.dto.CommonResponse;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
