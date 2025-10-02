@@ -122,7 +122,12 @@ public class US_StockCalFromFpmService {
         return result;
     }
 
-    // TODO: 개발중
+    /**
+     * 성장성 반영 주당 가치 계산
+     * @param symbol
+     * @return
+     * @throws Exception
+     */
     public CompanySharePriceResult calPerValueV2(String symbol)
             throws Exception {
 

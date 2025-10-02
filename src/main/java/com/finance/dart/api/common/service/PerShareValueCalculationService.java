@@ -65,6 +65,10 @@ public class PerShareValueCalculationService {
 
         final String STEP01 = CalUtil.multi(operatingProfitAvg, adjustedPER);
 
+        resultDetail.setPER(per);
+        resultDetail.set영업이익성장률(growth);
+        resultDetail.set성장률보정PER(adjustedPER);
+
         // STEP02 ------------------------------------------------------------------------------------------------------
         // (유동자산 − (유동부채 × 비율) + 투자자산)
         final String STEP02 = CalUtil.add(CalUtil.sub(assetsTotal, CalUtil.multi(liabilitiesTotal, K)), investmentAssets);
@@ -76,11 +80,13 @@ public class PerShareValueCalculationService {
         // STEP04 ------------------------------------------------------------------------------------------------------
         // (최근 3년 평균 R&D)
         final String STEP04 = calRnDAvg(req.getRndPrePre(), req.getRndPre(), req.getRndCurrent());
+        resultDetail.set연구개발비_평균(STEP04);
 
         // STEP05 ------------------------------------------------------------------------------------------------------
         // (순부채)
         String netDebt = CalUtil.sub(totalDebt, cash);
         final String STEP05 = netDebt;
+        resultDetail.set순부채(netDebt);
 
         // 계산
         String rst01 = CalUtil.add(STEP01, STEP02);

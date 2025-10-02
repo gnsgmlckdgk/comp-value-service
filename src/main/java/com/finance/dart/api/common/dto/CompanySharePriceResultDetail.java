@@ -32,6 +32,7 @@ public class CompanySharePriceResultDetail {
     /** V2 추가 **/
     private String PER = "";
     private String 영업이익성장률 = "";
+    private String 성장률보정PER = "";
     private String 무형자산 = "";
 
     private String 연구개발비_당기 ="";
