@@ -68,6 +68,24 @@ public enum FmpApiList {
             "재무비율지표 조회 API"
     ),
 
+    /** 재무비율지표(TTM) 조회 **/
+    FinancialRatiosTTM(
+            "Financial Ratios Data API",
+            "https://financialmodelingprep.com/stable/ratios-ttm",
+            HttpMethod.GET,
+            "https://site.financialmodelingprep.com/developer/docs#ratios-ttm",
+            "재무비율지표(TTM) 조회 API"
+    ),
+
+    /** 영업이익 성장률 조회 **/
+    IncomeStatementGrowth(
+            "Income Statement Growth Data API",
+            "https://financialmodelingprep.com/stable/income-statement-growth",
+            HttpMethod.GET,
+            "https://site.financialmodelingprep.com/developer/docs#income-statement-growth",
+            "영업이익 성장률 조회 API"
+    ),
+
 
     ;
 

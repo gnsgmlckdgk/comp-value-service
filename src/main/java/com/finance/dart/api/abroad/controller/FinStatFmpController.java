@@ -6,15 +6,16 @@ import com.finance.dart.api.abroad.dto.fmp.enterprisevalues.EnterpriseValuesReqD
 import com.finance.dart.api.abroad.dto.fmp.enterprisevalues.EnterpriseValuesResDto;
 import com.finance.dart.api.abroad.dto.fmp.financialratios.FinancialRatiosReqDto;
 import com.finance.dart.api.abroad.dto.fmp.financialratios.FinancialRatiosResDto;
+import com.finance.dart.api.abroad.dto.fmp.financialratios.FinancialRatiosTTM_ReqDto;
+import com.finance.dart.api.abroad.dto.fmp.financialratios.FinancialRatiosTTM_ResDto;
 import com.finance.dart.api.abroad.dto.fmp.incomestatement.IncomeStatReqDto;
 import com.finance.dart.api.abroad.dto.fmp.incomestatement.IncomeStatResDto;
+import com.finance.dart.api.abroad.dto.fmp.incomestatgrowth.IncomeStatGrowthReqDto;
+import com.finance.dart.api.abroad.dto.fmp.incomestatgrowth.IncomeStatGrowthResDto;
 import com.finance.dart.api.abroad.dto.fmp.keymetrics.KeyMetricsReqDto;
 import com.finance.dart.api.abroad.dto.fmp.keymetrics.KeyMetricsResDto;
-import com.finance.dart.api.abroad.service.FinancialRatiosService;
-import com.finance.dart.api.abroad.service.fmp.BalanceSheetStatementService;
-import com.finance.dart.api.abroad.service.fmp.EnterpriseValueService;
-import com.finance.dart.api.abroad.service.fmp.IncomeStatementService;
-import com.finance.dart.api.abroad.service.fmp.KeyMetricsService;
+import com.finance.dart.api.abroad.service.fmp.FinancialRatiosService;
+import com.finance.dart.api.abroad.service.fmp.*;
 import com.finance.dart.common.dto.CommonResponse;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -38,6 +39,7 @@ public class FinStatFmpController {
     private final KeyMetricsService keyMetricsService;
     private final EnterpriseValueService enterpriseValueService;
     private final FinancialRatiosService financialRatiosService;
+    private final IncomeStatGrowthService incomeStatGrowthService;
 
 
     /**
@@ -101,6 +103,32 @@ public class FinStatFmpController {
     public ResponseEntity<CommonResponse<List<FinancialRatiosResDto>>> financialRatios(@RequestBody FinancialRatiosReqDto requestDto) {
 
         List<FinancialRatiosResDto> response = financialRatiosService.findFinancialRatios(requestDto);
+
+        return new ResponseEntity<>(new CommonResponse<>(response), HttpStatus.OK);
+    }
+
+    /**
+     * 재무비율지표 TTM 조회
+     * @param requestDto
+     * @return
+     */
+    @PostMapping("/financialRatiosTTM")
+    public ResponseEntity<CommonResponse<List<FinancialRatiosTTM_ResDto>>> financialRatiosTTM(@RequestBody FinancialRatiosTTM_ReqDto requestDto) {
+
+        List<FinancialRatiosTTM_ResDto> response = financialRatiosService.findFinancialRatiosTTM(requestDto);
+
+        return new ResponseEntity<>(new CommonResponse<>(response), HttpStatus.OK);
+    }
+
+    /**
+     * 재무제표 성장률 조회
+     * @param requestDto
+     * @return
+     */
+    @PostMapping("/IncomeStatGrowth")
+    public ResponseEntity<CommonResponse<List<IncomeStatGrowthResDto>>> incomeStatementGrowth(@RequestBody IncomeStatGrowthReqDto requestDto) {
+
+        List<IncomeStatGrowthResDto> response = incomeStatGrowthService.findIncomeStatGrowth(requestDto);
 
         return new ResponseEntity<>(new CommonResponse<>(response), HttpStatus.OK);
     }

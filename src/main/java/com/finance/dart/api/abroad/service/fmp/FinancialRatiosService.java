@@ -1,8 +1,10 @@
-package com.finance.dart.api.abroad.service;
+package com.finance.dart.api.abroad.service.fmp;
 
 import com.finance.dart.api.abroad.component.FmpClientComponent;
 import com.finance.dart.api.abroad.dto.fmp.financialratios.FinancialRatiosReqDto;
 import com.finance.dart.api.abroad.dto.fmp.financialratios.FinancialRatiosResDto;
+import com.finance.dart.api.abroad.dto.fmp.financialratios.FinancialRatiosTTM_ReqDto;
+import com.finance.dart.api.abroad.dto.fmp.financialratios.FinancialRatiosTTM_ResDto;
 import com.finance.dart.api.abroad.enums.FmpApiList;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -33,6 +35,22 @@ public class FinancialRatiosService {
          );
 
          return response;
+    }
+
+    /**
+     * 재무비율지표(TTM) 조회
+     * @param reqDto
+     * @return
+     */
+    public List<FinancialRatiosTTM_ResDto> findFinancialRatiosTTM(FinancialRatiosTTM_ReqDto reqDto) {
+
+        List<FinancialRatiosTTM_ResDto> response = fmpClientComponent.sendGet(
+                FmpApiList.FinancialRatiosTTM,
+                reqDto,
+                new ParameterizedTypeReference<>() {}
+        );
+
+        return response;
     }
 
 }

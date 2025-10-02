@@ -70,13 +70,76 @@ public class CompanySharePriceCalculator {
     private String issuedShares;
 
 
-
-    // ---------------------- 필수값 아님
     /**
      * PER
      */
     @SerializedName("per")
     private String per;
+
+    /**
+     * <pre>
+     * 영업이익 성장률
+     * v2 추가
+     * </pre>
+     */
+    @SerializedName("growth")
+    private String operatingIncomeGrowth;
+
+    /**
+     * <pre>
+     * 무형자산
+     * v2 추가
+     * </pre>
+     */
+    @SerializedName("intangibleAssets")
+    private String intangibleAssets;
+
+    /**
+     * <pre>
+     * 당기 R&D
+     * v2 추가
+     * </pre>
+     */
+    @SerializedName("rndCurrent")
+    private String rndCurrent;
+
+    /**
+     * <pre>
+     * 전기 R&D
+     * v2 추가
+     * </pre>
+     */
+    @SerializedName("rndPre")
+    private String rndPre;
+
+    /**
+     * <pre>
+     * 전전기 R&D
+     * v2 추가
+     * </pre>
+     */
+    @SerializedName("rndPrePre")
+    private String rndPrePre;
+
+    /**
+     * <pre>
+     * 총부채
+     * v2 추가
+     * </pre>
+     */
+    @SerializedName("totalDebt")
+    private String totalDebt;
+
+    /**
+     * <pre>
+     * 현금성자산
+     * v2 추가
+     * </pre>
+     */
+    @SerializedName("cashAndCashEquivalents")
+    private String cashAndCashEquivalents;
+
+    // ---------------------- 필수값 아님
 
     /**
      * 현재 주가

@@ -7,6 +7,7 @@ import com.finance.dart.api.common.dto.CompanySharePriceResult;
 import com.finance.dart.api.common.service.PerShareValueCalculationService;
 import com.finance.dart.api.domestic.service.DomesticStockCalculationService;
 import com.finance.dart.common.dto.CommonResponse;
+import jakarta.annotation.Nullable;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -14,6 +15,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 
 @Slf4j
@@ -82,6 +84,42 @@ public class MainController {
 
 //        CompanySharePriceResult responseBody =  US_StockCalFromSecService.calPerValue(symbol);  // SEC
         CompanySharePriceResult responseBody = US_StockCalFromFmpService.calPerValue(symbol);   // FMP
+
+        return new ResponseEntity<>(new CommonResponse<>(responseBody), HttpStatus.OK);
+    }
+
+    /**
+     * <pre>
+     * 해외기업
+     * 한 기업의 한주당 가치 계산 V2
+     * </pre>
+     * @param symbol
+     * @return
+     * @throws Exception
+     */
+    @GetMapping("/cal/per_value/abroad/v2")
+    public ResponseEntity<Object> calAbroadCompanyStockPerValueV2(@RequestParam("symbol") String symbol)
+            throws Exception {
+
+        CompanySharePriceResult responseBody = US_StockCalFromFmpService.calPerValueV2(symbol);   // FMP
+
+        return new ResponseEntity<>(new CommonResponse<>(responseBody), HttpStatus.OK);
+    }
+
+    /**
+     * 해외기업
+     * 한 기업의 한주당 가치 계산(다건)
+     * @param symbolList ',' 로 구분
+     * @param detail false: 상세정보 생략
+     * @return
+     * @throws Exception
+     */
+    @GetMapping("/cal/per_value/abroad/arr")
+    public ResponseEntity<Object> calAbroadCompanyStockPerValueArr(@RequestParam("symbol") String symbolList,
+                                                                   @Nullable @RequestParam("detail") String detail)
+            throws Exception {
+
+        List<CompanySharePriceResult> responseBody = US_StockCalFromFmpService.calPerValueList(symbolList, detail);   // FMP
 
         return new ResponseEntity<>(new CommonResponse<>(responseBody), HttpStatus.OK);
     }

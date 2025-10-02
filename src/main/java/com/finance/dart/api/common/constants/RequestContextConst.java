@@ -18,6 +18,11 @@ public class RequestContextConst {
     public static final String 계산_부채 = "계산_부채";
     public static final String 계산_기업가치 = "계산_기업가치";
     public static final String PER = "PER";
+
+    // V2 추가
+    public static final String 연구개발비_합계 = "연구개발비_합계";
+    public static final String 연구개발비_평균 = "연구개발비_평균";
+
     // 끝: CompanySharePriceResultDetail --------------------------
 
 }

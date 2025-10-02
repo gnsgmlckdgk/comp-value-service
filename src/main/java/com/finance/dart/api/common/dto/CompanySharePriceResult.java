@@ -1,5 +1,6 @@
 package com.finance.dart.api.common.dto;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
@@ -23,6 +24,7 @@ public class CompanySharePriceResult {
     private String 현재가격 = "";    // 현재주식가격
     private String 확인시간 = "";    // yyyyMMdd HH:mm:ss
 
+    @JsonInclude(JsonInclude.Include.NON_NULL)
     private CompanySharePriceResultDetail 상세정보;
 
     public CompanySharePriceResult(String responseMessage) {
