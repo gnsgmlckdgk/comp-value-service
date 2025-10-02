@@ -10,6 +10,14 @@ public class StringUtil {
         return value.toString();
     }
 
+    public static String defaultString(Object value, String defaultValue) {
+
+        if(value == null) return defaultValue;
+        if("".equals(value.toString().trim())) return defaultValue;
+
+        return value.toString();
+    }
+
     public static long defaultLong(Object value) {
 
         if (value == null) return 0;

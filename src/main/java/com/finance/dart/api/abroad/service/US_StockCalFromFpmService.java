@@ -457,10 +457,13 @@ public class US_StockCalFromFpmService {
     private void setRstDetailContextData(CompanySharePriceResultDetail resultDetail) {
         resultDetail.set영업이익_합계(requestContext.getAttributeAsString(RequestContextConst.영업이익_합계));
         resultDetail.set영업이익_평균(requestContext.getAttributeAsString(RequestContextConst.영업이익_평균));
-        resultDetail.set계산_사업가치(requestContext.getAttributeAsString(RequestContextConst.계산_사업가치));
-        resultDetail.set계산_재산가치(requestContext.getAttributeAsString(RequestContextConst.계산_재산가치));
-        resultDetail.set계산_부채(requestContext.getAttributeAsString(RequestContextConst.계산_부채));
-        resultDetail.set계산_기업가치(requestContext.getAttributeAsString(RequestContextConst.계산_기업가치));
-        resultDetail.setPER(requestContext.getAttributeAsString(RequestContextConst.PER));
+
+        resultDetail.set계산_사업가치(StringUtil.defaultString(requestContext.getAttributeAsString(RequestContextConst.계산_사업가치), "N/A"));
+        resultDetail.set계산_재산가치(StringUtil.defaultString(requestContext.getAttributeAsString(RequestContextConst.계산_재산가치), "N/A"));
+        resultDetail.set계산_부채(StringUtil.defaultString(requestContext.getAttributeAsString(RequestContextConst.계산_부채), "N/A"));
+        resultDetail.set계산_기업가치(StringUtil.defaultString(requestContext.getAttributeAsString(RequestContextConst.계산_기업가치), "N/A"));
+
+        if(StringUtil.isStringEmpty(resultDetail.getPER()))
+            resultDetail.setPER(requestContext.getAttributeAsString(RequestContextConst.PER));
     }
 }
