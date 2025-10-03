@@ -82,6 +82,33 @@ public class US_StockCalFromFpmService {
         return resultList;
     }
 
+    /**
+     * 주당 가치 계산(다건) V2
+     * @param symbols
+     * @param detail
+     * @return
+     * @throws Exception
+     */
+    public List<CompanySharePriceResult> calPerValueListV2(String symbols, String detail) throws Exception {
+
+        List<CompanySharePriceResult> resultList = new LinkedList<>();
+
+        if(symbols == null) return null;
+        List<String> symbolList = Arrays.stream(symbols.split(","))
+                .map(String::trim)
+                .filter(s -> !s.isEmpty())
+                .toList();
+
+        for(String symbol : symbolList) {
+            CompanySharePriceResult result = calPerValueV2(symbol);
+            if("F".equals(StringUtil.defaultString(detail))) result.set상세정보(null);
+            resultList.add(result);
+            Thread.sleep(TRSC_DELAY);   // 너무 빠르게 연속호출하면 타겟에서 거부할 수 있음
+        }
+
+        return resultList;
+    }
+
 
     /**
      * 주당 가치 계산

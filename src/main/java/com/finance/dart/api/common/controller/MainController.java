@@ -124,6 +124,24 @@ public class MainController {
         return new ResponseEntity<>(new CommonResponse<>(responseBody), HttpStatus.OK);
     }
 
+    /**
+     * 해외기업
+     * 한 기업의 한주당 가치 계산(다건) V2
+     * @param symbolList ',' 로 구분
+     * @param detail false: 상세정보 생략
+     * @return
+     * @throws Exception
+     */
+    @GetMapping("/cal/per_value/abroad/arr/v2")
+    public ResponseEntity<Object> calAbroadCompanyStockPerValueArrV2(@RequestParam("symbol") String symbolList,
+                                                                   @Nullable @RequestParam("detail") String detail)
+            throws Exception {
+
+        List<CompanySharePriceResult> responseBody = US_StockCalFromFmpService.calPerValueListV2(symbolList, detail);   // FMP
+
+        return new ResponseEntity<>(new CommonResponse<>(responseBody), HttpStatus.OK);
+    }
+
 
     /**
      * 한 기업의 한주당 가치 수동 계산

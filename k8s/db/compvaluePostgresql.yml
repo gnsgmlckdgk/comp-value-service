@@ -14,9 +14,20 @@ spec:
       labels:
         app: postgres
     spec:
+      securityContext:
+        runAsUser: 999
+        runAsGroup: 999
+        fsGroup: 999
+      initContainers:
+      - name: fix-perms
+        image: postgres:15
+        command: ["bash","-lc","mkdir -p /var/lib/postgresql/data && chown -R 999:999 /var/lib/postgresql"]
+        volumeMounts:
+        - name: postgres-storage
+          mountPath: /var/lib/postgresql
       containers:
       - name: postgres
-        image: postgres:latest   # 사용하고자 하는 PostgreSQL 버전
+        image: postgres:15   # 버전 고정(이미지 최신 변경으로 인한 경로/권한 변화 방지)
         ports:
         - containerPort: 5432
         env:
@@ -26,9 +37,11 @@ spec:
             value: "compvalue"    # 테스트
           - name: POSTGRES_DB
             value: "COMP_VALUE"
+          - name: PGDATA
+            value: /var/lib/postgresql/data
         volumeMounts:
         - name: postgres-storage
-          mountPath: /var/lib/postgresql/data
+          mountPath: /var/lib/postgresql
   volumeClaimTemplates:
   - metadata:
       name: postgres-storage
