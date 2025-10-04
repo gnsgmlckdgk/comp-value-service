@@ -4,7 +4,7 @@ import com.finance.dart.common.config.AppProperties;
 import com.finance.dart.common.constant.ResponseEnum;
 import com.finance.dart.common.dto.CommonResponse;
 import com.finance.dart.common.exception.UnauthorizedException;
-import com.finance.dart.common.service.RedisService;
+import com.finance.dart.common.service.RedisComponent;
 import com.finance.dart.common.util.StringUtil;
 import com.finance.dart.member.dto.LoginDTO;
 import com.finance.dart.member.entity.Member;
@@ -29,7 +29,7 @@ import java.util.concurrent.TimeUnit;
 public class SessionService {
 
     private final MemberRepository memberRepository;
-    private final RedisService redisService;
+    private final RedisComponent redisComponent;
     private final PasswordEncoder passwordEncoder;
     private final AppProperties appProperties;
 
@@ -62,7 +62,7 @@ public class SessionService {
         String redisKey = LoginDTO.redisSessionPrefix + sessionKey;
         if(log.isDebugEnabled()) log.debug("redisKey = {}", redisKey);
 
-        redisService.saveValueWithTtl(redisKey, StringUtil.defaultString(member.getId()), TIMEOUT_MINUTES, TimeUnit.MINUTES);
+        redisComponent.saveValueWithTtl(redisKey, StringUtil.defaultString(member.getId()), TIMEOUT_MINUTES, TimeUnit.MINUTES);
         loginDTO.setSessionKey(sessionKey);
         loginDTO.setPassword(null);   // 비밀번호 입력값은 삭제
         loginDTO.setNickName(member.getNickname());
@@ -101,7 +101,7 @@ public class SessionService {
         String sessionId = getSessionId(request);
 
         String redisKey = LoginDTO.redisSessionPrefix + sessionId;
-        redisService.deleteKey(redisKey);
+        redisComponent.deleteKey(redisKey);
 
         return sessionId;
     }
@@ -182,7 +182,7 @@ public class SessionService {
     private boolean isValidSession(String sessionId) {
 
         String redisKey = LoginDTO.redisSessionPrefix + sessionId;
-        String value = redisService.getValue(redisKey);
+        String value = redisComponent.getValue(redisKey);
 
         if(StringUtil.isStringEmpty(value)) return false;
 

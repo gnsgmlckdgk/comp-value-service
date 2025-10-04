@@ -21,9 +21,11 @@ import com.finance.dart.api.common.dto.CompanySharePriceCalculator;
 import com.finance.dart.api.common.dto.CompanySharePriceResult;
 import com.finance.dart.api.common.dto.CompanySharePriceResultDetail;
 import com.finance.dart.api.common.service.PerShareValueCalculationService;
+import com.finance.dart.common.service.RedisComponent;
 import com.finance.dart.common.util.CalUtil;
 import com.finance.dart.common.util.DateUtil;
 import com.finance.dart.common.util.StringUtil;
+import com.google.gson.Gson;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -32,6 +34,7 @@ import java.math.RoundingMode;
 import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 /**
  * 해외기업 주식가치 계산 서비스
@@ -43,15 +46,17 @@ public class US_StockCalFromFpmService {
 
     private final int TRSC_DELAY = 100;    // 0.1s
 
-    private final RequestContext requestContext;
-    private final IncomeStatementService incomeStatementService;
-    private final BalanceSheetStatementService balanceSheetStatementService;
-    private final EnterpriseValueService enterpriseValueService;
-    private final FinancialRatiosService financialRatiosService;
-    private final IncomeStatGrowthService incomeStatGrowthService;
-    private final CompanyProfileSearchService profileSearchService;              // 해외기업 정보조회 서비스
+    private final RequestContext requestContext;    // 요청 컨텍스트
+    private final RedisComponent redisComponent;    // Redis 컴포넌트
 
-    private final PerShareValueCalculationService sharePriceCalculatorService;   // 가치 계산 서비스
+    private final IncomeStatementService incomeStatementService;                // 영업이익 조회 서비스
+    private final BalanceSheetStatementService balanceSheetStatementService;    // 재무상태표 조회 서비스
+    private final EnterpriseValueService enterpriseValueService;                // 기업가치 조회 서비스
+    private final FinancialRatiosService financialRatiosService;                // 재무비율지표 조회 서비스
+    private final IncomeStatGrowthService incomeStatGrowthService;              // 영업이익 성장률 조회 서비스
+    private final CompanyProfileSearchService profileSearchService;             // 해외기업 정보조회 서비스
+
+    private final PerShareValueCalculationService sharePriceCalculatorService;  // 가치 계산 서비스
 
 
 
@@ -160,6 +165,12 @@ public class US_StockCalFromFpmService {
 
         final String UNIT = "1";  // 1달러
 
+        //@ Redis 저장값 확인(캐시 역할)
+        String saveData = redisComponent.getValue(symbol);
+        if(!StringUtil.isStringEmpty(saveData)) {
+            return new Gson().fromJson(saveData, CompanySharePriceResult.class);
+        }
+
         CompanySharePriceResult result = new CompanySharePriceResult(); // 결과
         result.set기업심볼(symbol);
         CompanySharePriceResultDetail resultDetail = new CompanySharePriceResultDetail(UNIT);
@@ -186,9 +197,10 @@ public class US_StockCalFromFpmService {
 
         result.set상세정보(resultDetail);
 
+        //@ Redis에 결과값 저장(캐시 역할)
+        redisComponent.saveValueWithTtl(symbol, new Gson().toJson(result), 6, TimeUnit.HOURS);
+
         return result;
-
-
     }
 
     /**

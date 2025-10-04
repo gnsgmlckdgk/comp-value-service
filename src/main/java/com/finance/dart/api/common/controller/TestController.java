@@ -1,7 +1,7 @@
 package com.finance.dart.api.common.controller;
 
 import com.finance.dart.api.domestic.service.schedule.CalCompanyStockPerValueTotalService;
-import com.finance.dart.common.service.RedisService;
+import com.finance.dart.common.service.RedisComponent;
 import com.finance.dart.common.util.StringUtil;
 import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -17,7 +17,7 @@ import java.util.Map;
 public class TestController {
 
 
-    private final RedisService redisService;
+    private final RedisComponent redisComponent;
     private final CalCompanyStockPerValueTotalService calCompanyStockPerValueTotalService;
 
 
@@ -40,16 +40,16 @@ public class TestController {
 
         String result = switch (type) {
             case "I" -> {
-                if(ttl == 0) redisService.saveValue(key, value);
-                else redisService.saveValueWithTtl(key, value, ttl);
+                if(ttl == 0) redisComponent.saveValue(key, value);
+                else redisComponent.saveValueWithTtl(key, value, ttl);
                 yield "등록완료";
             }
-            case "S" -> redisService.getValue(key);
+            case "S" -> redisComponent.getValue(key);
             case "D" -> {
-                redisService.deleteKey(key);
+                redisComponent.deleteKey(key);
                 yield "삭제완료";
             }
-            case "AK" -> redisService.scanKeys(pattern).toString();
+            case "AK" -> redisComponent.scanKeys(pattern).toString();
             default -> "타입값이 올바르지 않습니다.";
         };
 

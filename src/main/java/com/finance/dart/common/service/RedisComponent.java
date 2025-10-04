@@ -5,15 +5,15 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.redis.core.Cursor;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.ScanOptions;
-import org.springframework.stereotype.Service;
+import org.springframework.stereotype.Component;
 
 import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
-@Service
+@Component
 @RequiredArgsConstructor
-public class RedisService {
+public class RedisComponent {
 
     private final RedisTemplate<String, Object> redisTemplate;
 
