@@ -31,6 +31,7 @@ public class CompanySharePriceResultDetail {
 
     /** V2 추가 **/
     private String PER = "N/A";
+    private String PEG = "N/A";
     private String 영업이익성장률 = "N/A";
     private String 성장률보정PER = "N/A";
     private String 무형자산 = "N/A";
@@ -49,7 +50,6 @@ public class CompanySharePriceResultDetail {
     private String 계산_재산가치 = "N/A";
     private String 계산_부채 = "N/A";
     private String 계산_기업가치 = "N/A";
-
 
     /** 기타값 **/
     private String 예외메세지_영업이익 = "N/A";

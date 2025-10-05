@@ -57,17 +57,16 @@ public class PerShareValueCalculationService {
                 req.getOperatingProfitPre(),
                 req.getOperatingProfitCurrent()
         );
-        if(log.isDebugEnabled()) log.debug("영업이익 평균 = {}", operatingProfitAvg);
 
         // 2. 성장률 보정 PER
         String adjustedPER = CalUtil.multi(per, CalUtil.add("1", growth));
-        if(log.isDebugEnabled()) log.debug("보정 성장률 = {}", operatingProfitAvg);
 
         final String STEP01 = CalUtil.multi(operatingProfitAvg, adjustedPER);
 
         resultDetail.setPER(per);
         resultDetail.set영업이익성장률(growth);
         resultDetail.set성장률보정PER(adjustedPER);
+        resultDetail.setPEG(calPeg(per, growth));
 
         // STEP02 ------------------------------------------------------------------------------------------------------
         // (유동자산 − (유동부채 × 비율) + 투자자산)
@@ -225,4 +224,31 @@ public class PerShareValueCalculationService {
         }
     }
 
+    /**
+     * <pre>
+     * PEG 계산
+     * PEG = PER ÷ 이익성장률 — 1 이하이면 성장 대비 저평가, 1 이상이면 고평가 가능
+     * </pre>
+     * @param per
+     * @param growth
+     * @return
+     */
+    private String calPeg(String per, String growth) {
+
+        String pegValue = null;
+        try {
+            if (!StringUtil.isStringEmpty(per) && !StringUtil.isStringEmpty(growth)) {
+                java.math.BigDecimal perBd = new java.math.BigDecimal(per);
+                java.math.BigDecimal gBd  = new java.math.BigDecimal(growth).abs();
+                java.math.BigDecimal growthPctBd = (gBd.compareTo(java.math.BigDecimal.ONE) > 0)
+                        ? gBd
+                        : gBd.multiply(new java.math.BigDecimal("100"));
+                if (growthPctBd.signum() > 0) {
+                    pegValue = perBd.divide(growthPctBd, 4, java.math.RoundingMode.HALF_UP).toPlainString();
+                }
+            }
+        } catch (Exception ignore) {}
+
+        return pegValue;
+    }
 }
