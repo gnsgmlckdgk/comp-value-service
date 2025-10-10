@@ -163,6 +163,9 @@ public class SessionService {
 
             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED); // 401
             throw new UnauthorizedException(ResponseEnum.LOGIN_SESSION_EXPIRED.getMessage());
+        } else {
+            // 세션 TTL 갱신
+            redisComponent.updateTtl(LoginDTO.redisSessionPrefix + sessionId, TIMEOUT_MINUTES, TimeUnit.MINUTES);
         }
     }
 

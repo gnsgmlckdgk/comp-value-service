@@ -47,6 +47,15 @@ public class RedisComponent {
         redisTemplate.opsForValue().set(key, value, timeout, timeUnit);
     }
 
+    /**
+     * TTL 갱신
+     * @param key
+     * @param timeout
+     * @param timeUnit
+     */
+    public void updateTtl(String key, long timeout, TimeUnit timeUnit) {
+        redisTemplate.expire(key, timeout, timeUnit);
+    }
 
     /**
      * 데이터 조회
