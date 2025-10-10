@@ -68,7 +68,6 @@ public class PerShareValueCalculationService {
         //String adjustedPER = calAdjustedPER(incomGrowth, per);    // A
         String adjustedPER = CalUtil.multi(per, CalUtil.add("1", incomGrowth)); // B
 
-
         final String STEP01 = CalUtil.multi(operatingProfitAvg, adjustedPER);
 
         resultDetail.setPER(per);
