@@ -61,8 +61,13 @@ public class PerShareValueCalculationService {
         );
 
         // 2. 성장률 보정 PER
-//        String adjustedPER = CalUtil.multi(per, CalUtil.add("1", incomeGrowthBd.toPlainString()));    // 이전 계산식(old)
-        String adjustedPER = calAdjustedPER(incomGrowth, per);
+        // PER에 성장률(g)을 단순 가산하여 적정 PER을 보정
+        // - A식 (÷g)은 이론상 정밀하지만 변동이 과도함
+        // - B식 (×(1+g))은 보수적이면서 실제 시장 밸류에 근접
+
+        //String adjustedPER = calAdjustedPER(incomGrowth, per);    // A
+        String adjustedPER = CalUtil.multi(per, CalUtil.add("1", incomGrowth)); // B
+
 
         final String STEP01 = CalUtil.multi(operatingProfitAvg, adjustedPER);
 
