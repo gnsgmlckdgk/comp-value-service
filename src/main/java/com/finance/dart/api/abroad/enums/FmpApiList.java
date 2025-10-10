@@ -86,6 +86,14 @@ public enum FmpApiList {
             "영업이익 성장률 조회 API"
     ),
 
+    /** 성장률 조회 **/
+    FinancialStatementsGrowth(
+            "Financial Statement Growth API",
+            "https://financialmodelingprep.com/stable/financial-growth",
+            HttpMethod.GET,
+            "https://site.financialmodelingprep.com/developer/docs#financial-growth",
+            "성장률 조회 API"
+    )
 
     ;
 

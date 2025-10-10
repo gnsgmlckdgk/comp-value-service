@@ -32,6 +32,7 @@ public class CompanySharePriceResultDetail {
     /** V2 추가 **/
     private String PER = "N/A";
     private String PEG = "N/A";
+    private String EPS성장률 = "N/A";
     private String 영업이익성장률 = "N/A";
     private String 성장률보정PER = "N/A";
     private String 무형자산 = "N/A";

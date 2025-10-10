@@ -6,6 +6,8 @@ import com.finance.dart.api.abroad.dto.fmp.balancesheet.BalanceSheetResDto;
 import com.finance.dart.api.abroad.dto.fmp.company.CompanyProfileDataResDto;
 import com.finance.dart.api.abroad.dto.fmp.enterprisevalues.EnterpriseValuesReqDto;
 import com.finance.dart.api.abroad.dto.fmp.enterprisevalues.EnterpriseValuesResDto;
+import com.finance.dart.api.abroad.dto.fmp.financialgrowth.FinancialGrowthReqDto;
+import com.finance.dart.api.abroad.dto.fmp.financialgrowth.FinancialGrowthResDto;
 import com.finance.dart.api.abroad.dto.fmp.financialratios.FinancialRatiosReqDto;
 import com.finance.dart.api.abroad.dto.fmp.financialratios.FinancialRatiosResDto;
 import com.finance.dart.api.abroad.dto.fmp.financialratios.FinancialRatiosTTM_ReqDto;
@@ -53,6 +55,7 @@ public class US_StockCalFromFpmService {
     private final BalanceSheetStatementService balanceSheetStatementService;    // 재무상태표 조회 서비스
     private final EnterpriseValueService enterpriseValueService;                // 기업가치 조회 서비스
     private final FinancialRatiosService financialRatiosService;                // 재무비율지표 조회 서비스
+    private final FinancialGrowthService financialGrowthService;                // 성장률 조회 서비스
     private final IncomeStatGrowthService incomeStatGrowthService;              // 영업이익 성장률 조회 서비스
     private final CompanyProfileSearchService profileSearchService;             // 해외기업 정보조회 서비스
 
@@ -354,12 +357,21 @@ public class US_StockCalFromFpmService {
             return null;
         }
 
+        FinancialGrowthReqDto financialGrowthReqDto = new FinancialGrowthReqDto(symbol, 1, FmpPeriod.fiscalYear);
+        List<FinancialGrowthResDto> financialGrowth = financialGrowthService.financialStatementsGrowth(financialGrowthReqDto);
+        if(financialGrowth == null || financialGrowth.size() < 1) {
+            result.set결과메시지("성장률 조회에 실패했습니다.");
+            return null;
+        }
+
         IncomeStatGrowthReqDto incomeStatGrowthReqDto = new IncomeStatGrowthReqDto(symbol, 1, FmpPeriod.annual);
         List<IncomeStatGrowthResDto> incomeStatGrowth = incomeStatGrowthService.findIncomeStatGrowth(incomeStatGrowthReqDto);
         if(incomeStatGrowth == null || incomeStatGrowth.size() < 1) {
-            result.set결과메시지("재무제표 성장률 조회에 실패했습니다.");
+            result.set결과메시지("영업이익 성장률 조회에 실패했습니다.");
             return null;
         }
+
+        // TODO: 환율정보 조회 필요
 
         // ----------------------------------------------------------------
 
@@ -402,9 +414,13 @@ public class US_StockCalFromFpmService {
         resultDetail.setPER(per);
 
         //@ 성장률(연간)
-        String growth = StringUtil.defaultString(incomeStatGrowth.get(0).getGrowthOperatingIncome());
-        calParam.setOperatingIncomeGrowth(growth);
-        resultDetail.set영업이익성장률(growth);
+        String epsGrowth = StringUtil.defaultString(financialGrowth.get(0).getEpsgrowth());
+        calParam.setEpsgrowth(epsGrowth);
+        resultDetail.setEPS성장률(epsGrowth);
+
+        String incomeGrowth = StringUtil.defaultString(incomeStatGrowth.get(0).getGrowthOperatingIncome());
+        calParam.setOperatingIncomeGrowth(incomeGrowth);
+        resultDetail.set영업이익성장률(incomeGrowth);
 
         //@ 최근 3년 R&D
         setRnDStat(calParam, income, resultDetail);

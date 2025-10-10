@@ -112,6 +112,17 @@ public class CalUtil {
     }
 
     /**
+     * 절대값 반환
+     * @param val
+     * @return
+     */
+    public static String abs(String val) {
+        BigDecimal num = new BigDecimal(val);
+        BigDecimal absNum = num.abs();
+        return absNum.toPlainString();
+    }
+
+    /**
      * 콤마 삭제
      * 123,789,987 => 123789987
      * @param val

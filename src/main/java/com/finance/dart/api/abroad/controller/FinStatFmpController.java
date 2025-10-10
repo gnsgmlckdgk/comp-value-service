@@ -4,6 +4,8 @@ import com.finance.dart.api.abroad.dto.fmp.balancesheet.BalanceSheetReqDto;
 import com.finance.dart.api.abroad.dto.fmp.balancesheet.BalanceSheetResDto;
 import com.finance.dart.api.abroad.dto.fmp.enterprisevalues.EnterpriseValuesReqDto;
 import com.finance.dart.api.abroad.dto.fmp.enterprisevalues.EnterpriseValuesResDto;
+import com.finance.dart.api.abroad.dto.fmp.financialgrowth.FinancialGrowthReqDto;
+import com.finance.dart.api.abroad.dto.fmp.financialgrowth.FinancialGrowthResDto;
 import com.finance.dart.api.abroad.dto.fmp.financialratios.FinancialRatiosReqDto;
 import com.finance.dart.api.abroad.dto.fmp.financialratios.FinancialRatiosResDto;
 import com.finance.dart.api.abroad.dto.fmp.financialratios.FinancialRatiosTTM_ReqDto;
@@ -14,7 +16,6 @@ import com.finance.dart.api.abroad.dto.fmp.incomestatgrowth.IncomeStatGrowthReqD
 import com.finance.dart.api.abroad.dto.fmp.incomestatgrowth.IncomeStatGrowthResDto;
 import com.finance.dart.api.abroad.dto.fmp.keymetrics.KeyMetricsReqDto;
 import com.finance.dart.api.abroad.dto.fmp.keymetrics.KeyMetricsResDto;
-import com.finance.dart.api.abroad.service.fmp.FinancialRatiosService;
 import com.finance.dart.api.abroad.service.fmp.*;
 import com.finance.dart.common.dto.CommonResponse;
 import lombok.AllArgsConstructor;
@@ -39,6 +40,7 @@ public class FinStatFmpController {
     private final KeyMetricsService keyMetricsService;
     private final EnterpriseValueService enterpriseValueService;
     private final FinancialRatiosService financialRatiosService;
+    private final FinancialGrowthService financialGrowthService;
     private final IncomeStatGrowthService incomeStatGrowthService;
 
 
@@ -121,7 +123,20 @@ public class FinStatFmpController {
     }
 
     /**
-     * 재무제표 성장률 조회
+     * 성장률 조회
+     * @param requestDto
+     * @return
+     */
+    @PostMapping("/financialGrowth")
+    public ResponseEntity<CommonResponse<List<FinancialGrowthResDto>>> financialGrowth(@RequestBody FinancialGrowthReqDto requestDto) {
+
+        List<FinancialGrowthResDto> response = financialGrowthService.financialStatementsGrowth(requestDto);
+
+        return new ResponseEntity<>(new CommonResponse<>(response), HttpStatus.OK);
+    }
+
+    /**
+     * 영업 성장률 조회
      * @param requestDto
      * @return
      */

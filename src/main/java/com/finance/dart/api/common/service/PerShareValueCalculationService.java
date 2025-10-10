@@ -11,6 +11,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
 import java.math.RoundingMode;
 
 /**
@@ -37,7 +38,8 @@ public class PerShareValueCalculationService {
         if(log.isDebugEnabled()) log.debug("CompanySharePriceCalculator = {}", req);
 
         final String per = req.getPer();                                    // PER
-        final String growth = req.getOperatingIncomeGrowth();               // 성장률
+        final String incomGrowth = req.getOperatingIncomeGrowth();          // 영업이익 성장율
+        final String epsGrowth = req.getEpsgrowth();                        // EPS 성장율
         final String assetsTotal = req.getCurrentAssetsTotal();             // 유동자산합계
         final String liabilitiesTotal = req.getCurrentLiabilitiesTotal();   // 유동부채합계
         final String intangibleAssets = req.getIntangibleAssets();          // 무형자산
@@ -59,14 +61,15 @@ public class PerShareValueCalculationService {
         );
 
         // 2. 성장률 보정 PER
-        String adjustedPER = CalUtil.multi(per, CalUtil.add("1", growth));
+//        String adjustedPER = CalUtil.multi(per, CalUtil.add("1", incomeGrowthBd.toPlainString()));    // 이전 계산식(old)
+        String adjustedPER = calAdjustedPER(incomGrowth, per);
 
         final String STEP01 = CalUtil.multi(operatingProfitAvg, adjustedPER);
 
         resultDetail.setPER(per);
-        resultDetail.set영업이익성장률(growth);
+        resultDetail.set영업이익성장률(incomGrowth);
         resultDetail.set성장률보정PER(adjustedPER);
-        resultDetail.setPEG(calPeg(per, growth));
+        resultDetail.setPEG(calPeg(per, epsGrowth));  // PEG 는 영업이익 성장률이 아닌 EPS 성장률
 
         // STEP02 ------------------------------------------------------------------------------------------------------
         // (유동자산 − (유동부채 × 비율) + 투자자산)
@@ -226,29 +229,94 @@ public class PerShareValueCalculationService {
 
     /**
      * <pre>
-     * PEG 계산
-     * PEG = PER ÷ 이익성장률 — 1 이하이면 성장 대비 저평가, 1 이상이면 고평가 가능
+     * 성장률보정 PER 계산
+     * 이론적 성장률 반영 + 현실적 밸류 안정화를 동시에 만족시키기 위한 보정 로직 추가
      * </pre>
+     * @param incomGrowth
      * @param per
-     * @param growth
      * @return
      */
-    private String calPeg(String per, String growth) {
+    private String calAdjustedPER(String incomGrowth, String per) {
+        if (StringUtil.isStringEmpty(incomGrowth) || StringUtil.isStringEmpty(per)) return null;
 
-        String pegValue = null;
+        BigDecimal g = new BigDecimal(incomGrowth);
+
+        // 역성장/정체(<=0)면 보정하지 않음: 기본 PER 반환
+        if (g.signum() <= 0) return per;
+
+        // 1) λ-보정: 너무 작은 성장률 안정화
+        BigDecimal lambda = new BigDecimal("0.05");     // 최소 기대 성장 5%
+        BigDecimal gEff = g.add(lambda);                    // g + λ
+
+        // (선택) 상한 캡: 일시적 급등 완화
+        BigDecimal gMax = new BigDecimal("0.40");       // 최대 40% 사용
+        if (gEff.compareTo(gMax) > 0) gEff = gMax;
+
+        // 2) 이론값: PER ÷ (g + λ)
+        String perPureStr = CalUtil.divide(per, gEff.toPlainString(), 4, RoundingMode.HALF_UP);
+        BigDecimal perPure = new BigDecimal(perPureStr);
+
+        // 3) 시장 Anchor와 혼합
+        BigDecimal anchor = new BigDecimal("25");       // 시장 평균 PER
+        BigDecimal alpha  = new BigDecimal("0.4");      // 이론:시장 = 40:60
+        BigDecimal adjusted = perPure.multiply(alpha)
+                .add(anchor.multiply(BigDecimal.ONE.subtract(alpha)));
+
+        // 4) 최종 캡 (과대 방지)
+        BigDecimal cap = new BigDecimal("120");
+        if (adjusted.compareTo(cap) > 0) adjusted = cap;
+
+        return adjusted.setScale(4, RoundingMode.HALF_UP).toPlainString();
+    }
+
+    /**
+     * <pre>
+     * PEG 계산
+     * PEG = PER ÷ EPS성장률 — 1 이하이면 성장 대비 저평가, 1 이상이면 고평가 가능
+     * </pre>
+     * @param per
+     * @param epsGrowth
+     * @return
+     */
+    private String calPeg(String per, String epsGrowth) {
+
         try {
-            if (!StringUtil.isStringEmpty(per) && !StringUtil.isStringEmpty(growth)) {
-                java.math.BigDecimal perBd = new java.math.BigDecimal(per);
-                java.math.BigDecimal gBd  = new java.math.BigDecimal(growth).abs();
-                java.math.BigDecimal growthPctBd = (gBd.compareTo(java.math.BigDecimal.ONE) > 0)
-                        ? gBd
-                        : gBd.multiply(new java.math.BigDecimal("100"));
-                if (growthPctBd.signum() > 0) {
-                    pegValue = perBd.divide(growthPctBd, 4, java.math.RoundingMode.HALF_UP).toPlainString();
-                }
-            }
-        } catch (Exception ignore) {}
+            if (StringUtil.isStringEmpty(per) || StringUtil.isStringEmpty(epsGrowth)) return null;
 
-        return pegValue;
+            BigDecimal perBd = new BigDecimal(per);
+            BigDecimal gBd   = new BigDecimal(epsGrowth); // abs() 쓰지 않음
+
+            // 역성장/정체 → PEG는 의미 없음
+            if (gBd.signum() <= 0) return "999";
+
+            // 분모는 "퍼센트". 0.x(비율)로 들어오면 ×100, 이미 퍼센트(>1)이면 그대로
+            BigDecimal growthPctBd = (gBd.compareTo(BigDecimal.ONE) > 0)
+                    ? gBd
+                    : gBd.multiply(new BigDecimal("100"));
+
+//            // 너무 작은 성장률(≈0)은 폭주 방지용 필터 (선택)
+//            if (growthPctBd.compareTo(new BigDecimal("0.01")) < 0) return null; // 0.01% 미만이면 N/A
+
+            return perBd.divide(growthPctBd, 4, RoundingMode.HALF_UP).toPlainString();
+        } catch (Exception ignore) {
+            return null;
+        }
+
+        // 역성장 계산방지 로직 없는거(old)
+//        String pegValue = null;
+//        try {
+//            if (!StringUtil.isStringEmpty(per) && !StringUtil.isStringEmpty(epsGrowth)) {
+//                java.math.BigDecimal perBd = new java.math.BigDecimal(per);
+//                java.math.BigDecimal gBd  = new java.math.BigDecimal(epsGrowth).abs();
+//                java.math.BigDecimal growthPctBd = (gBd.compareTo(java.math.BigDecimal.ONE) > 0)
+//                        ? gBd
+//                        : gBd.multiply(new java.math.BigDecimal("100"));
+//                if (growthPctBd.signum() > 0) {
+//                    pegValue = perBd.divide(growthPctBd, 4, java.math.RoundingMode.HALF_UP).toPlainString();
+//                }
+//            }
+//        } catch (Exception ignore) {}
+//
+//        return pegValue;
     }
 }

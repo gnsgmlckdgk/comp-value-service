@@ -78,6 +78,15 @@ public class CompanySharePriceCalculator {
 
     /**
      * <pre>
+     * EPS 성장률
+     * V2 추가
+     * </pre>
+     */
+    @SerializedName("epsgrowth")
+    private String epsgrowth;
+
+    /**
+     * <pre>
      * 영업이익 성장률
      * v2 추가
      * </pre>
