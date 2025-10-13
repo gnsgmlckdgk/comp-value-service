@@ -42,6 +42,7 @@ spring:
   data:
     redis:
       host: 127.0.0.1
+      password: 1234
       port: 6380  # 로컬에선 6380, 운영에선 6379(k8s에서 설정)
       timeout: 2s
       database: 9 # 디폴트 0인데 개발 환경에선 9로 분리(k8s 올릴때 환경변수는 0으로 설정)
