@@ -20,7 +20,7 @@ spring:
     active: test # CI 빌드 테스트 시 컨피그서버에서 테스트컨테이너 설정도 읽을 수 있게하기 위해 추가
   datasource:
     driver-class-name: org.postgresql.Driver
-    url: jdbc:postgresql://localhost:5432/COMP_VALUE
+    url: jdbc:postgresql://localhost:5433/COMP_VALUE  # 로컬 5433, 운영 5432(k8s에서 설정)
     username: compvalue
     password: compvalue
   jpa:
@@ -42,7 +42,7 @@ spring:
   data:
     redis:
       host: 127.0.0.1
-      port: 6380  # k8s 설정에선 6379 로 할 예정(로컬 redis 가 따로 있어서 로컬에선 6380 k8s redis로 포트포워딩 함)
+      port: 6380  # 로컬에선 6380, 운영에선 6379(k8s에서 설정)
       timeout: 2s
       database: 9 # 디폴트 0인데 개발 환경에선 9로 분리(k8s 올릴때 환경변수는 0으로 설정)
       client-name: finreport-k8s-pf
