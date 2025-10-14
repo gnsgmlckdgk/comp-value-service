@@ -1,5 +1,6 @@
 package com.finance.dart.common.config;
 
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.data.redis.RedisProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -10,12 +11,18 @@ import org.springframework.data.redis.connection.lettuce.LettuceConnectionFactor
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.serializer.StringRedisSerializer;
 
+@Slf4j
 @Configuration
 public class RedisConfig {
 
     @Bean
     public RedisConnectionFactory redisConnectionFactory(RedisProperties redisProperties) {
-        RedisStandaloneConfiguration cfg = new RedisStandaloneConfiguration(redisProperties.getHost(), redisProperties.getPort());
+
+        String host = redisProperties.getHost();
+        int port = redisProperties.getPort();
+
+        RedisStandaloneConfiguration cfg = new RedisStandaloneConfiguration(host, port);
+        if(log.isInfoEnabled()) log.info("Redis Conn [{}:{}]", host, port);
         cfg.setPassword(RedisPassword.of(redisProperties.getPassword()));
         return new LettuceConnectionFactory(cfg);
     }
