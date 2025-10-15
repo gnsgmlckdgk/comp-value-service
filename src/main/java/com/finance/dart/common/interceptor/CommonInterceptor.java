@@ -12,7 +12,7 @@ import org.springframework.web.servlet.ModelAndView;
 @Slf4j
 @AllArgsConstructor
 @Component
-public class AuthInterceptor implements HandlerInterceptor {
+public class CommonInterceptor implements HandlerInterceptor {
 
     private final SessionService sessionService;
 
