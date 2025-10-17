@@ -50,6 +50,13 @@ public class CompanySymbolSearchService {
 
         List<FindCompanySymbolResDto> resultList = new LinkedList<>(mergedMap.values());
 
+        // symbol과 동일하면 앞으로 정렬
+        resultList.sort((a, b) -> {
+            if (a.getSymbol().equals(symbol.toUpperCase())) return -1; // a가 기준 symbol이면 맨 앞
+            if (b.getSymbol().equals(symbol.toUpperCase())) return 1;  // b가 기준 symbol이면 뒤로
+            return 0; // 그 외는 순서 유지
+        });
+
         return resultList;
     }
 
