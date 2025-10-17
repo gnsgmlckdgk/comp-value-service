@@ -5,6 +5,8 @@ import com.finance.dart.api.abroad.dto.fmp.company.FindCompanySymbolResDto;
 import com.finance.dart.api.abroad.service.fmp.CompanyProfileSearchService;
 import com.finance.dart.api.abroad.service.fmp.CompanySymbolSearchService;
 import com.finance.dart.common.dto.CommonResponse;
+import com.finance.dart.common.util.StringUtil;
+import jakarta.annotation.Nullable;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -29,17 +31,34 @@ public class CompanySearchController {
     private final CompanyProfileSearchService companyProfileSearchService;
 
     /**
-     * 해외기업 심볼 검색
+     * 해외기업 검색
      * @param companyName 기업명
+     * @param symbol 기업심볼
      * @return
      */
     @GetMapping("/symbol")
-    public ResponseEntity<CommonResponse<List<FindCompanySymbolResDto>>> findSymbolByCompanyName(@RequestParam(name = "cn") String companyName) {
+    public ResponseEntity<CommonResponse<List<FindCompanySymbolResDto>>> findSymbolByCompanyName(
+            @Nullable @RequestParam(name = "cn") String companyName,
+            @Nullable @RequestParam(name = "symbol") String symbol
+    ) {
 
-        List<FindCompanySymbolResDto> companySymbolList = companySymbolSearchService.findSymbolListByCompanyName(companyName);
+        List<FindCompanySymbolResDto> companySymbolList = null;
+
+        if(StringUtil.isStringEmpty(companyName)) {
+            companySymbolList =
+                    companySymbolSearchService.findSymbolListBySymbol(symbol);
+
+        } else if(StringUtil.isStringEmpty(symbol)) {
+            companySymbolList =
+                    companySymbolSearchService.findSymbolListByCompanyName(companyName);
+        } else {
+            companySymbolList =
+                    companySymbolSearchService.findSymbolListByIntegrate(companyName, symbol);
+        }
 
         return new ResponseEntity<>(new CommonResponse<>(companySymbolList), HttpStatus.OK);
     }
+
 
     /**
      * 해외기업 프로파일 검색

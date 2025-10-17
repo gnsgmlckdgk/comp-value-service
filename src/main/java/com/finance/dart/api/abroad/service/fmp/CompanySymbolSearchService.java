@@ -1,8 +1,8 @@
 package com.finance.dart.api.abroad.service.fmp;
 
+import com.finance.dart.api.abroad.consts.ExchangeConst;
 import com.finance.dart.api.abroad.dto.fmp.company.FindCompanySymbolReqDto;
 import com.finance.dart.api.abroad.dto.fmp.company.FindCompanySymbolResDto;
-import com.finance.dart.api.abroad.consts.ExchangeConst;
 import com.finance.dart.api.abroad.enums.FmpApiList;
 import com.finance.dart.common.service.ConfigService;
 import com.finance.dart.common.service.HttpClientService;
@@ -14,8 +14,8 @@ import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
-import java.util.Arrays;
-import java.util.List;
+import java.util.*;
+import java.util.stream.Stream;
 
 /**
  * 기업 심볼검색 서비스
@@ -28,8 +28,58 @@ public class CompanySymbolSearchService {
     private final ConfigService configService;
     private final HttpClientService httpClientService;
 
+
     /**
      * 기업 심볼 목록 검색
+     * @param companyName
+     * @param symbol
+     * @return
+     */
+    public List<FindCompanySymbolResDto> findSymbolListByIntegrate(String companyName, String symbol) {
+
+        //@ companyName
+        List<FindCompanySymbolResDto> resultList01 = findSymbolListByCompanyName(companyName);
+
+        //@ symbol
+        List<FindCompanySymbolResDto> resultList02 = findSymbolListBySymbol(symbol);
+
+        Map<String, FindCompanySymbolResDto> mergedMap = new LinkedHashMap<>();
+
+        Stream.concat(resultList01.stream(), resultList02.stream())
+                .forEach(s -> mergedMap.putIfAbsent(s.getSymbol(), s));
+
+        List<FindCompanySymbolResDto> resultList = new LinkedList<>(mergedMap.values());
+
+        return resultList;
+    }
+
+    /**
+     * 기업 심볼 목록 검색(심볼로 검색)
+     * @param symbol
+     * @return
+     */
+    public List<FindCompanySymbolResDto> findSymbolListBySymbol(String symbol) {
+
+        //@ 요청 데이터 세팅
+        String apiKey = configService.getFmpApiKey();
+        String url = FmpApiList.CompanyStockSymbolSearchBySymbol.url;
+
+        FindCompanySymbolReqDto paramDto = FindCompanySymbolReqDto.ofQuery(apiKey, symbol);
+        url = ClientUtil.addQueryParams(url, paramDto, true);
+
+        //@ 요청
+        ResponseEntity<List<FindCompanySymbolResDto>> response =
+                httpClientService.exchangeSync(url, HttpMethod.GET, new ParameterizedTypeReference<>() {});
+
+        //@ 응답데이터 가공
+        List<FindCompanySymbolResDto> findCompanySymbolResDtoList = response.getBody();
+
+        // 미국거래소만 분류
+        return filterOnlyUsExchanges(findCompanySymbolResDtoList);
+    }
+
+    /**
+     * 기업 심볼 목록 검색(기업명으로 검색)
      * @param companyName
      * @return
      */
@@ -37,7 +87,7 @@ public class CompanySymbolSearchService {
 
         //@ 요청 데이터 세팅
         String apiKey = configService.getFmpApiKey();
-        String url = FmpApiList.CompanyStockSymbolSearch.url;
+        String url = FmpApiList.CompanyStockSymbolSearchByCompanyName.url;
 
         FindCompanySymbolReqDto paramDto = FindCompanySymbolReqDto.ofQuery(apiKey, companyName);
         url = ClientUtil.addQueryParams(url, paramDto, true);

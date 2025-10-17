@@ -6,7 +6,7 @@ import lombok.Getter;
 import lombok.ToString;
 
 /**
- * CompanyStockSymbolSearch API 요청
+ * CompanyStockSymbolSearch / StockSymbolSearch API 요청
  */
 
 @Getter

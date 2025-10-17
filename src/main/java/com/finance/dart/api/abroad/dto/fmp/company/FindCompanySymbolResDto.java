@@ -3,7 +3,7 @@ package com.finance.dart.api.abroad.dto.fmp.company;
 import lombok.Data;
 
 /**
- * CompanyStockSymbolSearch API 응답
+ * CompanyStockSymbolSearch / StockSymbolSearch API 응답
  */
 @Data
 public class FindCompanySymbolResDto {
