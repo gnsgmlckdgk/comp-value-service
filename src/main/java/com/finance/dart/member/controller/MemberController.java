@@ -4,7 +4,8 @@ package com.finance.dart.member.controller;
 import com.finance.dart.common.constant.ResponseEnum;
 import com.finance.dart.common.dto.CommonResponse;
 import com.finance.dart.member.dto.LoginDTO;
-import com.finance.dart.member.entity.Member;
+import com.finance.dart.member.dto.Member;
+import com.finance.dart.member.entity.MemberEntity;
 import com.finance.dart.member.service.MemberService;
 import com.finance.dart.member.service.SessionService;
 import jakarta.servlet.http.HttpServletRequest;
@@ -28,7 +29,6 @@ public class MemberController {
     private final MemberService memberService;
 
     // TODO: 회원정보 수정, 삭제 기능 추가 예정
-    // TODO: 로그아웃 기능 추가 예정
 
     /**
      * 로그인
@@ -51,6 +51,11 @@ public class MemberController {
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
+    /**
+     * 로그아웃
+     * @param request
+     * @return
+     */
     @DeleteMapping("/logout")
     public ResponseEntity<CommonResponse> logout(HttpServletRequest request) {
 
@@ -65,13 +70,13 @@ public class MemberController {
 
     /**
      * 회원가입
-     * @param member
+     * @param memberEntity
      * @return
      */
     @PostMapping("/join")
-    public ResponseEntity<CommonResponse<Member>> join(@Valid @RequestBody Member member) {
+    public ResponseEntity<CommonResponse<MemberEntity>> join(@Valid @RequestBody MemberEntity memberEntity) {
 
-        CommonResponse<Member> response = memberService.join(member);
+        CommonResponse<MemberEntity> response = memberService.join(memberEntity);
 
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
@@ -91,6 +96,22 @@ public class MemberController {
         } else {
             response = new CommonResponse(ResponseEnum.LOGIN_SESSION_EXPIRED);
         }
+
+        return new ResponseEntity<>(response, ResponseEnum.OK.getHttpStatus());
+    }
+
+    /**
+     * <pre>
+     * 현재 로그인한 회원 정보 조회
+     * </pre>
+     * @param request
+     * @return
+     */
+    @GetMapping("/me/info")
+    public ResponseEntity<CommonResponse> getLoginMember(HttpServletRequest request) {
+
+        Member member = memberService.getLoginMember(request);
+        CommonResponse response = new CommonResponse(member);
 
         return new ResponseEntity<>(response, ResponseEnum.OK.getHttpStatus());
     }

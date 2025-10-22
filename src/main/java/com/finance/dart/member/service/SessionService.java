@@ -7,7 +7,7 @@ import com.finance.dart.common.exception.UnauthorizedException;
 import com.finance.dart.common.service.RedisComponent;
 import com.finance.dart.common.util.StringUtil;
 import com.finance.dart.member.dto.LoginDTO;
-import com.finance.dart.member.entity.Member;
+import com.finance.dart.member.entity.MemberEntity;
 import com.finance.dart.member.repository.MemberRepository;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
@@ -46,13 +46,13 @@ public class SessionService {
         CommonResponse<LoginDTO> response = new CommonResponse<>();
 
         //@ 로그인 정보 확인
-        Member member = memberRepository.findByUsername(loginDTO.getUsername());
-        if(member == null) {
+        MemberEntity memberEntity = memberRepository.findByUsername(loginDTO.getUsername());
+        if(memberEntity == null) {
             response.setResponeInfo(ResponseEnum.LOGIN_NOTFOUND_USER);
             return response;
         }
         //@ 비밀번호 비교
-        if (!passwordEncoder.matches(loginDTO.getPassword(), member.getPassword())) {
+        if (!passwordEncoder.matches(loginDTO.getPassword(), memberEntity.getPassword())) {
             response.setResponeInfo(ResponseEnum.LOGIN_NOTMATCH_PASSWORD);
             return response;
         }
@@ -62,10 +62,10 @@ public class SessionService {
         String redisKey = LoginDTO.redisSessionPrefix + sessionKey;
         if(log.isDebugEnabled()) log.debug("redisKey = {}", redisKey);
 
-        redisComponent.saveValueWithTtl(redisKey, StringUtil.defaultString(member.getId()), TIMEOUT_MINUTES, TimeUnit.MINUTES);
+        redisComponent.saveValueWithTtl(redisKey, StringUtil.defaultString(memberEntity.getId()), TIMEOUT_MINUTES, TimeUnit.MINUTES);
         loginDTO.setSessionKey(sessionKey);
         loginDTO.setPassword(null);   // 비밀번호 입력값은 삭제
-        loginDTO.setNickName(member.getNickname());
+        loginDTO.setNickName(memberEntity.getNickname());
 
         //@ 응답 조립
         response.setResponse(loginDTO);
