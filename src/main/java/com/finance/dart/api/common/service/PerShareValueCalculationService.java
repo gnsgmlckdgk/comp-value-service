@@ -77,7 +77,8 @@ public class PerShareValueCalculationService {
 
         // STEP02 ------------------------------------------------------------------------------------------------------
         // (유동자산 − (유동부채 × 비율) + 투자자산)
-        final String STEP02 = CalUtil.add(CalUtil.sub(assetsTotal, CalUtil.multi(liabilitiesTotal, K)), investmentAssets);
+        String assets = CalUtil.sub(assetsTotal, cash);   // 2025.10.22: STEP05 에서 현금계산이 포함되어있어서 이중계산되서 빼줌
+        final String STEP02 = CalUtil.add(CalUtil.sub(assets, CalUtil.multi(liabilitiesTotal, K)), investmentAssets);
 
         // STEP03 ------------------------------------------------------------------------------------------------------
         // (무형자산 × 30%)
