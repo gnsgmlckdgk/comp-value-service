@@ -1,6 +1,7 @@
 package com.finance.dart.api.abroad.dto.fmp.balancesheet;
 
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Data;
 
 @Data
@@ -185,4 +186,76 @@ public class BalanceSheetResDto {
 
     /** 순부채 (총부채 - 현금) */
     private Long netDebt;
+
+    /**
+     * 모든 금액(Long 타입) 필드를 입력된 환율로 현지통화에서 USD로 환산합니다.
+     * <p>
+     * 예시:<br>
+     * CNYUSD 환율이 0.14 일 때 (1위안 = 0.14달러)<br>
+     * - 1,000,000위안 → 140,000달러<br>
+     * - 10,000,000,000위안 → 1,400,000,000달러
+     * </p>
+     *
+     * @param rate 적용할 환율 (예: 0.14)
+     */
+    @JsonIgnore
+    public void applyExchangeRate(double rate) {
+        cashAndCashEquivalents = apply(cashAndCashEquivalents, rate);
+        shortTermInvestments = apply(shortTermInvestments, rate);
+        cashAndShortTermInvestments = apply(cashAndShortTermInvestments, rate);
+        netReceivables = apply(netReceivables, rate);
+        accountsReceivables = apply(accountsReceivables, rate);
+        otherReceivables = apply(otherReceivables, rate);
+        inventory = apply(inventory, rate);
+        prepaids = apply(prepaids, rate);
+        otherCurrentAssets = apply(otherCurrentAssets, rate);
+        totalCurrentAssets = apply(totalCurrentAssets, rate);
+        propertyPlantEquipmentNet = apply(propertyPlantEquipmentNet, rate);
+        goodwill = apply(goodwill, rate);
+        intangibleAssets = apply(intangibleAssets, rate);
+        goodwillAndIntangibleAssets = apply(goodwillAndIntangibleAssets, rate);
+        longTermInvestments = apply(longTermInvestments, rate);
+        taxAssets = apply(taxAssets, rate);
+        otherNonCurrentAssets = apply(otherNonCurrentAssets, rate);
+        totalNonCurrentAssets = apply(totalNonCurrentAssets, rate);
+        otherAssets = apply(otherAssets, rate);
+        totalAssets = apply(totalAssets, rate);
+        totalPayables = apply(totalPayables, rate);
+        accountPayables = apply(accountPayables, rate);
+        otherPayables = apply(otherPayables, rate);
+        accruedExpenses = apply(accruedExpenses, rate);
+        shortTermDebt = apply(shortTermDebt, rate);
+        capitalLeaseObligationsCurrent = apply(capitalLeaseObligationsCurrent, rate);
+        taxPayables = apply(taxPayables, rate);
+        deferredRevenue = apply(deferredRevenue, rate);
+        otherCurrentLiabilities = apply(otherCurrentLiabilities, rate);
+        totalCurrentLiabilities = apply(totalCurrentLiabilities, rate);
+        longTermDebt = apply(longTermDebt, rate);
+        deferredRevenueNonCurrent = apply(deferredRevenueNonCurrent, rate);
+        deferredTaxLiabilitiesNonCurrent = apply(deferredTaxLiabilitiesNonCurrent, rate);
+        otherNonCurrentLiabilities = apply(otherNonCurrentLiabilities, rate);
+        totalNonCurrentLiabilities = apply(totalNonCurrentLiabilities, rate);
+        otherLiabilities = apply(otherLiabilities, rate);
+        capitalLeaseObligations = apply(capitalLeaseObligations, rate);
+        totalLiabilities = apply(totalLiabilities, rate);
+        treasuryStock = apply(treasuryStock, rate);
+        preferredStock = apply(preferredStock, rate);
+        commonStock = apply(commonStock, rate);
+        retainedEarnings = apply(retainedEarnings, rate);
+        additionalPaidInCapital = apply(additionalPaidInCapital, rate);
+        accumulatedOtherComprehensiveIncomeLoss = apply(accumulatedOtherComprehensiveIncomeLoss, rate);
+        otherTotalStockholdersEquity = apply(otherTotalStockholdersEquity, rate);
+        totalStockholdersEquity = apply(totalStockholdersEquity, rate);
+        totalEquity = apply(totalEquity, rate);
+        minorityInterest = apply(minorityInterest, rate);
+        totalLiabilitiesAndTotalEquity = apply(totalLiabilitiesAndTotalEquity, rate);
+        totalInvestments = apply(totalInvestments, rate);
+        totalDebt = apply(totalDebt, rate);
+        netDebt = apply(netDebt, rate);
+    }
+
+    private Long apply(Long value, double rate) {
+        if (value == null) return null;
+        return Math.round(value * rate);
+    }
 }

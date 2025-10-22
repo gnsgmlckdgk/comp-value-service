@@ -1,5 +1,6 @@
 package com.finance.dart.api.abroad.dto.fmp.incomestatement;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Data;
 
@@ -126,5 +127,52 @@ public class IncomeStatResDto {
     /** 가중평균 주식수 (희석주 포함) */
     @JsonProperty("weightedAverageShsOutDil")
     private Long weightedAverageShsOutDiluted;
+
+    /**
+     * 모든 금액 필드를 입력한 환율로 원화 등 현지 통화에서 달러(USD)로 변환합니다.
+     * EPS 및 주식 수 관련 필드는 변환되지 않습니다.
+     *
+     * @param rate 적용할 환율 (예: 1원당 달러 값)
+     *
+     * 예시:
+     * KRWUSD 환율이 0.00069 일 때 (1원 = 0.00069달러)
+     * - 1,000,000원 → 690달러
+     * - 10,000,000,000원 → 6,900,000달러
+     */
+    @JsonIgnore
+    public void applyExchangeRate(double rate) {
+        this.revenue = apply(this.revenue, rate);
+        this.costOfRevenue = apply(this.costOfRevenue, rate);
+        this.grossProfit = apply(this.grossProfit, rate);
+        this.researchAndDevelopmentExpenses = apply(this.researchAndDevelopmentExpenses, rate);
+        this.generalAndAdministrativeExpenses = apply(this.generalAndAdministrativeExpenses, rate);
+        this.sellingAndMarketingExpenses = apply(this.sellingAndMarketingExpenses, rate);
+        this.sellingGeneralAndAdministrativeExpenses = apply(this.sellingGeneralAndAdministrativeExpenses, rate);
+        this.otherExpenses = apply(this.otherExpenses, rate);
+        this.operatingExpenses = apply(this.operatingExpenses, rate);
+        this.costAndExpenses = apply(this.costAndExpenses, rate);
+        this.netInterestIncome = apply(this.netInterestIncome, rate);
+        this.interestIncome = apply(this.interestIncome, rate);
+        this.interestExpense = apply(this.interestExpense, rate);
+        this.depreciationAndAmortization = apply(this.depreciationAndAmortization, rate);
+        this.ebitda = apply(this.ebitda, rate);
+        this.ebit = apply(this.ebit, rate);
+        this.nonOperatingIncomeExcludingInterest = apply(this.nonOperatingIncomeExcludingInterest, rate);
+        this.operatingIncome = apply(this.operatingIncome, rate);
+        this.totalOtherIncomeExpensesNet = apply(this.totalOtherIncomeExpensesNet, rate);
+        this.incomeBeforeTax = apply(this.incomeBeforeTax, rate);
+        this.incomeTaxExpense = apply(this.incomeTaxExpense, rate);
+        this.netIncomeFromContinuingOperations = apply(this.netIncomeFromContinuingOperations, rate);
+        this.netIncomeFromDiscontinuedOperations = apply(this.netIncomeFromDiscontinuedOperations, rate);
+        this.otherAdjustmentsToNetIncome = apply(this.otherAdjustmentsToNetIncome, rate);
+        this.netIncome = apply(this.netIncome, rate);
+        this.netIncomeDeductions = apply(this.netIncomeDeductions, rate);
+        this.bottomLineNetIncome = apply(this.bottomLineNetIncome, rate);
+    }
+
+    private Long apply(Long value, double rate) {
+        if (value == null) return null;
+        return Math.round(value * rate);
+    }
 
 }

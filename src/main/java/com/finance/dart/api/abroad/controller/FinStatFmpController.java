@@ -10,6 +10,8 @@ import com.finance.dart.api.abroad.dto.fmp.financialratios.FinancialRatiosReqDto
 import com.finance.dart.api.abroad.dto.fmp.financialratios.FinancialRatiosResDto;
 import com.finance.dart.api.abroad.dto.fmp.financialratios.FinancialRatiosTTM_ReqDto;
 import com.finance.dart.api.abroad.dto.fmp.financialratios.FinancialRatiosTTM_ResDto;
+import com.finance.dart.api.abroad.dto.fmp.forexquote.ForexQuoteReqDto;
+import com.finance.dart.api.abroad.dto.fmp.forexquote.ForexQuoteResDto;
 import com.finance.dart.api.abroad.dto.fmp.incomestatement.IncomeStatReqDto;
 import com.finance.dart.api.abroad.dto.fmp.incomestatement.IncomeStatResDto;
 import com.finance.dart.api.abroad.dto.fmp.incomestatgrowth.IncomeStatGrowthReqDto;
@@ -42,6 +44,7 @@ public class FinStatFmpController {
     private final FinancialRatiosService financialRatiosService;
     private final FinancialGrowthService financialGrowthService;
     private final IncomeStatGrowthService incomeStatGrowthService;
+    private final ForexQuoteService forexQuoteService;
 
 
     /**
@@ -144,6 +147,19 @@ public class FinStatFmpController {
     public ResponseEntity<CommonResponse<List<IncomeStatGrowthResDto>>> incomeStatementGrowth(@RequestBody IncomeStatGrowthReqDto requestDto) {
 
         List<IncomeStatGrowthResDto> response = incomeStatGrowthService.findIncomeStatGrowth(requestDto);
+
+        return new ResponseEntity<>(new CommonResponse<>(response), HttpStatus.OK);
+    }
+
+    /**
+     * 외환시세(환율) 조회
+     * @param requestDto
+     * @return
+     */
+    @PostMapping("/forexQuote")
+    public ResponseEntity<CommonResponse<List<ForexQuoteResDto>>> forexQuote(@RequestBody ForexQuoteReqDto requestDto) {
+
+        List<ForexQuoteResDto> response = forexQuoteService.findForexQuote(requestDto);
 
         return new ResponseEntity<>(new CommonResponse<>(response), HttpStatus.OK);
     }

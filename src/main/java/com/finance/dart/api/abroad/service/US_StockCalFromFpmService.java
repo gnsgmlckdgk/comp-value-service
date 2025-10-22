@@ -1,5 +1,6 @@
 package com.finance.dart.api.abroad.service;
 
+import com.finance.dart.api.abroad.consts.CurrencyConst;
 import com.finance.dart.api.abroad.consts.FmpPeriod;
 import com.finance.dart.api.abroad.dto.fmp.balancesheet.BalanceSheetReqDto;
 import com.finance.dart.api.abroad.dto.fmp.balancesheet.BalanceSheetResDto;
@@ -12,6 +13,8 @@ import com.finance.dart.api.abroad.dto.fmp.financialratios.FinancialRatiosReqDto
 import com.finance.dart.api.abroad.dto.fmp.financialratios.FinancialRatiosResDto;
 import com.finance.dart.api.abroad.dto.fmp.financialratios.FinancialRatiosTTM_ReqDto;
 import com.finance.dart.api.abroad.dto.fmp.financialratios.FinancialRatiosTTM_ResDto;
+import com.finance.dart.api.abroad.dto.fmp.forexquote.ForexQuoteReqDto;
+import com.finance.dart.api.abroad.dto.fmp.forexquote.ForexQuoteResDto;
 import com.finance.dart.api.abroad.dto.fmp.incomestatement.IncomeStatReqDto;
 import com.finance.dart.api.abroad.dto.fmp.incomestatement.IncomeStatResDto;
 import com.finance.dart.api.abroad.dto.fmp.incomestatgrowth.IncomeStatGrowthReqDto;
@@ -58,6 +61,7 @@ public class US_StockCalFromFpmService {
     private final FinancialGrowthService financialGrowthService;                // 성장률 조회 서비스
     private final IncomeStatGrowthService incomeStatGrowthService;              // 영업이익 성장률 조회 서비스
     private final CompanyProfileSearchService profileSearchService;             // 해외기업 정보조회 서비스
+    private final ForexQuoteService forexQuoteService;                          // 외환시세 조회 서비스
 
     private final PerShareValueCalculationService sharePriceCalculatorService;  // 가치 계산 서비스
 
@@ -264,7 +268,7 @@ public class US_StockCalFromFpmService {
         }
 
         Thread.sleep(TRSC_DELAY);
-        FinancialRatiosReqDto financialRatiosReqDto = new FinancialRatiosReqDto(symbol, 1, FmpPeriod.annual);   // TODO: 유료전환 후 querter 로 변경
+        FinancialRatiosReqDto financialRatiosReqDto = new FinancialRatiosReqDto(symbol, 1, FmpPeriod.quarter);
         List<FinancialRatiosResDto> financialRatios = financialRatiosService.findFinancialRatios(financialRatiosReqDto);
         if(financialRatios == null || financialRatios.size() < 1) {
             result.set결과메시지("재무비율지표 조회에 실패했습니다.");
@@ -331,6 +335,16 @@ public class US_StockCalFromFpmService {
         if(income == null || income.size() < 3) {
             result.set결과메시지("영업이익 조회에 실패했습니다.");
             return null;
+        } else {
+            // 환율 반영
+            for(IncomeStatResDto ic : income) {
+                if(!ic.getReportedCurrency().equals(CurrencyConst.USA)) {
+                    double rate = getForexQuotePriceUSD(ic.getReportedCurrency());
+                    if(log.isDebugEnabled()) log.debug("[영업이익 환율 반영] {} -> USD / rate = {} / 변경전 = {}", ic.getReportedCurrency(), rate, ic);
+                    if(rate != -1) ic.applyExchangeRate(rate);
+                    if(log.isDebugEnabled()) log.debug("[영업이익 환율 반영] {} -> USD / rate = {} / 변경후 = {}", ic.getReportedCurrency(), rate, ic);
+                }
+            }
         }
 
         Thread.sleep(TRSC_DELAY);
@@ -339,6 +353,16 @@ public class US_StockCalFromFpmService {
         if(balance == null || balance.size() < 1) {
             result.set결과메시지("재무상태표 조회에 실패했습니다.");
             return null;
+        } else {
+            // 환율 반영
+            for(BalanceSheetResDto bs : balance) {
+                if(!bs.getReportedCurrency().equals(CurrencyConst.USA)) {
+                    double rate = getForexQuotePriceUSD(bs.getReportedCurrency());
+                    if(log.isDebugEnabled()) log.debug("[재무상태표 환율 반영] {} -> USD / rate = {} / 변경전 = {}", bs.getReportedCurrency(), rate, bs);
+                    if(rate != -1) bs.applyExchangeRate(rate);
+                    if(log.isDebugEnabled()) log.debug("[재무상태표 환율 반영] {} -> USD / rate = {} / 변경후 = {}", bs.getReportedCurrency(), rate, bs);
+                }
+            }
         }
 
         Thread.sleep(TRSC_DELAY);
@@ -370,8 +394,6 @@ public class US_StockCalFromFpmService {
             result.set결과메시지("영업이익 성장률 조회에 실패했습니다.");
             return null;
         }
-
-        // TODO: 환율정보 조회 필요
 
         // ----------------------------------------------------------------
 
@@ -521,4 +543,22 @@ public class US_StockCalFromFpmService {
         if(StringUtil.isStringEmpty(resultDetail.getPER()))
             resultDetail.setPER(requestContext.getAttributeAsString(RequestContextConst.PER));
     }
+
+    /**
+     * 달러 환율정보 조회
+     * @param currency
+     * @return
+     */
+    private double getForexQuotePriceUSD(String currency) {
+
+        String symbol = currency + "USD";
+
+        ForexQuoteReqDto forexQuoteReqDto = new ForexQuoteReqDto(symbol);
+        List<ForexQuoteResDto> resList = forexQuoteService.findForexQuote(forexQuoteReqDto);
+
+        if(resList == null || resList.size() == 0) return -1;
+
+        return resList.get(0).getPrice();
+    }
+
 }

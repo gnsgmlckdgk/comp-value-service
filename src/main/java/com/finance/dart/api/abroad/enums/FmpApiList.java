@@ -1,6 +1,7 @@
 package com.finance.dart.api.abroad.enums;
 
 
+import com.finance.dart.api.abroad.service.fmp.ForexQuoteService;
 import org.springframework.http.HttpMethod;
 
 public enum FmpApiList {
@@ -102,6 +103,15 @@ public enum FmpApiList {
             HttpMethod.GET,
             "https://site.financialmodelingprep.com/developer/docs#financial-growth",
             "성장률 조회 API"
+    ),
+
+    /** 외환 시세 조회(환율정보 조회) **/
+    ForexQuote(
+            "Forex Quote API",
+            "https://financialmodelingprep.com/stable/quote",
+            HttpMethod.GET,
+            "https://site.financialmodelingprep.com/developer/docs#quote",
+            "외환 시세 조회 API"
     )
 
     ;
