@@ -24,6 +24,14 @@ public class TranRecordController {
 
     private final TranRecordService tranRecordService;
 
+    /*
+        TODO
+        - 수수료차이?인지 실제와 조금 차이나는거 확인
+        - 컬럼 헤더, 행 No/티커 고정되는지
+        - 비고 컬럼 추가
+        - 가격차 -> 단일가격차 변경
+        - 종합가격차 추가(수량까지포함해서 계산된 값)
+    */
 
     /**
      * 거래기록 등록
