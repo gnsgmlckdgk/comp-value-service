@@ -67,12 +67,12 @@ public class TranRecordService {
         TranRecordEntity data = dataOpt.get();
         data.setMember(memberEntity);
 
-        data.setSymbol(updateEntity.getSymbol());
-        data.setCompanyName(updateEntity.getCompanyName());
-        data.setBuyDate(updateEntity.getBuyDate());
-        data.setBuyPrice(updateEntity.getBuyPrice());
-        data.setTotalBuyAmount(updateEntity.getTotalBuyAmount());
-        data.setTargetPrice(updateEntity.getTargetPrice());
+        if(updateEntity.getSymbol() != null) data.setSymbol(updateEntity.getSymbol());
+        if(updateEntity.getCompanyName() != null) data.setCompanyName(updateEntity.getCompanyName());
+        if(updateEntity.getBuyDate() != null) data.setBuyDate(updateEntity.getBuyDate());
+        if(updateEntity.getBuyPrice() != null) data.setBuyPrice(updateEntity.getBuyPrice());
+        if(updateEntity.getTotalBuyAmount() != null) data.setTotalBuyAmount(updateEntity.getTotalBuyAmount());
+        if(updateEntity.getTargetPrice() != null) data.setTargetPrice(updateEntity.getTargetPrice());
         data.setUpdatedAt(LocalDateTime.now());
 
         TranRecordEntity result = tranRecordRepository.save(data);
@@ -115,7 +115,8 @@ public class TranRecordService {
 
             // 현재가 갱신
             TranRecordCurValueResDto curValue = getCurValue(tranRecordDto.getSymbol());
-            tranRecordDto.setCurrentPrice(curValue == null ? 0 : curValue.getCurrentPrice());
+            tranRecordDto.setCurrentPrice((curValue == null || curValue.getCurrentPrice() == null) ?
+                    0 : curValue.getCurrentPrice());
 
             tranRecordDtoList.add(tranRecordDto);
         }

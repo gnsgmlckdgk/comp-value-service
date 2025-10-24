@@ -1,5 +1,7 @@
 package com.finance.dart.board.controller;
 
+import com.finance.dart.board.dto.TranRecordCurValueReqDto;
+import com.finance.dart.board.dto.TranRecordCurValueResDto;
 import com.finance.dart.board.dto.TranRecordDto;
 import com.finance.dart.board.entity.TranRecordEntity;
 import com.finance.dart.board.service.TranRecordService;
@@ -12,6 +14,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 
 @Slf4j
@@ -73,6 +77,23 @@ public class TranRecordController {
     public ResponseEntity<CommonResponse<List<TranRecordDto>>> getTranRecordList(HttpServletRequest request) {
 
         List<TranRecordDto> response = tranRecordService.getTranRecordList(request);
+
+        return new ResponseEntity<>(new CommonResponse<>(response), HttpStatus.OK);
+    }
+
+    /**
+     * 티커 당 현재가격 조회
+     * @param reqBody
+     * @return
+     */
+    @PostMapping("/price")
+    public ResponseEntity<CommonResponse<List<TranRecordCurValueResDto>>> getTranRecordCurValueRes(
+            @RequestBody TranRecordCurValueReqDto reqBody
+            ) {
+
+        Set<String> symbols = reqBody.getSymbols().stream().collect(Collectors.toSet());
+
+        List<TranRecordCurValueResDto> response = tranRecordService.getCurValues(symbols);
 
         return new ResponseEntity<>(new CommonResponse<>(response), HttpStatus.OK);
     }
