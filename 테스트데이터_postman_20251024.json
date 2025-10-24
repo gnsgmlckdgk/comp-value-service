@@ -1339,6 +1339,36 @@
 					"response": []
 				},
 				{
+					"name": "거래 현황 환율정보 조회",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"currency\": \"USDKRW\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost:18080/dart/tranrecord/rate",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "18080",
+							"path": [
+								"dart",
+								"tranrecord",
+								"rate"
+							]
+						}
+					},
+					"response": []
+				},
+				{
 					"name": "거래 현황 수정",
 					"request": {
 						"method": "POST",

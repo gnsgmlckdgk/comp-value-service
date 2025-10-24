@@ -1,9 +1,14 @@
 package com.finance.dart.board.service;
 
 import com.finance.dart.api.abroad.dto.fmp.company.CompanyProfileDataResDto;
+import com.finance.dart.api.abroad.dto.fmp.forexquote.ForexQuoteReqDto;
+import com.finance.dart.api.abroad.dto.fmp.forexquote.ForexQuoteResDto;
 import com.finance.dart.api.abroad.service.fmp.CompanyProfileSearchService;
+import com.finance.dart.api.abroad.service.fmp.ForexQuoteService;
 import com.finance.dart.board.dto.TranRecordCurValueResDto;
 import com.finance.dart.board.dto.TranRecordDto;
+import com.finance.dart.board.dto.TranRecordFxRateReqDto;
+import com.finance.dart.board.dto.TranRecordFxRateResDto;
 import com.finance.dart.board.entity.TranRecordEntity;
 import com.finance.dart.board.repository.TranRecordRepository;
 import com.finance.dart.common.util.ConvertUtil;
@@ -28,7 +33,8 @@ public class TranRecordService {
     private final TranRecordRepository tranRecordRepository;
 
     private final MemberService memberService;
-    private final CompanyProfileSearchService companyProfileSearchService;
+    private final CompanyProfileSearchService companyProfileSearchService;      // 기업 프로파일 검색 서비스
+    private final ForexQuoteService forexQuoteService;                          // 외환시세 조회 서비스
 
 
     /**
@@ -181,6 +187,27 @@ public class TranRecordService {
         return resultList;
     }
 
+    /**
+     * 환율 조회
+     * @param currency
+     * @return
+     */
+    public TranRecordFxRateResDto getFxRate(String currency) {
+
+        TranRecordFxRateResDto result = new TranRecordFxRateResDto();
+
+        ForexQuoteReqDto forexQuoteReqDto = new ForexQuoteReqDto(currency);
+        List<ForexQuoteResDto> resList = forexQuoteService.findForexQuote(forexQuoteReqDto);
+
+        if(resList == null || resList.size() == 0) return null;
+
+        ForexQuoteResDto forexQuoteResDto = resList.get(0);
+
+        result.setRate(forexQuoteResDto.getPrice());
+        result.setUpdatedAt(DateUtil.getToday("yyyy-MM-dd HH:mm:ss"));
+
+        return result;
+    }
 
     /**
      * 로그인 회원정보 조회

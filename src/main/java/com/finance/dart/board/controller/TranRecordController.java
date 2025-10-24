@@ -1,8 +1,6 @@
 package com.finance.dart.board.controller;
 
-import com.finance.dart.board.dto.TranRecordCurValueReqDto;
-import com.finance.dart.board.dto.TranRecordCurValueResDto;
-import com.finance.dart.board.dto.TranRecordDto;
+import com.finance.dart.board.dto.*;
 import com.finance.dart.board.entity.TranRecordEntity;
 import com.finance.dart.board.service.TranRecordService;
 import com.finance.dart.common.dto.CommonResponse;
@@ -87,13 +85,28 @@ public class TranRecordController {
      * @return
      */
     @PostMapping("/price")
-    public ResponseEntity<CommonResponse<List<TranRecordCurValueResDto>>> getTranRecordCurValueRes(
+    public ResponseEntity<CommonResponse<List<TranRecordCurValueResDto>>> getTranRecordCurValue(
             @RequestBody TranRecordCurValueReqDto reqBody
             ) {
 
         Set<String> symbols = reqBody.getSymbols().stream().collect(Collectors.toSet());
 
         List<TranRecordCurValueResDto> response = tranRecordService.getCurValues(symbols);
+
+        return new ResponseEntity<>(new CommonResponse<>(response), HttpStatus.OK);
+    }
+
+    /**
+     * 환율정보 조회
+     * @param reqBody
+     * @return
+     */
+    @PostMapping("/rate")
+    public ResponseEntity<CommonResponse<TranRecordFxRateResDto>> getCurrencyRate(
+            @RequestBody TranRecordFxRateReqDto reqBody
+    ) {
+
+        TranRecordFxRateResDto response = tranRecordService.getFxRate(reqBody.getCurrency());
 
         return new ResponseEntity<>(new CommonResponse<>(response), HttpStatus.OK);
     }

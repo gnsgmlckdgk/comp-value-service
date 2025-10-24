@@ -11,6 +11,6 @@ public class TranRecordFxRateResDto {
      * { "rate": 1390.25, "updatedAt": "2025-10-23T06:12:34Z" }   // 1 USD → KRW
      */
 
-    private String rate;        // 환율
+    private Double rate;        // 환율
     private String updatedAt;   // yyyy-MM-dd HH:mm:ss
 }
