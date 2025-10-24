@@ -4,7 +4,6 @@ import com.finance.dart.board.dto.TranRecordDto;
 import com.finance.dart.board.entity.TranRecordEntity;
 import com.finance.dart.board.service.TranRecordService;
 import com.finance.dart.common.dto.CommonResponse;
-import com.finance.dart.member.dto.Member;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -24,8 +23,6 @@ public class TranRecordController {
     private final TranRecordService tranRecordService;
 
 
-    // TODO: 거래기록 수정, 삭제 추가 예정
-
     /**
      * 거래기록 등록
      * @param reqBody
@@ -35,6 +32,33 @@ public class TranRecordController {
     public ResponseEntity<CommonResponse<TranRecordEntity>> regiTranRecord(HttpServletRequest request, @RequestBody TranRecordEntity reqBody) {
 
         TranRecordEntity result = tranRecordService.regiTranRecord(request, reqBody);
+
+        return new ResponseEntity<>(new CommonResponse<>(result), HttpStatus.OK);
+    }
+
+    /**
+     * 거래기록 수정
+     * @param request
+     * @param reqBody
+     * @return
+     */
+    @PostMapping("/modi")
+    public ResponseEntity<CommonResponse<TranRecordEntity>> modiTranRecord(HttpServletRequest request, @RequestBody TranRecordEntity reqBody) {
+
+        TranRecordEntity result = tranRecordService.modiTranRecord(request, reqBody);
+
+        return new ResponseEntity<>(new CommonResponse<>(result), HttpStatus.OK);
+    }
+
+    /**
+     * 거래기록 삭제
+     * @param reqBody
+     * @return
+     */
+    @PostMapping("/del")
+    public ResponseEntity<CommonResponse<TranRecordEntity>> delTranRecord(@RequestBody TranRecordEntity reqBody) {
+
+        TranRecordEntity result = tranRecordService.delTranRecord(reqBody);
 
         return new ResponseEntity<>(new CommonResponse<>(result), HttpStatus.OK);
     }

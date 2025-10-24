@@ -17,10 +17,8 @@ import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
-import java.util.LinkedHashSet;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Set;
+import java.time.LocalDateTime;
+import java.util.*;
 
 @Slf4j
 @AllArgsConstructor
@@ -41,9 +39,7 @@ public class TranRecordService {
     public TranRecordEntity regiTranRecord(HttpServletRequest request, TranRecordEntity tranRecordEntity) {
 
         // 로그인 회원 정보
-        Member member = memberService.getLoginMember(request);
-        MemberEntity memberEntity = new MemberEntity();
-        memberEntity.setId(member.getId());
+        MemberEntity memberEntity = getMemberEntity(request);
 
         // 데이터 저장
         tranRecordEntity.setMember(memberEntity);
@@ -51,6 +47,51 @@ public class TranRecordService {
 
         return resultEntity;
     }
+
+    /**
+     * 거래기록 수정
+     * @param request
+     * @param updateEntity
+     * @return
+     */
+    public TranRecordEntity modiTranRecord(HttpServletRequest request, TranRecordEntity updateEntity) {
+
+        // 로그인 회원 정보
+        MemberEntity memberEntity = getMemberEntity(request);
+
+        // 데이터 조회
+        Optional<TranRecordEntity> dataOpt = tranRecordRepository.findById(updateEntity.getId());
+        if(dataOpt.isEmpty()) return null;
+
+        // 데이터 수정
+        TranRecordEntity data = dataOpt.get();
+        data.setMember(memberEntity);
+
+        data.setSymbol(updateEntity.getSymbol());
+        data.setCompanyName(updateEntity.getCompanyName());
+        data.setBuyDate(updateEntity.getBuyDate());
+        data.setBuyPrice(updateEntity.getBuyPrice());
+        data.setTotalBuyAmount(updateEntity.getTotalBuyAmount());
+        data.setTargetPrice(updateEntity.getTargetPrice());
+        data.setUpdatedAt(LocalDateTime.now());
+
+        TranRecordEntity result = tranRecordRepository.save(data);
+
+        return result;
+    }
+
+    /**
+     * 거래기록 삭제
+     * @param deleteEntity
+     * @return
+     */
+    public TranRecordEntity delTranRecord(TranRecordEntity deleteEntity) {
+
+        tranRecordRepository.delete(deleteEntity);
+
+        return deleteEntity;
+    }
+
 
     /**
      * 거래기록 목록 조회
@@ -139,4 +180,17 @@ public class TranRecordService {
         return resultList;
     }
 
+
+    /**
+     * 로그인 회원정보 조회
+     * @param request
+     * @return
+     */
+    private MemberEntity getMemberEntity(HttpServletRequest request) {
+        // 로그인 회원 정보
+        Member member = memberService.getLoginMember(request);
+        MemberEntity memberEntity = ConvertUtil.parseObject(member, MemberEntity.class);
+
+        return memberEntity;
+    }
 }
