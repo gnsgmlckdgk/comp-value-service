@@ -32,6 +32,8 @@ public class TranRecordDto {
     private Double currentPrice;    // 현재가
     private Double targetPrice;     // 매도목표가
 
+    private String rmk;             // 비고
+
     private String createdAt;
     private String updatedAt;
 

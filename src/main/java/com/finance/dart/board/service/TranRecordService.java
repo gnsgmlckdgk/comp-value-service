@@ -7,7 +7,6 @@ import com.finance.dart.api.abroad.service.fmp.CompanyProfileSearchService;
 import com.finance.dart.api.abroad.service.fmp.ForexQuoteService;
 import com.finance.dart.board.dto.TranRecordCurValueResDto;
 import com.finance.dart.board.dto.TranRecordDto;
-import com.finance.dart.board.dto.TranRecordFxRateReqDto;
 import com.finance.dart.board.dto.TranRecordFxRateResDto;
 import com.finance.dart.board.entity.TranRecordEntity;
 import com.finance.dart.board.repository.TranRecordRepository;
@@ -79,6 +78,7 @@ public class TranRecordService {
         if(updateEntity.getBuyPrice() != null) data.setBuyPrice(updateEntity.getBuyPrice());
         if(updateEntity.getTotalBuyAmount() != null) data.setTotalBuyAmount(updateEntity.getTotalBuyAmount());
         if(updateEntity.getTargetPrice() != null) data.setTargetPrice(updateEntity.getTargetPrice());
+        if(updateEntity.getRmk() != null) data.setRmk(updateEntity.getRmk());
         data.setUpdatedAt(LocalDateTime.now());
 
         TranRecordEntity result = tranRecordRepository.save(data);

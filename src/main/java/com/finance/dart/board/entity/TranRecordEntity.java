@@ -3,6 +3,7 @@ package com.finance.dart.board.entity;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.finance.dart.member.entity.MemberEntity;
 import jakarta.persistence.*;
+import jakarta.validation.constraints.Size;
 import lombok.Data;
 
 import java.time.LocalDateTime;
@@ -33,6 +34,9 @@ public class TranRecordEntity {
     private Integer totalBuyAmount;// 수량
 
     private Double targetPrice;    // 매도목표가
+
+    @Column(length = 500)
+    private String rmk;             // 비고
 
     private LocalDateTime createdAt = LocalDateTime.now();
     private LocalDateTime updatedAt = LocalDateTime.now();
