@@ -18,6 +18,10 @@ import com.finance.dart.api.abroad.dto.fmp.incomestatgrowth.IncomeStatGrowthReqD
 import com.finance.dart.api.abroad.dto.fmp.incomestatgrowth.IncomeStatGrowthResDto;
 import com.finance.dart.api.abroad.dto.fmp.keymetrics.KeyMetricsReqDto;
 import com.finance.dart.api.abroad.dto.fmp.keymetrics.KeyMetricsResDto;
+import com.finance.dart.api.abroad.dto.fmp.quote.AfterTradeReqDto;
+import com.finance.dart.api.abroad.dto.fmp.quote.AfterTradeResDto;
+import com.finance.dart.api.abroad.dto.fmp.quote.StockQuoteReqDto;
+import com.finance.dart.api.abroad.dto.fmp.quote.StockQuoteResDto;
 import com.finance.dart.api.abroad.service.fmp.*;
 import com.finance.dart.common.dto.CommonResponse;
 import lombok.AllArgsConstructor;
@@ -45,6 +49,8 @@ public class FinStatFmpController {
     private final FinancialGrowthService financialGrowthService;
     private final IncomeStatGrowthService incomeStatGrowthService;
     private final ForexQuoteService forexQuoteService;
+    private final StockQuoteService stockQuoteService;                          // 주식 시세 조회 서비스
+    private final AfterTradeService afterTradeService;                          // 애프터마켓 시세 조회 서비스
 
 
     /**
@@ -160,6 +166,36 @@ public class FinStatFmpController {
     public ResponseEntity<CommonResponse<List<ForexQuoteResDto>>> forexQuote(@RequestBody ForexQuoteReqDto requestDto) {
 
         List<ForexQuoteResDto> response = forexQuoteService.findForexQuote(requestDto);
+
+        return new ResponseEntity<>(new CommonResponse<>(response), HttpStatus.OK);
+    }
+
+    /**
+     * <pre>
+     * 주식시세 조회
+     * 정규장
+     * forexQuote 간소화 버전
+     * </pre>
+     * @param requestDto
+     * @return
+     */
+    @PostMapping("/stockQuote")
+    public ResponseEntity<CommonResponse<List<StockQuoteResDto>>> stockQuote(@RequestBody StockQuoteReqDto requestDto) {
+
+        List<StockQuoteResDto> response = stockQuoteService.findStockQuote(requestDto);
+
+        return new ResponseEntity<>(new CommonResponse<>(response), HttpStatus.OK);
+    }
+
+    /**
+     * 애프터마켓 시세 조회
+     * @param requestDto
+     * @return
+     */
+    @PostMapping("/afterTrade")
+    public ResponseEntity<CommonResponse<List<AfterTradeResDto>>> afterTrade(@RequestBody AfterTradeReqDto requestDto) {
+
+        List<AfterTradeResDto> response = afterTradeService.findAfterTrade(requestDto);
 
         return new ResponseEntity<>(new CommonResponse<>(response), HttpStatus.OK);
     }

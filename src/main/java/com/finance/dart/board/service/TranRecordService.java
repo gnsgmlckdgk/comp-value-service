@@ -1,8 +1,10 @@
 package com.finance.dart.board.service;
 
-import com.finance.dart.api.abroad.dto.fmp.company.CompanyProfileDataResDto;
 import com.finance.dart.api.abroad.dto.fmp.forexquote.ForexQuoteReqDto;
 import com.finance.dart.api.abroad.dto.fmp.forexquote.ForexQuoteResDto;
+import com.finance.dart.api.abroad.dto.fmp.quote.AfterTradeReqDto;
+import com.finance.dart.api.abroad.dto.fmp.quote.AfterTradeResDto;
+import com.finance.dart.api.abroad.service.fmp.AfterTradeService;
 import com.finance.dart.api.abroad.service.fmp.CompanyProfileSearchService;
 import com.finance.dart.api.abroad.service.fmp.ForexQuoteService;
 import com.finance.dart.board.dto.TranRecordCurValueResDto;
@@ -34,6 +36,7 @@ public class TranRecordService {
     private final MemberService memberService;
     private final CompanyProfileSearchService companyProfileSearchService;      // 기업 프로파일 검색 서비스
     private final ForexQuoteService forexQuoteService;                          // 외환시세 조회 서비스
+    private final AfterTradeService afterTradeService;                          // 애프터마켓 시세 조회 서비스
 
 
     /**
@@ -168,17 +171,41 @@ public class TranRecordService {
 
             TranRecordCurValueResDto tranRecordCurValueResDto = new TranRecordCurValueResDto();
 
-            List<CompanyProfileDataResDto> profiles = companyProfileSearchService.findProfileListBySymbol(symbol);
+            // 정규장
+            List<ForexQuoteResDto> forexQuoteResDtoList = forexQuoteService.findForexQuote(new ForexQuoteReqDto(symbol));
+            // 애프터장
+            List<AfterTradeResDto> afterTradeResDtoList = afterTradeService.findAfterTrade(new AfterTradeReqDto(symbol));
 
-            if(profiles == null || profiles.size() == 0) {
-                tranRecordCurValueResDto.setSymbol(symbol);
+            if(forexQuoteResDtoList == null && forexQuoteResDtoList.size() == 0) tranRecordCurValueResDto.setSymbol(symbol);
+            else {
+                ForexQuoteResDto forexQuoteResDto = forexQuoteResDtoList.get(0);
+                tranRecordCurValueResDto.setCurrentPrice(forexQuoteResDto.getPrice());
 
-            } else {
-                CompanyProfileDataResDto profile = profiles.get(0);
-                tranRecordCurValueResDto.setSymbol(profile.getSymbol());
-                tranRecordCurValueResDto.setCurrentPrice(profile.getPrice());
+                if(afterTradeResDtoList != null || afterTradeResDtoList.size() > 0) {
+
+                    AfterTradeResDto afterTradeResDto = afterTradeResDtoList.get(0);
+
+                    long quoteTimestamp = forexQuoteResDto.getTimestamp();      // 정규장
+                    long afterTradeTimestamp = afterTradeResDto.getTimestamp(); // 애프터마켓
+
+                    if(afterTradeTimestamp > quoteTimestamp) {  // 애프터마켓이 더 최신
+                        tranRecordCurValueResDto.setCurrentPrice(afterTradeResDto.getPrice());
+                    }
+                }
 
             }
+
+            // 이전 버전(2025.10.30)
+//            List<CompanyProfileDataResDto> profiles = companyProfileSearchService.findProfileListBySymbol(symbol);
+//
+//            if(profiles == null || profiles.size() == 0) {
+//                tranRecordCurValueResDto.setSymbol(symbol);
+//
+//            } else {
+//                CompanyProfileDataResDto profile = profiles.get(0);
+//                tranRecordCurValueResDto.setSymbol(profile.getSymbol());
+//                tranRecordCurValueResDto.setCurrentPrice(profile.getPrice());
+//            }
 
             tranRecordCurValueResDto.setUpdatedAt(DateUtil.getToday("yyyy-MM-dd HH:mm:ss"));
             resultList.add(tranRecordCurValueResDto);

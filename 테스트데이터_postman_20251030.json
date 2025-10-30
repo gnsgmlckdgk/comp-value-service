@@ -93,7 +93,7 @@
 						"header": [],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n    \"username\" : \"admin\",\n    \"password\" : \"1q2w3e4r!\",\n    \"email\" : \"admin@naver.com\",\n    \"nickname\" : \"관리자\"\n}",
+							"raw": "{\n    \"username\" : \"\",\n    \"password\" : \"\",\n    \"email\" : \"\",\n    \"nickname\" : \"\"\n}",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -123,7 +123,7 @@
 						"header": [],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n    \"username\" : \"admin\",\n    \"password\" : \"1q2w3e4r!\"\n}",
+							"raw": "{\n    \"username\" : \"admin\",\n    \"password\" : \"\"\n}",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -1063,6 +1063,84 @@
 												"financial",
 												"fmp",
 												"forexQuote"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "08. 주식 시세 조회(간소화 버전)",
+									"request": {
+										"method": "POST",
+										"header": [
+											{
+												"key": "Content-Type",
+												"value": "application/json; charset=utf-8",
+												"type": "text"
+											}
+										],
+										"body": {
+											"mode": "raw",
+											"raw": "{\n    \"symbol\" : \"GOOGL\"\n}",
+											"options": {
+												"raw": {
+													"language": "json"
+												}
+											}
+										},
+										"url": {
+											"raw": "http://localhost:18080/dart/abroad/company/financial/fmp/stockQuote",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "18080",
+											"path": [
+												"dart",
+												"abroad",
+												"company",
+												"financial",
+												"fmp",
+												"stockQuote"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "09. 애프터마켓 시세 조회",
+									"request": {
+										"method": "POST",
+										"header": [
+											{
+												"key": "Content-Type",
+												"value": "application/json; charset=utf-8",
+												"type": "text"
+											}
+										],
+										"body": {
+											"mode": "raw",
+											"raw": "{\n    \"symbol\" : \"GOOGL\"\n}",
+											"options": {
+												"raw": {
+													"language": "json"
+												}
+											}
+										},
+										"url": {
+											"raw": "http://localhost:18080/dart/abroad/company/financial/fmp/afterTrade",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "18080",
+											"path": [
+												"dart",
+												"abroad",
+												"company",
+												"financial",
+												"fmp",
+												"afterTrade"
 											]
 										}
 									},
