@@ -34,7 +34,7 @@ public class TranRecordController {
     */
 
     /**
-     * 거래기록 등록
+     * 거래기록 등록 
      * @param reqBody
      * @return
      */
