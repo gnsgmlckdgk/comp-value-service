@@ -118,17 +118,39 @@ public class TranRecordService {
         // 거래기록 조회
         List<TranRecordEntity> tranRecordEntityList = tranRecordRepository.findByMember_Id(memberId);
 
+        // 티커 분류
+        Map<String, Double> tickerValueMap = new HashMap<>();
         for(TranRecordEntity tranRecordEntity : tranRecordEntityList) {
+            tickerValueMap.put(tranRecordEntity.getSymbol(), 0.0);
+        }
 
-            TranRecordDto tranRecordDto = ConvertUtil.parseObject(tranRecordEntity, TranRecordDto.class);
-
-            // 현재가 갱신
-            TranRecordCurValueResDto curValue = getCurValue(tranRecordDto.getSymbol());
-            tranRecordDto.setCurrentPrice((curValue == null || curValue.getCurrentPrice() == null) ?
+        // 현재가 조회
+        for(String ticker : tickerValueMap.keySet()) {
+            TranRecordCurValueResDto curValue = getCurValue(ticker);
+            tickerValueMap.put(ticker, (curValue == null || curValue.getCurrentPrice() == null) ?
                     0 : curValue.getCurrentPrice());
+        }
 
+        // 현재가 세팅
+        for(TranRecordEntity tranRecordEntity : tranRecordEntityList) {
+            TranRecordDto tranRecordDto = ConvertUtil.parseObject(tranRecordEntity, TranRecordDto.class);
+            tranRecordDto.setCurrentPrice(tickerValueMap.get(tranRecordDto.getSymbol()));
             tranRecordDtoList.add(tranRecordDto);
         }
+
+
+        // OLD
+//        for(TranRecordEntity tranRecordEntity : tranRecordEntityList) {
+//
+//            TranRecordDto tranRecordDto = ConvertUtil.parseObject(tranRecordEntity, TranRecordDto.class);
+//
+//            // 현재가 갱신
+//            TranRecordCurValueResDto curValue = getCurValue(tranRecordDto.getSymbol());
+//            tranRecordDto.setCurrentPrice((curValue == null || curValue.getCurrentPrice() == null) ?
+//                    0 : curValue.getCurrentPrice());
+//
+//            tranRecordDtoList.add(tranRecordDto);
+//        }
 
         return tranRecordDtoList;
     }
