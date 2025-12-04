@@ -37,6 +37,10 @@ spring:
       naming:
         # 물리명그대로 사용하기
         physical-strategy: org.hibernate.boot.model.naming.PhysicalNamingStrategyStandardImpl
+    show-sql: true  # SQL 쿼리 출력
+    properties:
+      hibernate:
+        format_sql: true  # SQL 포맷팅
     database:
       platform: org.hibernate.dialect.PostgreSQLDialect
   data:
