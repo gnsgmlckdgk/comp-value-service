@@ -19,6 +19,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.time.Duration;
+import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
@@ -32,6 +33,7 @@ public class SessionService {
     private final RedisComponent redisComponent;
     private final PasswordEncoder passwordEncoder;
     private final AppProperties appProperties;
+    private final RoleService roleService;
 
     private final int TIMEOUT_MINUTES = 30;
 
@@ -67,6 +69,16 @@ public class SessionService {
         loginDTO.setPassword(null);   // 비밀번호 입력값은 삭제
         loginDTO.setNickName(memberEntity.getNickname());
 
+        // 권한 정보 조회 및 Redis 저장
+        CommonResponse<List<String>> memRoleListRes = roleService.getMemberRoles(memberEntity.getId());
+        List<String> memRoleList = memRoleListRes.getResponse();
+        loginDTO.setRoles(memRoleList);
+
+        // 권한 정보 Redis 저장 (memberId 기준)
+        String rolesRedisKey = LoginDTO.redisRolesPrefix + memberEntity.getId();
+        String rolesValue = String.join(",", memRoleList != null ? memRoleList : List.of());
+        redisComponent.saveValueWithTtl(rolesRedisKey, rolesValue, TIMEOUT_MINUTES, TimeUnit.MINUTES);
+
         //@ 응답 조립
         response.setResponse(loginDTO);
 
@@ -100,8 +112,15 @@ public class SessionService {
 
         String sessionId = getSessionId(request);
 
-        String redisKey = LoginDTO.redisSessionPrefix + sessionId;
-        redisComponent.deleteKey(redisKey);
+        // 세션에서 memberId 조회 후 권한 정보도 삭제
+        String sessionRedisKey = LoginDTO.redisSessionPrefix + sessionId;
+        String memberId = redisComponent.getValue(sessionRedisKey);
+        if (memberId != null) {
+            String rolesRedisKey = LoginDTO.redisRolesPrefix + memberId;
+            redisComponent.deleteKey(rolesRedisKey);
+        }
+
+        redisComponent.deleteKey(sessionRedisKey);
 
         return sessionId;
     }
@@ -190,6 +209,41 @@ public class SessionService {
         if(StringUtil.isStringEmpty(value)) return false;
 
         return true;
+    }
+
+    /**
+     * Redis에서 현재 로그인한 사용자의 권한 목록 조회
+     * @param request
+     * @return 권한 목록 (없으면 빈 리스트)
+     */
+    public List<String> getRolesFromSession(HttpServletRequest request) {
+        String sessionId = getSessionId(request);
+        if (sessionId == null) {
+            return List.of();
+        }
+
+        String memberId = redisComponent.getValue(LoginDTO.redisSessionPrefix + sessionId);
+        if (memberId == null) {
+            return List.of();
+        }
+
+        String rolesValue = redisComponent.getValue(LoginDTO.redisRolesPrefix + memberId);
+        if (StringUtil.isStringEmpty(rolesValue)) {
+            return List.of();
+        }
+
+        return List.of(rolesValue.split(","));
+    }
+
+    /**
+     * 현재 로그인한 사용자가 특정 권한을 가지고 있는지 확인
+     * @param request
+     * @param roleName
+     * @return
+     */
+    public boolean hasRole(HttpServletRequest request, String roleName) {
+        List<String> roles = getRolesFromSession(request);
+        return roles.contains(roleName);
     }
 
 }

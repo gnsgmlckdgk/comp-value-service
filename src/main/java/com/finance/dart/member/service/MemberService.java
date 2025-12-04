@@ -7,7 +7,12 @@ import com.finance.dart.common.util.ConvertUtil;
 import com.finance.dart.member.dto.LoginDTO;
 import com.finance.dart.member.dto.Member;
 import com.finance.dart.member.entity.MemberEntity;
+import com.finance.dart.member.entity.MemberRoleEntity;
+import com.finance.dart.member.entity.RoleEntity;
+import com.finance.dart.member.enums.Role;
 import com.finance.dart.member.repository.MemberRepository;
+import com.finance.dart.member.repository.MemberRoleRepository;
+import com.finance.dart.member.repository.RoleRepository;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -26,6 +31,10 @@ public class MemberService {
     private final RedisComponent redisComponent;
     private final MemberRepository memberRepository;
     private final PasswordEncoder passwordEncoder;
+
+    private final RoleRepository roleRepository;
+    private final MemberRoleRepository memberRoleRepository;
+
 
     /**
      * 로그인한 회원 정보 조회
@@ -81,8 +90,17 @@ public class MemberService {
 
         //@ 회원가입
         MemberEntity joinMemberEntity = memberRepository.save(memberEntity);
-        joinMemberEntity.setPassword(null); // 비밀번호 입력값은 삭제
 
+        //@ 기본 권한 설정
+        Optional<RoleEntity> optRole = roleRepository.findByRoleName(Role.USER.getRoleName());
+        if(optRole.isPresent()) {
+            MemberRoleEntity mre = new MemberRoleEntity();
+            mre.setMember(joinMemberEntity);
+            mre.setRole(optRole.get());
+            memberRoleRepository.save(mre);
+        }
+
+        joinMemberEntity.setPassword(null); // 응답에서 비밀번호 제외 (DB 반영 X)
         commonResponse.setResponse(joinMemberEntity);
 
         return commonResponse;

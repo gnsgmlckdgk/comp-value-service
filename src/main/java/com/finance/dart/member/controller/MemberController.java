@@ -6,6 +6,7 @@ import com.finance.dart.common.dto.CommonResponse;
 import com.finance.dart.member.dto.LoginDTO;
 import com.finance.dart.member.dto.Member;
 import com.finance.dart.member.entity.MemberEntity;
+import com.finance.dart.member.enums.Role;
 import com.finance.dart.member.service.MemberService;
 import com.finance.dart.member.service.SessionService;
 import jakarta.servlet.http.HttpServletRequest;
@@ -48,6 +49,38 @@ public class MemberController {
                     .body(response);
         }
 
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+    /**
+     * 현재 로그인 계정 관리자 권한 여부 확인
+     * @param request
+     * @return
+     */
+    @GetMapping("/admin/users")
+    public ResponseEntity<?> getUsers01(HttpServletRequest request) {
+
+        CommonResponse response = new CommonResponse();
+
+        if (!sessionService.hasRole(request, Role.ADMIN.getRoleName())) {
+            return ResponseEntity.status(403).body("권한 없음");
+        }
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+    /**
+     * 현재 로그인 계정 슈퍼 관리자 권한 여부 확인
+     * @param request
+     * @return
+     */
+    @GetMapping("/super_admin/users")
+    public ResponseEntity<?> getUsers02(HttpServletRequest request) {
+
+        CommonResponse response = new CommonResponse();
+
+        if (!sessionService.hasRole(request, Role.SUPER_ADMIN.getRoleName())) {
+            return ResponseEntity.status(403).body("권한 없음");
+        }
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
