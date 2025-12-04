@@ -16,7 +16,6 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 @Slf4j
 @AllArgsConstructor
@@ -121,10 +120,8 @@ public class RoleService {
             return response;
         }
 
-        // 이미 해당 권한이 있는지 체크
-        List<MemberRoleEntity> existingRoles = memberRoleRepository.findByMemberId(memberId);
-        boolean alreadyHasRole = existingRoles.stream()
-                .anyMatch(mr -> mr.getRole().getId().equals(roleId));
+        // 이미 해당 권한이 있는지 체크 (순환 참조 방지 - Repository 메서드 사용)
+        boolean alreadyHasRole = memberRoleRepository.existsByMemberIdAndRoleId(memberId, roleId);
 
         if (alreadyHasRole) {
             response.setResponeInfo(ResponseEnum.DUPLICATE);
@@ -153,13 +150,10 @@ public class RoleService {
     }
 
     /**
-     * 회원의 권한 목록 조회
+     * 회원의 권한 목록 조회 (순환 참조 방지 - JPQL 직접 사용)
      */
     public CommonResponse<List<String>> getMemberRoles(Long memberId) {
-        List<MemberRoleEntity> memberRoles = memberRoleRepository.findByMemberId(memberId);
-        List<String> roleNames = memberRoles.stream()
-                .map(mr -> mr.getRole().getRoleName())
-                .collect(Collectors.toList());
+        List<String> roleNames = memberRoleRepository.findRoleNamesByMemberId(memberId);
         return new CommonResponse<>(roleNames);
     }
 }

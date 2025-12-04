@@ -1,7 +1,10 @@
 package com.finance.dart.board.controller;
 
-import com.finance.dart.board.entity.FreeBoard;
+import com.finance.dart.board.dto.FreeBoardDto;
+import com.finance.dart.board.dto.FreeBoardListResponseDto;
 import com.finance.dart.board.service.FreeBoardService;
+import com.finance.dart.common.dto.CommonResponse;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.PageRequest;
@@ -10,8 +13,6 @@ import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.Map;
 
 
 @Slf4j
@@ -24,7 +25,7 @@ public class FreeBoardController {
 
 
     @GetMapping("")
-    public ResponseEntity<Map<String, Object>> getFreeBoard(
+    public ResponseEntity<CommonResponse<FreeBoardListResponseDto>> getFreeBoard(
             @RequestParam(name = "page",defaultValue = "0") int page,
             @RequestParam(name = "size", defaultValue = "10") int size,
             @RequestParam(name = "search", defaultValue = "") String search,
@@ -32,39 +33,41 @@ public class FreeBoardController {
     ) {
 
         Pageable pageable = PageRequest.of("".equals(page) ? 0 : page, size, Sort.by(Sort.Direction.DESC, "createdAt"));
-        Map<String, Object> response = freeBoardService.getAllBoards(pageable, search, sgubun);
+        FreeBoardListResponseDto response = freeBoardService.getAllBoards(pageable, search, sgubun);
 
-        return new ResponseEntity<>(response, HttpStatus.OK);
+        return new ResponseEntity<>(new CommonResponse<>(response), HttpStatus.OK);
     }
 
     @GetMapping("/view/{id}")
-    public ResponseEntity<FreeBoard> viewFreeBoard(@PathVariable("id") Long id) {
+    public ResponseEntity<CommonResponse<FreeBoardDto>> viewFreeBoard(@PathVariable("id") Long id) {
 
-        FreeBoard registedBoard = freeBoardService.getBoardById(id);
+        FreeBoardDto board = freeBoardService.getBoardById(id);
 
-        return new ResponseEntity<>(registedBoard, HttpStatus.OK);
+        return new ResponseEntity<>(new CommonResponse<>(board), HttpStatus.OK);
     }
 
     @PostMapping("/regi")
-    public ResponseEntity<FreeBoard> regiFreeBoard(@RequestBody FreeBoard freeBoard) {
+    public ResponseEntity<CommonResponse<FreeBoardDto>> regiFreeBoard(
+            HttpServletRequest request,
+            @RequestBody FreeBoardDto freeBoard) {
 
-        FreeBoard registedBoard = freeBoardService.createBoard(freeBoard);
+        FreeBoardDto registedBoard = freeBoardService.createBoard(request, freeBoard);
 
-        return new ResponseEntity<>(registedBoard, HttpStatus.CREATED);
+        return new ResponseEntity<>(new CommonResponse<>(registedBoard), HttpStatus.CREATED);
     }
 
     @PutMapping("/modi")
-    public ResponseEntity<FreeBoard> modiFreeBoard(@RequestBody FreeBoard freeBoard) {
+    public ResponseEntity<CommonResponse<FreeBoardDto>> modiFreeBoard(@RequestBody FreeBoardDto freeBoard) {
 
-        FreeBoard updateBoard = freeBoardService.updateBoard(freeBoard.getId(), freeBoard);
+        FreeBoardDto updateBoard = freeBoardService.updateBoard(freeBoard.getId(), freeBoard);
 
-        return new ResponseEntity<>(updateBoard, HttpStatus.OK);
+        return new ResponseEntity<>(new CommonResponse<>(updateBoard), HttpStatus.OK);
     }
 
     @DeleteMapping("/delete/{id}")
-    public ResponseEntity<Object> deleteFreeBoard(@PathVariable("id") Long id) {
+    public ResponseEntity<CommonResponse<Void>> deleteFreeBoard(@PathVariable("id") Long id) {
         freeBoardService.deleteBoard(id);
-        return new ResponseEntity<>(null, HttpStatus.NO_CONTENT);
+        return new ResponseEntity<>(new CommonResponse<>(), HttpStatus.NO_CONTENT);
     }
 
 }

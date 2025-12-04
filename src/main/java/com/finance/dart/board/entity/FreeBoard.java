@@ -1,5 +1,7 @@
 package com.finance.dart.board.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.finance.dart.member.entity.MemberEntity;
 import jakarta.persistence.*;
 import lombok.Data;
 import java.time.LocalDateTime;
@@ -20,10 +22,15 @@ public class FreeBoard {
 
     private String title;
 
-//    @Lob
     @Column(columnDefinition = "text")
     private String content;
 
+    @JsonIgnore // 순환 참조 방지
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "member_id", nullable = false)
+    private MemberEntity member; // 작성자 (Member 테이블 참조)
+
+    @Deprecated // 더 이상 사용하지 않음 (member로 대체)
     private String author;
 
     private Integer viewCount = 0;

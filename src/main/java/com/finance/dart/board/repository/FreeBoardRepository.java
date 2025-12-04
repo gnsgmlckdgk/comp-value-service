@@ -36,11 +36,20 @@ public interface FreeBoardRepository extends JpaRepository<FreeBoard, Long> {
 
     /**
      * 검색어 추가 목록 조회
-     * @param author 작성자
+     * @param author 작성자 (Deprecated - author 필드 사용)
      * @param pageable
      * @return
      */
+    @Deprecated
     Page<FreeBoard> findByAuthorContaining(String author, Pageable pageable);
+
+    /**
+     * 작성자 닉네임으로 검색 (member.nickname 사용)
+     * @param nickname 작성자 닉네임
+     * @param pageable
+     * @return
+     */
+    Page<FreeBoard> findByMember_NicknameContaining(String nickname, Pageable pageable);
 
 }
 

@@ -107,9 +107,9 @@ public class MemberController {
      * @return
      */
     @PostMapping("/join")
-    public ResponseEntity<CommonResponse<MemberEntity>> join(@Valid @RequestBody MemberEntity memberEntity) {
+    public ResponseEntity<CommonResponse<Member>> join(@Valid @RequestBody MemberEntity memberEntity) {
 
-        CommonResponse<MemberEntity> response = memberService.join(memberEntity);
+        CommonResponse<Member> response = memberService.join(memberEntity);
 
         return new ResponseEntity<>(response, HttpStatus.OK);
     }

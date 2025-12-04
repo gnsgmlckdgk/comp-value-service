@@ -73,9 +73,9 @@ public class MemberService {
      * @param memberEntity
      * @return
      */
-    public CommonResponse<MemberEntity> join(MemberEntity memberEntity) {
+    public CommonResponse<Member> join(MemberEntity memberEntity) {
 
-        CommonResponse<MemberEntity> commonResponse = new CommonResponse();
+        CommonResponse<Member> commonResponse = new CommonResponse<>();
 
         //@ 중복체크
         MemberEntity alreadyMemberEntity = memberRepository.findByUsername(memberEntity.getUsername());
@@ -100,8 +100,9 @@ public class MemberService {
             memberRoleRepository.save(mre);
         }
 
-        joinMemberEntity.setPassword(null); // 응답에서 비밀번호 제외 (DB 반영 X)
-        commonResponse.setResponse(joinMemberEntity);
+        //@ Entity -> DTO 변환 (비밀번호는 자동으로 제외됨)
+        Member member = ConvertUtil.parseObject(joinMemberEntity, Member.class);
+        commonResponse.setResponse(member);
 
         return commonResponse;
     }

@@ -41,64 +41,69 @@ public class TranRecordService {
 
     /**
      * 거래기록 등록
-     * @param tranRecordEntity
+     * @param tranRecordDto
      * @return
      */
-    public TranRecordEntity regiTranRecord(HttpServletRequest request, TranRecordEntity tranRecordEntity) {
+    public TranRecordDto regiTranRecord(HttpServletRequest request, TranRecordDto tranRecordDto) {
 
         // 로그인 회원 정보
         MemberEntity memberEntity = getMemberEntity(request);
 
-        // 데이터 저장
+        // DTO -> Entity 변환
+        TranRecordEntity tranRecordEntity = ConvertUtil.parseObject(tranRecordDto, TranRecordEntity.class);
         tranRecordEntity.setMember(memberEntity);
-        TranRecordEntity resultEntity = tranRecordRepository.save(tranRecordEntity);
 
-        return resultEntity;
+        // 데이터 저장
+        TranRecordEntity savedEntity = tranRecordRepository.save(tranRecordEntity);
+
+        // Entity -> DTO 변환하여 반환
+        return ConvertUtil.parseObject(savedEntity, TranRecordDto.class);
     }
 
     /**
      * 거래기록 수정
      * @param request
-     * @param updateEntity
+     * @param updateDto
      * @return
      */
-    public TranRecordEntity modiTranRecord(HttpServletRequest request, TranRecordEntity updateEntity) {
+    public TranRecordDto modiTranRecord(HttpServletRequest request, TranRecordDto updateDto) {
 
         // 로그인 회원 정보
         MemberEntity memberEntity = getMemberEntity(request);
 
         // 데이터 조회
-        Optional<TranRecordEntity> dataOpt = tranRecordRepository.findById(updateEntity.getId());
+        Optional<TranRecordEntity> dataOpt = tranRecordRepository.findById(updateDto.getId());
         if(dataOpt.isEmpty()) return null;
 
         // 데이터 수정
         TranRecordEntity data = dataOpt.get();
         data.setMember(memberEntity);
 
-        if(updateEntity.getSymbol() != null) data.setSymbol(updateEntity.getSymbol());
-        if(updateEntity.getCompanyName() != null) data.setCompanyName(updateEntity.getCompanyName());
-        if(updateEntity.getBuyDate() != null) data.setBuyDate(updateEntity.getBuyDate());
-        if(updateEntity.getBuyPrice() != null) data.setBuyPrice(updateEntity.getBuyPrice());
-        if(updateEntity.getTotalBuyAmount() != null) data.setTotalBuyAmount(updateEntity.getTotalBuyAmount());
-        if(updateEntity.getTargetPrice() != null) data.setTargetPrice(updateEntity.getTargetPrice());
-        if(updateEntity.getRmk() != null) data.setRmk(updateEntity.getRmk());
+        if(updateDto.getSymbol() != null) data.setSymbol(updateDto.getSymbol());
+        if(updateDto.getCompanyName() != null) data.setCompanyName(updateDto.getCompanyName());
+        if(updateDto.getBuyDate() != null) data.setBuyDate(updateDto.getBuyDate());
+        if(updateDto.getBuyPrice() != null) data.setBuyPrice(updateDto.getBuyPrice());
+        if(updateDto.getTotalBuyAmount() != null) data.setTotalBuyAmount(updateDto.getTotalBuyAmount());
+        if(updateDto.getTargetPrice() != null) data.setTargetPrice(updateDto.getTargetPrice());
+        if(updateDto.getRmk() != null) data.setRmk(updateDto.getRmk());
         data.setUpdatedAt(LocalDateTime.now());
 
-        TranRecordEntity result = tranRecordRepository.save(data);
+        TranRecordEntity savedEntity = tranRecordRepository.save(data);
 
-        return result;
+        // Entity -> DTO 변환하여 반환
+        return ConvertUtil.parseObject(savedEntity, TranRecordDto.class);
     }
 
     /**
      * 거래기록 삭제
-     * @param deleteEntity
+     * @param deleteDto
      * @return
      */
-    public TranRecordEntity delTranRecord(TranRecordEntity deleteEntity) {
+    public void delTranRecord(TranRecordDto deleteDto) {
 
-        tranRecordRepository.delete(deleteEntity);
-
-        return deleteEntity;
+        if (deleteDto.getId() != null) {
+            tranRecordRepository.deleteById(deleteDto.getId());
+        }
     }
 
 
