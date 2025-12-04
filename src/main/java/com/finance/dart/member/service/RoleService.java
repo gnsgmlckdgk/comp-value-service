@@ -1,0 +1,165 @@
+package com.finance.dart.member.service;
+
+import com.finance.dart.common.constant.ResponseEnum;
+import com.finance.dart.common.dto.CommonResponse;
+import com.finance.dart.member.entity.MemberEntity;
+import com.finance.dart.member.entity.MemberRoleEntity;
+import com.finance.dart.member.entity.RoleEntity;
+import com.finance.dart.member.repository.MemberRepository;
+import com.finance.dart.member.repository.MemberRoleRepository;
+import com.finance.dart.member.repository.RoleRepository;
+import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
+
+@Slf4j
+@AllArgsConstructor
+@Service
+public class RoleService {
+
+    private final RoleRepository roleRepository;
+    private final MemberRepository memberRepository;
+    private final MemberRoleRepository memberRoleRepository;
+
+    /**
+     * 권한 목록 조회
+     */
+    public CommonResponse<List<RoleEntity>> getRoles() {
+        List<RoleEntity> roles = roleRepository.findAll();
+        return new CommonResponse<>(roles);
+    }
+
+    /**
+     * 권한 단건 조회
+     */
+    public CommonResponse<RoleEntity> getRole(Long roleId) {
+        Optional<RoleEntity> roleOpt = roleRepository.findById(roleId);
+        if (roleOpt.isPresent()) {
+            return new CommonResponse<>(roleOpt.get());
+        }
+        CommonResponse<RoleEntity> response = new CommonResponse<>();
+        response.setResponeInfo(ResponseEnum.NOT_FOUND);
+        return response;
+    }
+
+    /**
+     * 권한 등록
+     */
+    public CommonResponse<RoleEntity> createRole(RoleEntity roleEntity) {
+        CommonResponse<RoleEntity> response = new CommonResponse<>();
+
+        // 중복 체크
+        Optional<RoleEntity> existingRole = roleRepository.findByRoleName(roleEntity.getRoleName());
+        if (existingRole.isPresent()) {
+            response.setResponeInfo(ResponseEnum.DUPLICATE);
+            return response;
+        }
+
+        RoleEntity savedRole = roleRepository.save(roleEntity);
+        response.setResponse(savedRole);
+        return response;
+    }
+
+    /**
+     * 권한 수정
+     */
+    public CommonResponse<RoleEntity> updateRole(Long roleId, RoleEntity roleEntity) {
+        CommonResponse<RoleEntity> response = new CommonResponse<>();
+
+        Optional<RoleEntity> roleOpt = roleRepository.findById(roleId);
+        if (roleOpt.isEmpty()) {
+            response.setResponeInfo(ResponseEnum.NOT_FOUND);
+            return response;
+        }
+
+        RoleEntity existingRole = roleOpt.get();
+        existingRole.setRoleName(roleEntity.getRoleName());
+        existingRole.setDescription(roleEntity.getDescription());
+        existingRole.setUpdatedAt(LocalDateTime.now());
+
+        RoleEntity savedRole = roleRepository.save(existingRole);
+        response.setResponse(savedRole);
+        return response;
+    }
+
+    /**
+     * 권한 삭제
+     */
+    @Transactional
+    public CommonResponse<Void> deleteRole(Long roleId) {
+        CommonResponse<Void> response = new CommonResponse<>();
+
+        Optional<RoleEntity> roleOpt = roleRepository.findById(roleId);
+        if (roleOpt.isEmpty()) {
+            response.setResponeInfo(ResponseEnum.NOT_FOUND);
+            return response;
+        }
+
+        roleRepository.deleteById(roleId);
+        response.setResponeInfo(ResponseEnum.OK);
+        return response;
+    }
+
+    /**
+     * 회원에게 권한 부여
+     */
+    @Transactional
+    public CommonResponse<Void> assignRoleToMember(Long memberId, Long roleId) {
+        CommonResponse<Void> response = new CommonResponse<>();
+
+        Optional<MemberEntity> memberOpt = memberRepository.findById(memberId);
+        Optional<RoleEntity> roleOpt = roleRepository.findById(roleId);
+
+        if (memberOpt.isEmpty() || roleOpt.isEmpty()) {
+            response.setResponeInfo(ResponseEnum.NOT_FOUND);
+            return response;
+        }
+
+        // 이미 해당 권한이 있는지 체크
+        List<MemberRoleEntity> existingRoles = memberRoleRepository.findByMemberId(memberId);
+        boolean alreadyHasRole = existingRoles.stream()
+                .anyMatch(mr -> mr.getRole().getId().equals(roleId));
+
+        if (alreadyHasRole) {
+            response.setResponeInfo(ResponseEnum.DUPLICATE);
+            return response;
+        }
+
+        MemberRoleEntity memberRole = new MemberRoleEntity();
+        memberRole.setMember(memberOpt.get());
+        memberRole.setRole(roleOpt.get());
+        memberRoleRepository.save(memberRole);
+
+        response.setResponeInfo(ResponseEnum.OK);
+        return response;
+    }
+
+    /**
+     * 회원의 권한 제거
+     */
+    @Transactional
+    public CommonResponse<Void> removeRoleFromMember(Long memberId, Long roleId) {
+        CommonResponse<Void> response = new CommonResponse<>();
+
+        memberRoleRepository.deleteByMemberIdAndRoleId(memberId, roleId);
+        response.setResponeInfo(ResponseEnum.OK);
+        return response;
+    }
+
+    /**
+     * 회원의 권한 목록 조회
+     */
+    public CommonResponse<List<String>> getMemberRoles(Long memberId) {
+        List<MemberRoleEntity> memberRoles = memberRoleRepository.findByMemberId(memberId);
+        List<String> roleNames = memberRoles.stream()
+                .map(mr -> mr.getRole().getRoleName())
+                .collect(Collectors.toList());
+        return new CommonResponse<>(roleNames);
+    }
+}
