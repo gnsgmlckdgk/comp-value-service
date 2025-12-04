@@ -271,7 +271,14 @@ public class TranRecordService {
     private MemberEntity getMemberEntity(HttpServletRequest request) {
         // 로그인 회원 정보
         Member member = memberService.getLoginMember(request);
-        MemberEntity memberEntity = ConvertUtil.parseObject(member, MemberEntity.class);
+        if (member == null) {
+            throw new RuntimeException("로그인이 필요합니다.");
+        }
+
+        MemberEntity memberEntity = new MemberEntity();
+        memberEntity.setId(member.getId());
+        memberEntity.setUsername(member.getUsername());
+        memberEntity.setNickname(member.getNickname());
 
         return memberEntity;
     }

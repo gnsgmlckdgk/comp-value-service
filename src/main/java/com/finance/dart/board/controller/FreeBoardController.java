@@ -57,16 +57,20 @@ public class FreeBoardController {
     }
 
     @PutMapping("/modi")
-    public ResponseEntity<CommonResponse<FreeBoardDto>> modiFreeBoard(@RequestBody FreeBoardDto freeBoard) {
+    public ResponseEntity<CommonResponse<FreeBoardDto>> modiFreeBoard(
+            HttpServletRequest request,
+            @RequestBody FreeBoardDto freeBoard) {
 
-        FreeBoardDto updateBoard = freeBoardService.updateBoard(freeBoard.getId(), freeBoard);
+        FreeBoardDto updateBoard = freeBoardService.updateBoard(request, freeBoard.getId(), freeBoard);
 
         return new ResponseEntity<>(new CommonResponse<>(updateBoard), HttpStatus.OK);
     }
 
     @DeleteMapping("/delete/{id}")
-    public ResponseEntity<CommonResponse<Void>> deleteFreeBoard(@PathVariable("id") Long id) {
-        freeBoardService.deleteBoard(id);
+    public ResponseEntity<CommonResponse<Void>> deleteFreeBoard(
+            HttpServletRequest request,
+            @PathVariable("id") Long id) {
+        freeBoardService.deleteBoard(request, id);
         return new ResponseEntity<>(new CommonResponse<>(), HttpStatus.NO_CONTENT);
     }
 

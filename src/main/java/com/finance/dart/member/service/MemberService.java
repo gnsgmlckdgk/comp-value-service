@@ -59,13 +59,26 @@ public class MemberService {
     public Member getMember(Long memberId) {
 
         Optional<MemberEntity> memberOpt = memberRepository.findById(memberId);
-        if(memberOpt.isPresent()) {
-            MemberEntity memberEntity = memberOpt.get();
-            Member member = ConvertUtil.parseObject(memberEntity, Member.class);
-            return member;
+        if (memberOpt.isEmpty()) {
+            return null;
         }
 
-        return null;
+        MemberEntity memberEntity = memberOpt.get();
+
+        // Gson 변환 실패 등으로 인한 NPE 방지를 위해 수동 매핑
+        Member member = new Member();
+        member.setId(memberEntity.getId());
+        member.setUsername(memberEntity.getUsername());
+        member.setEmail(memberEntity.getEmail());
+        member.setNickname(memberEntity.getNickname());
+        if (memberEntity.getCreatedAt() != null) {
+            member.setCreatedAt(memberEntity.getCreatedAt().toString());
+        }
+        if (memberEntity.getUpdatedAt() != null) {
+            member.setUpdatedAt(memberEntity.getUpdatedAt().toString());
+        }
+
+        return member;
     }
 
     /**

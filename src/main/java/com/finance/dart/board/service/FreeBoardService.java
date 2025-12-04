@@ -4,16 +4,17 @@ import com.finance.dart.board.dto.FreeBoardDto;
 import com.finance.dart.board.entity.FreeBoard;
 import com.finance.dart.board.dto.FreeBoardListResponseDto;
 import com.finance.dart.board.repository.FreeBoardRepository;
-import com.finance.dart.common.util.ConvertUtil;
 import com.finance.dart.member.dto.Member;
 import com.finance.dart.member.entity.MemberEntity;
 import com.finance.dart.member.service.MemberService;
-import jakarta.servlet.http.HttpServletRequest;
+import com.finance.dart.member.service.SessionService;
+import com.finance.dart.member.enums.Role;
 import lombok.AllArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import jakarta.servlet.http.HttpServletRequest;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -27,6 +28,7 @@ public class FreeBoardService {
 
     private final FreeBoardRepository freeBoardRepository;
     private final MemberService memberService;
+    private final SessionService sessionService;
 
     /**
      * Entity -> DTO 변환
@@ -60,7 +62,15 @@ public class FreeBoardService {
     public FreeBoardDto createBoard(HttpServletRequest request, FreeBoardDto boardDto) {
         // 로그인 회원 정보
         Member member = memberService.getLoginMember(request);
-        MemberEntity memberEntity = ConvertUtil.parseObject(member, MemberEntity.class);
+        if (member == null) {
+            throw new RuntimeException("로그인이 필요합니다.");
+        }
+
+        // 최소한의 정보만 가진 MemberEntity 구성 (id, username, nickname 정도만 사용)
+        MemberEntity memberEntity = new MemberEntity();
+        memberEntity.setId(member.getId());
+        memberEntity.setUsername(member.getUsername());
+        memberEntity.setNickname(member.getNickname());
 
         // DTO -> Entity 변환
         FreeBoard board = new FreeBoard();
@@ -131,10 +141,16 @@ public class FreeBoardService {
      * 게시글 수정
      */
     @Transactional
-    public FreeBoardDto updateBoard(Long id, FreeBoardDto boardDto) {
+    public FreeBoardDto updateBoard(HttpServletRequest request, Long id, FreeBoardDto boardDto) {
         Optional<FreeBoard> boardOpt = freeBoardRepository.findById(id);
         FreeBoard board = boardOpt.orElseThrow(() ->
                 new RuntimeException("Board not found with id: " + id));
+
+        // 로그인 회원 정보
+        Member loginMember = memberService.getLoginMember(request);
+
+        // 권한 체크
+        validateUpdatePermission(request, loginMember, board);
 
         // 수정
         board.setTitle(boardDto.getTitle());
@@ -149,12 +165,66 @@ public class FreeBoardService {
     /**
      * 게시글 삭제
      */
-    public void deleteBoard(Long id) {
+    public void deleteBoard(HttpServletRequest request, Long id) {
         Optional<FreeBoard> boardOpt = freeBoardRepository.findById(id);
         FreeBoard board = boardOpt.orElseThrow(() ->
                 new RuntimeException("Board not found with id: " + id));
 
+        // 로그인 회원 정보
+        Member loginMember = memberService.getLoginMember(request);
+
+        // 권한 체크
+        validateDeletePermission(request, loginMember, board);
+
         freeBoardRepository.delete(board);
+    }
+
+    /**
+     * 수정 권한 체크
+     * 슈퍼관리자, 관리자 : 자기 게시글만 수정 가능
+     * 그 외 : 자기 게시글만 수정 가능
+     */
+    private void validateUpdatePermission(HttpServletRequest request, Member loginMember, FreeBoard board) {
+
+        if (loginMember == null) {
+            throw new RuntimeException("로그인이 필요합니다.");
+        }
+
+        Long loginMemberId = loginMember.getId();
+        Long writerId = board.getMember().getId();
+
+        // 본인 글인지 체크
+        if (!loginMemberId.equals(writerId)) {
+            throw new RuntimeException("해당 게시글을 수정할 권한이 없습니다.");
+        }
+    }
+
+    /**
+     * 삭제 권한 체크
+     * 슈퍼관리자, 관리자 : 모든 게시글 삭제 가능
+     * 그 외 : 자기 게시글만 삭제 가능
+     */
+    private void validateDeletePermission(HttpServletRequest request, Member loginMember, FreeBoard board) {
+
+        if (loginMember == null) {
+            throw new RuntimeException("로그인이 필요합니다.");
+        }
+
+        Long loginMemberId = loginMember.getId();
+        Long writerId = board.getMember().getId();
+
+        // SUPER_ADMIN 또는 ADMIN 권한이면 모두 삭제 가능
+        boolean isSuperAdmin = sessionService.hasRole(request, Role.SUPER_ADMIN.getRoleName());
+        boolean isAdmin = sessionService.hasRole(request, Role.ADMIN.getRoleName());
+
+        if (isSuperAdmin || isAdmin) {
+            return;
+        }
+
+        // 그 외 권한은 본인 글만 삭제 가능
+        if (!loginMemberId.equals(writerId)) {
+            throw new RuntimeException("해당 게시글을 삭제할 권한이 없습니다.");
+        }
     }
 
 
