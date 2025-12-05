@@ -5,6 +5,8 @@ import org.springframework.http.HttpMethod;
 
 public enum FmpApiList {
 
+    /** ========== 거래소 및 기업 조회 ========== **/
+
     /** Symbol로 거래소심볼 조회 **/
     CompanyStockSymbolSearchBySymbol(
             "Stock Symbol Search API",
@@ -31,6 +33,9 @@ public enum FmpApiList {
             "https://site.financialmodelingprep.com/developer/docs/stable/profile-symbol",
             "기업 프로파일 조회 API"
     ),
+
+
+    /** ========== 재무제표 조회 ========== **/
 
     /** 영업이익 조회 **/
     IncomeStatement(
@@ -104,6 +109,9 @@ public enum FmpApiList {
             "성장률 조회 API"
     ),
 
+
+    /** ========== 주식관련 데이터 조회 ========== **/
+
     /** 외환 시세 조회(환율정보 조회) **/
     ForexQuote(
             "Forex Quote API",
@@ -129,6 +137,27 @@ public enum FmpApiList {
             HttpMethod.GET,
             "https://site.financialmodelingprep.com/developer/docs#aftermarket-trade",
             "애프터마켓 시세 조회 API"
+    ),
+
+
+    // -- 차트 조회
+
+    /** 기업별 차트 조회 **/
+    StockPriceandVolumeData(
+            "Stock Price and Volume Data API",
+            "https://financialmodelingprep.com/stable/historical-price-eod/full",
+            HttpMethod.GET,
+            "https://site.financialmodelingprep.com/developer/docs/stable/historical-price-eod-full",
+            "주식 가격 그리고 거래량 데이터 조회 API"
+    ),
+
+    /** 거래소별 차트 조회 **/
+    HistoricalIndexFullChart(
+            "Historical Index Full Chart API",
+            "https://financialmodelingprep.com/stable/historical-price-eod/full",
+            HttpMethod.GET,
+            "https://site.financialmodelingprep.com/developer/docs/stable/index-historical-price-eod-full",
+            "기록 인덱스 전체 차트 조회 API"
     ),
 
     ;

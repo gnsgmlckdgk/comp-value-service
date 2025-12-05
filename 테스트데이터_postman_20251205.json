@@ -1,7 +1,7 @@
 {
 	"info": {
 		"_postman_id": "55a6eb5d-ab93-4c72-904f-7724c50c44cf",
-		"name": "OPEN DART",
+		"name": "CompValue",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
 		"_exporter_id": "32631979"
 	},
@@ -87,13 +87,254 @@
 			"name": "회원정보",
 			"item": [
 				{
+					"name": "권한",
+					"item": [
+						{
+							"name": "권한 목록 조회",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "http://localhost:18080/dart/role",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "18080",
+									"path": [
+										"dart",
+										"role"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "권한 등록",
+							"request": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"roleName\": \"ROLE_USER3\",\n    \"description\": \"일반 사용자3\"\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "http://localhost:18080/dart/role",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "18080",
+									"path": [
+										"dart",
+										"role"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "권한 수정",
+							"request": {
+								"method": "PUT",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"roleName\": \"ROLE_ADMIN\",\n    \"description\": \"시스템 관리자\"\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "http://localhost:18080/dart/role/2",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "18080",
+									"path": [
+										"dart",
+										"role",
+										"2"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "권한 단건 조회",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "http://localhost:18080/dart/role/1",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "18080",
+									"path": [
+										"dart",
+										"role",
+										"1"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "권한 삭제",
+							"request": {
+								"method": "DELETE",
+								"header": [],
+								"url": {
+									"raw": "http://localhost:18080/dart/role/5",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "18080",
+									"path": [
+										"dart",
+										"role",
+										"5"
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "\b회원 권한",
+					"item": [
+						{
+							"name": "회원의 권한 목록 조회",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "http://localhost:18080/dart/role/member/1",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "18080",
+									"path": [
+										"dart",
+										"role",
+										"member",
+										"1"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "회원에게 권한 부여",
+							"request": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "http://localhost:18080/dart/role/member/1/role/2",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "18080",
+									"path": [
+										"dart",
+										"role",
+										"member",
+										"1",
+										"role",
+										"2"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "회원의 권한 제거",
+							"request": {
+								"method": "DELETE",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "http://localhost:18080/dart/role/member/1/role/2",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "18080",
+									"path": [
+										"dart",
+										"role",
+										"member",
+										"1",
+										"role",
+										"2"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "관리자 권한 여부 확인 (테스트용)",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "http://localhost:18080/dart/member/admin/users",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "18080",
+									"path": [
+										"dart",
+										"member",
+										"admin",
+										"users"
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				},
+				{
 					"name": "회원가입",
 					"request": {
 						"method": "POST",
 						"header": [],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n    \"username\" : \"\",\n    \"password\" : \"\",\n    \"email\" : \"\",\n    \"nickname\" : \"\"\n}",
+							"raw": "{\n    \"username\" : \"user01\",\n    \"password\" : \"1q2w3e4r!\",\n    \"email\" : \"user01@test.com\",\n    \"nickname\" : \"유저01\"\n}",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -123,7 +364,7 @@
 						"header": [],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n    \"username\" : \"admin\",\n    \"password\" : \"\"\n}",
+							"raw": "{\n    \"username\" : \"admin\",\n    \"password\" : \"1q2w3e4r!\"\n}",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -1143,6 +1384,74 @@
 												"afterTrade"
 											]
 										}
+									},
+									"response": []
+								}
+							]
+						},
+						{
+							"name": "차트 조회(FMP)",
+							"item": [
+								{
+									"name": "기업의 주식, 거래량 데이터 조회(기간별)",
+									"request": {
+										"method": "POST",
+										"header": [],
+										"body": {
+											"mode": "raw",
+											"raw": "{\n  \"symbol\": \"AAPL\",\n  \"from\": \"2025-01-01\",\n  \"to\": \"2025-02-04\"\n}",
+											"options": {
+												"raw": {
+													"language": "json"
+												}
+											}
+										},
+										"url": {
+											"raw": "http://localhost:18080/dart/abroad/chart/stock-price-volume",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "18080",
+											"path": [
+												"dart",
+												"abroad",
+												"chart",
+												"stock-price-volume"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "거래소별 인덱스 차트 조회(기간별)",
+									"request": {
+										"method": "POST",
+										"header": [],
+										"body": {
+											"mode": "raw",
+											"raw": "{\n  \"symbol\": \"^GSPC\",\n  \"from\": \"2025-07-01\",\n  \"to\": \"2025-07-24\"\n}",
+											"options": {
+												"raw": {
+													"language": "json"
+												}
+											}
+										},
+										"url": {
+											"raw": "http://localhost:18080/dart/abroad/chart/historical-index",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "18080",
+											"path": [
+												"dart",
+												"abroad",
+												"chart",
+												"historical-index"
+											]
+										},
+										"description": "| ^GSPC | S&P 500 |\n| --- | --- |\n| ^DJI | Dow Jones Industrial Average |\n| ^^IXIC | NASDAQ Composite |\n| ^RUT | Russell 2000 |\n| ^FTSE | FTSE 100 |\n| ^N225 | Nikkei 225 |\n| ^HSI | Hang Seng Index |\n| ^STOXX50E | Euro Stoxx 50 |\n| ^VIX | VIX (Volatility Index) |"
 									},
 									"response": []
 								}
