@@ -1666,174 +1666,337 @@
 			"name": "거래현황",
 			"item": [
 				{
-					"name": "거래 현황 등록",
-					"request": {
-						"method": "POST",
-						"header": [],
-						"body": {
-							"mode": "raw",
-							"raw": "{\n  \"symbol\": \"AAPL\",\n  \"companyName\": \"Apple Inc.\",\n  \"buyDate\": \"2025-10-24\",\n  \"buyPrice\": 190.5,\n  \"totalBuyAmount\": 10,\n  \"targetPrice\": 190.0\n}",
-							"options": {
-								"raw": {
-									"language": "json"
+					"name": "거래현황",
+					"item": [
+						{
+							"name": "거래 현황 등록",
+							"request": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"symbol\": \"AAPL\",\n  \"companyName\": \"Apple Inc.\",\n  \"buyDate\": \"2025-10-24\",\n  \"buyPrice\": 190.5,\n  \"totalBuyAmount\": 10,\n  \"targetPrice\": 190.0\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "http://localhost:18080/dart/tranrecord/regi",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "18080",
+									"path": [
+										"dart",
+										"tranrecord",
+										"regi"
+									]
 								}
-							}
+							},
+							"response": []
 						},
-						"url": {
-							"raw": "http://localhost:18080/dart/tranrecord/regi",
-							"protocol": "http",
-							"host": [
-								"localhost"
-							],
-							"port": "18080",
-							"path": [
-								"dart",
-								"tranrecord",
-								"regi"
-							]
+						{
+							"name": "거래 현황 현재가격 갱신",
+							"request": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"symbols\": [\"AAPL\", \"MSFT\", \"KO\"]\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "http://localhost:18080/dart/tranrecord/price",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "18080",
+									"path": [
+										"dart",
+										"tranrecord",
+										"price"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "거래 현황 환율정보 조회",
+							"request": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"currency\": \"USDKRW\"\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "http://localhost:18080/dart/tranrecord/rate",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "18080",
+									"path": [
+										"dart",
+										"tranrecord",
+										"rate"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "거래 현황 수정",
+							"request": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"id\": 1,\n  \"symbol\": \"AAPL\",\n  \"companyName\": \"Apple Inc. Modi Test@@@\",\n  \"buyDate\": \"2025-10-24\",\n  \"buyPrice\": 999.5,\n  \"totalBuyAmount\": 10,\n  \"targetPrice\": 190.0\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "http://localhost:18080/dart/tranrecord/modi",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "18080",
+									"path": [
+										"dart",
+										"tranrecord",
+										"modi"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "거래현황 삭제",
+							"request": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"id\": 1\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "http://localhost:18080/dart/tranrecord/del",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "18080",
+									"path": [
+										"dart",
+										"tranrecord",
+										"del"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "거래 현황 조회",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "http://localhost:18080/dart/tranrecord",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "18080",
+									"path": [
+										"dart",
+										"tranrecord"
+									]
+								}
+							},
+							"response": []
 						}
-					},
-					"response": []
+					]
 				},
 				{
-					"name": "거래 현황 현재가격 갱신",
-					"request": {
-						"method": "POST",
-						"header": [],
-						"body": {
-							"mode": "raw",
-							"raw": "{\n  \"symbols\": [\"AAPL\", \"MSFT\", \"KO\"]\n}",
-							"options": {
-								"raw": {
-									"language": "json"
+					"name": "매도현황",
+					"item": [
+						{
+							"name": "매도 현황 등록",
+							"request": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"symbol\": \"AAPL\",\n    \"companyName\": \"Apple Inc.\",\n    \"sellDate\": \"2025-12-09\",\n    \"sellPrice\": 150.50,\n    \"sellQty\": 10,\n    \"realizedPnl\": 500.00,\n    \"rmk\": \"차익 실현\"\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "http://localhost:18080/dart/sellrecord/regi",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "18080",
+									"path": [
+										"dart",
+										"sellrecord",
+										"regi"
+									]
 								}
-							}
+							},
+							"response": []
 						},
-						"url": {
-							"raw": "http://localhost:18080/dart/tranrecord/price",
-							"protocol": "http",
-							"host": [
-								"localhost"
-							],
-							"port": "18080",
-							"path": [
-								"dart",
-								"tranrecord",
-								"price"
-							]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "거래 현황 환율정보 조회",
-					"request": {
-						"method": "POST",
-						"header": [],
-						"body": {
-							"mode": "raw",
-							"raw": "{\n  \"currency\": \"USDKRW\"\n}",
-							"options": {
-								"raw": {
-									"language": "json"
+						{
+							"name": "매도 현황 수정",
+							"request": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"id\": 1,\n    \"symbol\": \"AAPL\",\n    \"companyName\": \"Apple Inc.\",\n    \"sellDate\": \"2025-12-09\",\n    \"sellPrice\": 155.00,\n    \"sellQty\": 10,\n    \"realizedPnl\": 550.00,\n    \"rmk\": \"수정된 메모\"\n}\n\n",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "http://localhost:18080/dart/sellrecord/modi",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "18080",
+									"path": [
+										"dart",
+										"sellrecord",
+										"modi"
+									]
 								}
-							}
+							},
+							"response": []
 						},
-						"url": {
-							"raw": "http://localhost:18080/dart/tranrecord/rate",
-							"protocol": "http",
-							"host": [
-								"localhost"
-							],
-							"port": "18080",
-							"path": [
-								"dart",
-								"tranrecord",
-								"rate"
-							]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "거래 현황 수정",
-					"request": {
-						"method": "POST",
-						"header": [],
-						"body": {
-							"mode": "raw",
-							"raw": "{\n  \"id\": 1,\n  \"symbol\": \"AAPL\",\n  \"companyName\": \"Apple Inc. Modi Test@@@\",\n  \"buyDate\": \"2025-10-24\",\n  \"buyPrice\": 999.5,\n  \"totalBuyAmount\": 10,\n  \"targetPrice\": 190.0\n}",
-							"options": {
-								"raw": {
-									"language": "json"
+						{
+							"name": "매도 현황 삭제",
+							"request": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"id\": 1\n}\n\n",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "http://localhost:18080/dart/sellrecord/del",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "18080",
+									"path": [
+										"dart",
+										"sellrecord",
+										"del"
+									]
 								}
-							}
+							},
+							"response": []
 						},
-						"url": {
-							"raw": "http://localhost:18080/dart/tranrecord/modi",
-							"protocol": "http",
-							"host": [
-								"localhost"
-							],
-							"port": "18080",
-							"path": [
-								"dart",
-								"tranrecord",
-								"modi"
-							]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "거래현황 삭제",
-					"request": {
-						"method": "POST",
-						"header": [],
-						"body": {
-							"mode": "raw",
-							"raw": "{\n  \"id\": 1\n}",
-							"options": {
-								"raw": {
-									"language": "json"
+						{
+							"name": "매도 현황 조회(단건)",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "http://localhost:18080/dart/sellrecord/1",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "18080",
+									"path": [
+										"dart",
+										"sellrecord",
+										"1"
+									]
 								}
-							}
+							},
+							"response": []
 						},
-						"url": {
-							"raw": "http://localhost:18080/dart/tranrecord/del",
-							"protocol": "http",
-							"host": [
-								"localhost"
-							],
-							"port": "18080",
-							"path": [
-								"dart",
-								"tranrecord",
-								"del"
-							]
+						{
+							"name": "매도 현황 조회(전체)",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "http://localhost:18080/dart/sellrecord",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "18080",
+									"path": [
+										"dart",
+										"sellrecord"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "매도 현황 조회(티커별)",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "http://localhost:18080/dart/sellrecord/symbol/AAPL",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "18080",
+									"path": [
+										"dart",
+										"sellrecord",
+										"symbol",
+										"AAPL"
+									]
+								}
+							},
+							"response": []
 						}
-					},
-					"response": []
-				},
-				{
-					"name": "거래 현황 조회",
-					"request": {
-						"method": "GET",
-						"header": [],
-						"url": {
-							"raw": "http://localhost:18080/dart/tranrecord",
-							"protocol": "http",
-							"host": [
-								"localhost"
-							],
-							"port": "18080",
-							"path": [
-								"dart",
-								"tranrecord"
-							]
-						}
-					},
-					"response": []
+					]
 				}
 			]
 		}

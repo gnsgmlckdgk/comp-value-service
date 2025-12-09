@@ -1,7 +1,6 @@
 package com.finance.dart.board.controller;
 
 import com.finance.dart.board.dto.*;
-import com.finance.dart.board.entity.TranRecordEntity;
 import com.finance.dart.board.service.TranRecordService;
 import com.finance.dart.common.dto.CommonResponse;
 import jakarta.servlet.http.HttpServletRequest;
