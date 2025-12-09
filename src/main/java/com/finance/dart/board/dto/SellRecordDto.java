@@ -8,8 +8,7 @@ import lombok.Data;
 @Data
 public class SellRecordDto {
 
-    private Long id;                    // PK
-
+    private Long id;                    // 매도기록ID
     // --- 거래 기록 정보
     private String symbol;              // 티커
     private String companyName;         // 기업명
