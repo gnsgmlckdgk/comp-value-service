@@ -22,6 +22,10 @@ public enum ResponseEnum {
 
     // 회원가입 관련 오류
     JOIN_DUPLICATE_USERNAME("40000", "이미 등록된 username 입니다.", false, HttpStatus.BAD_REQUEST),
+
+    // 회원 관련 오류
+    MEMBER_NOT_FOUND("40401", "회원 정보를 찾을 수 없습니다.", false, HttpStatus.BAD_REQUEST),
+    PASSWORD_NOT_MATCH("40001", "비밀번호가 일치하지 않습니다.", false, HttpStatus.BAD_REQUEST),
     ;
 
 

@@ -19,6 +19,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Optional;
 
 
@@ -28,6 +30,7 @@ import java.util.Optional;
 public class MemberService {
 
     private final SessionService sessionService;
+    private final RoleService roleService;
     private final RedisComponent redisComponent;
     private final MemberRepository memberRepository;
     private final PasswordEncoder passwordEncoder;
@@ -78,6 +81,15 @@ public class MemberService {
             member.setUpdatedAt(memberEntity.getUpdatedAt().toString());
         }
 
+        //@ 권한정보 조회
+        CommonResponse<List<String>> roleListRes = roleService.getMemberRoles(memberEntity.getId());
+        if(roleListRes == null) {
+            member.setRoles(new LinkedList<>());
+        } else {
+            List<String> roleList = roleListRes.getResponse();
+            member.setRoles(roleList);
+        }
+
         return member;
     }
 
@@ -116,6 +128,139 @@ public class MemberService {
         //@ Entity -> DTO 변환 (비밀번호는 자동으로 제외됨)
         Member member = ConvertUtil.parseObject(joinMemberEntity, Member.class);
         commonResponse.setResponse(member);
+
+        return commonResponse;
+    }
+
+    /**
+     * 회원정보 수정
+     * @param request
+     * @param updateMember
+     * @return
+     */
+    public CommonResponse<Member> updateMember(HttpServletRequest request, Member updateMember) {
+
+        CommonResponse<Member> commonResponse = new CommonResponse<>();
+
+        // 로그인 회원 정보
+        Member loginMember = getLoginMember(request);
+        if (loginMember == null) {
+            commonResponse.setResponeInfo(ResponseEnum.LOGIN_SESSION_EXPIRED);
+            return commonResponse;
+        }
+
+        // 회원 조회
+        Optional<MemberEntity> memberOpt = memberRepository.findById(loginMember.getId());
+        if (memberOpt.isEmpty()) {
+            commonResponse.setResponeInfo(ResponseEnum.MEMBER_NOT_FOUND);
+            return commonResponse;
+        }
+
+        MemberEntity memberEntity = memberOpt.get();
+
+        // 수정 가능 필드 업데이트
+        if (updateMember.getEmail() != null) {
+            memberEntity.setEmail(updateMember.getEmail());
+        }
+        if (updateMember.getNickname() != null) {
+            memberEntity.setNickname(updateMember.getNickname());
+        }
+        memberEntity.setUpdatedAt(java.time.LocalDateTime.now());
+
+        // 저장
+        MemberEntity savedEntity = memberRepository.save(memberEntity);
+
+        // Entity -> DTO 변환
+        Member member = getMember(savedEntity.getId());
+        commonResponse.setResponse(member);
+
+        return commonResponse;
+    }
+
+    /**
+     * 비밀번호 변경
+     * @param request
+     * @param currentPassword
+     * @param newPassword
+     * @return
+     */
+    public CommonResponse<Void> changePassword(HttpServletRequest request, String currentPassword, String newPassword) {
+
+        CommonResponse<Void> commonResponse = new CommonResponse<>();
+
+        // 로그인 회원 정보
+        Member loginMember = getLoginMember(request);
+        if (loginMember == null) {
+            commonResponse.setResponeInfo(ResponseEnum.LOGIN_SESSION_EXPIRED);
+            return commonResponse;
+        }
+
+        // 회원 조회
+        Optional<MemberEntity> memberOpt = memberRepository.findById(loginMember.getId());
+        if (memberOpt.isEmpty()) {
+            commonResponse.setResponeInfo(ResponseEnum.MEMBER_NOT_FOUND);
+            return commonResponse;
+        }
+
+        MemberEntity memberEntity = memberOpt.get();
+
+        // 현재 비밀번호 확인
+        if (!passwordEncoder.matches(currentPassword, memberEntity.getPassword())) {
+            commonResponse.setResponeInfo(ResponseEnum.PASSWORD_NOT_MATCH);
+            return commonResponse;
+        }
+
+        // 새 비밀번호 암호화 및 저장
+        String encryptedPw = passwordEncoder.encode(newPassword);
+        memberEntity.setPassword(encryptedPw);
+        memberEntity.setUpdatedAt(java.time.LocalDateTime.now());
+
+        memberRepository.save(memberEntity);
+
+        return commonResponse;
+    }
+
+    /**
+     * 회원 탈퇴
+     * @param request
+     * @param password
+     * @return
+     */
+    public CommonResponse<Void> deleteMember(HttpServletRequest request, String password) {
+
+        CommonResponse<Void> commonResponse = new CommonResponse<>();
+
+        // 로그인 회원 정보
+        Member loginMember = getLoginMember(request);
+        if (loginMember == null) {
+            commonResponse.setResponeInfo(ResponseEnum.LOGIN_SESSION_EXPIRED);
+            return commonResponse;
+        }
+
+        // 회원 조회
+        Optional<MemberEntity> memberOpt = memberRepository.findById(loginMember.getId());
+        if (memberOpt.isEmpty()) {
+            commonResponse.setResponeInfo(ResponseEnum.MEMBER_NOT_FOUND);
+            return commonResponse;
+        }
+
+        MemberEntity memberEntity = memberOpt.get();
+
+        // 비밀번호 확인
+        if (!passwordEncoder.matches(password, memberEntity.getPassword())) {
+            commonResponse.setResponeInfo(ResponseEnum.PASSWORD_NOT_MATCH);
+            return commonResponse;
+        }
+
+        // 회원 권한 삭제 (cascade로 자동 삭제되지만 명시적으로)
+        memberRoleRepository.deleteAll(memberEntity.getMemberRoles());
+
+        // 회원 삭제
+        memberRepository.delete(memberEntity);
+
+        // 세션 삭제
+        String sessionId = sessionService.getSessionId(request);
+        redisComponent.deleteKey(LoginDTO.redisSessionPrefix + sessionId);
 
         return commonResponse;
     }

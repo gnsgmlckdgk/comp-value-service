@@ -5,6 +5,8 @@ import com.finance.dart.common.constant.ResponseEnum;
 import com.finance.dart.common.dto.CommonResponse;
 import com.finance.dart.member.dto.LoginDTO;
 import com.finance.dart.member.dto.Member;
+import com.finance.dart.member.dto.MemberDeleteDto;
+import com.finance.dart.member.dto.PasswordChangeDto;
 import com.finance.dart.member.entity.MemberEntity;
 import com.finance.dart.member.enums.Role;
 import com.finance.dart.member.service.MemberService;
@@ -28,8 +30,6 @@ public class MemberController {
 
     private final SessionService sessionService;
     private final MemberService memberService;
-
-    // TODO: 회원정보 수정, 삭제 기능 추가 예정
 
     /**
      * 로그인
@@ -147,6 +147,54 @@ public class MemberController {
         CommonResponse response = new CommonResponse(member);
 
         return new ResponseEntity<>(response, ResponseEnum.OK.getHttpStatus());
+    }
+
+    /**
+     * 회원정보 수정
+     * @param request
+     * @param reqBody
+     * @return
+     */
+    @PostMapping("/update")
+    public ResponseEntity<CommonResponse<Member>> updateMember(HttpServletRequest request, @RequestBody Member reqBody) {
+
+        CommonResponse<Member> response = memberService.updateMember(request, reqBody);
+
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+    /**
+     * 비밀번호 변경
+     * @param request
+     * @param reqBody
+     * @return
+     */
+    @PostMapping("/password")
+    public ResponseEntity<CommonResponse<Void>> changePassword(HttpServletRequest request, @Valid @RequestBody PasswordChangeDto reqBody) {
+
+        CommonResponse<Void> response = memberService.changePassword(request, reqBody.getCurrentPassword(), reqBody.getNewPassword());
+
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+    /**
+     * 회원 탈퇴
+     * @param request
+     * @param reqBody
+     * @return
+     */
+    @PostMapping("/delete")
+    public ResponseEntity<CommonResponse<Void>> deleteMember(HttpServletRequest request, @Valid @RequestBody MemberDeleteDto reqBody) {
+
+        CommonResponse<Void> response = memberService.deleteMember(request, reqBody.getPassword());
+
+        // 세션 쿠키 삭제
+        String sessionId = sessionService.getSessionId(request);
+        ResponseCookie cookie = sessionService.deleteSessionCookie(sessionId);
+
+        return ResponseEntity.ok()
+                .header(HttpHeaders.SET_COOKIE, cookie.toString())
+                .body(response);
     }
 
 }
