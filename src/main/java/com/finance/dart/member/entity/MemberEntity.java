@@ -30,7 +30,7 @@ public class MemberEntity {
 
     @JsonIgnore // 비밀번호는 절대 응답에 포함하지 않음
     @NotBlank(message = "password 을 입력해주세요.")
-    @Column(nullable = false)
+    @Column(nullable = false, unique = false)
     private String password;
 
     @Column(nullable = true, unique = false)

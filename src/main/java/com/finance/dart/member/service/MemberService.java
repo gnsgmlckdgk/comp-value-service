@@ -6,6 +6,7 @@ import com.finance.dart.common.service.RedisComponent;
 import com.finance.dart.common.util.ConvertUtil;
 import com.finance.dart.member.dto.LoginDTO;
 import com.finance.dart.member.dto.Member;
+import com.finance.dart.member.dto.MemberJoinReqDto;
 import com.finance.dart.member.entity.MemberEntity;
 import com.finance.dart.member.entity.MemberRoleEntity;
 import com.finance.dart.member.entity.RoleEntity;
@@ -98,9 +99,16 @@ public class MemberService {
      * @param memberEntity
      * @return
      */
-    public CommonResponse<Member> join(MemberEntity memberEntity) {
+//    public CommonResponse<Member> join(MemberEntity memberEntity) {
+    public CommonResponse<Member> join(MemberJoinReqDto memberJoinReqDto) {
 
         CommonResponse<Member> commonResponse = new CommonResponse<>();
+
+        MemberEntity memberEntity = new MemberEntity();
+        memberEntity.setUsername(memberJoinReqDto.getUsername());
+        memberEntity.setPassword(memberJoinReqDto.getPassword());
+        memberEntity.setEmail(memberJoinReqDto.getEmail());
+        memberEntity.setNickname(memberJoinReqDto.getNickname());
 
         //@ 중복체크
         MemberEntity alreadyMemberEntity = memberRepository.findByUsername(memberEntity.getUsername());
