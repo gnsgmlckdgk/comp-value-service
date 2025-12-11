@@ -43,7 +43,23 @@ public class MemberEntity {
     private LocalDateTime createdAt = LocalDateTime.now();
     private LocalDateTime updatedAt = LocalDateTime.now();
 
+
+    //@ OnToMany 설정으로 상대쪽 테이블에 외래키 컬럼만 존재
+    // Cascade 설정으로 회원탈퇴시 아래 외래키로 참조하고 있는 테이블 데이터도 같이 삭제됨
+
     @JsonIgnore
     @OneToMany(mappedBy = "member", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     private List<MemberRoleEntity> memberRoles = new ArrayList<>();
+
+    @JsonIgnore
+    @OneToMany(mappedBy = "member", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<com.finance.dart.board.entity.FreeBoard> freeBoards = new ArrayList<>();
+
+    @JsonIgnore
+    @OneToMany(mappedBy = "member", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<com.finance.dart.board.entity.TranRecordEntity> tranRecords = new ArrayList<>();
+
+    @JsonIgnore
+    @OneToMany(mappedBy = "member", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<com.finance.dart.board.entity.SellRecordEntity> sellRecords = new ArrayList<>();
 }

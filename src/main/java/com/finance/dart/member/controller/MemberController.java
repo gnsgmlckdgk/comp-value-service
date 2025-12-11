@@ -4,7 +4,6 @@ package com.finance.dart.member.controller;
 import com.finance.dart.common.constant.ResponseEnum;
 import com.finance.dart.common.dto.CommonResponse;
 import com.finance.dart.member.dto.*;
-import com.finance.dart.member.entity.MemberEntity;
 import com.finance.dart.member.enums.Role;
 import com.finance.dart.member.service.MemberService;
 import com.finance.dart.member.service.SessionService;
@@ -100,11 +99,10 @@ public class MemberController {
 
     /**
      * 회원가입
-     * @param memberEntity
+     * @param memberJoinReqDto
      * @return
      */
     @PostMapping("/join")
-//    public ResponseEntity<CommonResponse<Member>> join(@Valid @RequestBody MemberEntity memberEntity) {
     public ResponseEntity<CommonResponse<Member>> join(@Valid @RequestBody MemberJoinReqDto memberJoinReqDto) {
 
         CommonResponse<Member> response = memberService.join(memberJoinReqDto);
