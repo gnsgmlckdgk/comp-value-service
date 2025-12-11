@@ -27,6 +27,9 @@ public enum ResponseEnum {
     MEMBER_NOT_FOUND("40401", "회원 정보를 찾을 수 없습니다.", false, HttpStatus.BAD_REQUEST),
     PASSWORD_NOT_MATCH("40001", "비밀번호가 일치하지 않습니다.", false, HttpStatus.BAD_REQUEST),
     MEMBER_NOT_APPROVED("40300", "회원 승인 대기 중입니다. 관리자 승인 후 이용 가능합니다.", false, HttpStatus.FORBIDDEN),
+
+    // 권한 관련 오류
+    FORBIDDEN("40301", "접근 권한이 없습니다.", false, HttpStatus.FORBIDDEN),
     ;
 
 

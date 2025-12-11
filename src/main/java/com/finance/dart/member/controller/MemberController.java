@@ -193,4 +193,28 @@ public class MemberController {
                 .body(response);
     }
 
+    /**
+     * 회원 목록 조회 (페이징, 검색)
+     * - 관리자 또는 슈퍼관리자 권한 필요
+     * @param httpRequest
+     * @param request
+     * @return
+     */
+    @PostMapping("/list")
+    public ResponseEntity<CommonResponse<MemberListResponseDto>> getMemberList(
+            HttpServletRequest httpRequest,
+            @Valid @RequestBody MemberListRequestDto request) {
+
+        // 관리자 권한 체크 (ADMIN 또는 SUPER_ADMIN)
+        if (!sessionService.hasRole(httpRequest, Role.ADMIN.getRoleName()) &&
+            !sessionService.hasRole(httpRequest, Role.SUPER_ADMIN.getRoleName())) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                    .body(new CommonResponse<>(ResponseEnum.FORBIDDEN));
+        }
+
+        CommonResponse<MemberListResponseDto> response = memberService.getMemberList(request);
+
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
 }

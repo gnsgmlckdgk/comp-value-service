@@ -7,6 +7,8 @@ import com.finance.dart.common.util.ConvertUtil;
 import com.finance.dart.member.dto.LoginDTO;
 import com.finance.dart.member.dto.Member;
 import com.finance.dart.member.dto.MemberJoinReqDto;
+import com.finance.dart.member.dto.MemberListRequestDto;
+import com.finance.dart.member.dto.MemberListResponseDto;
 import com.finance.dart.member.entity.MemberEntity;
 import com.finance.dart.member.entity.MemberRoleEntity;
 import com.finance.dart.member.entity.RoleEntity;
@@ -14,12 +16,22 @@ import com.finance.dart.member.enums.Role;
 import com.finance.dart.member.repository.MemberRepository;
 import com.finance.dart.member.repository.MemberRoleRepository;
 import com.finance.dart.member.repository.RoleRepository;
+import jakarta.persistence.criteria.Predicate;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Optional;
@@ -269,6 +281,118 @@ public class MemberService {
         // 세션 삭제
         String sessionId = sessionService.getSessionId(request);
         redisComponent.deleteKey(LoginDTO.redisSessionPrefix + sessionId);
+
+        return commonResponse;
+    }
+
+    /**
+     * 회원 목록 조회 (페이징, 검색)
+     * @param request
+     * @return
+     */
+    public CommonResponse<MemberListResponseDto> getMemberList(MemberListRequestDto request) {
+
+        CommonResponse<MemberListResponseDto> commonResponse = new CommonResponse<>();
+
+        // 페이징 설정 (최신순 정렬)
+        Pageable pageable = PageRequest.of(
+                request.getPageNumber(),
+                request.getPageSize(),
+                Sort.by(Sort.Direction.DESC, "createdAt")
+        );
+
+        // 검색 조건 생성
+        Specification<MemberEntity> spec = (root, query, criteriaBuilder) -> {
+            List<Predicate> predicates = new ArrayList<>();
+
+            // 유저아이디 검색 (LIKE %검색어%)
+            if (request.getUsername() != null && !request.getUsername().trim().isEmpty()) {
+                predicates.add(criteriaBuilder.like(
+                        root.get("username"),
+                        "%" + request.getUsername() + "%"
+                ));
+            }
+
+            // 이메일 검색 (LIKE %검색어%)
+            if (request.getEmail() != null && !request.getEmail().trim().isEmpty()) {
+                predicates.add(criteriaBuilder.like(
+                        root.get("email"),
+                        "%" + request.getEmail() + "%"
+                ));
+            }
+
+            // 닉네임 검색 (LIKE %검색어%)
+            if (request.getNickname() != null && !request.getNickname().trim().isEmpty()) {
+                predicates.add(criteriaBuilder.like(
+                        root.get("nickname"),
+                        "%" + request.getNickname() + "%"
+                ));
+            }
+
+            // 가입일자 범위 검색
+            if (request.getCreatedAtStart() != null && !request.getCreatedAtStart().trim().isEmpty()) {
+                LocalDateTime startDateTime = LocalDate.parse(request.getCreatedAtStart(), DateTimeFormatter.ISO_DATE).atStartOfDay();
+                predicates.add(criteriaBuilder.greaterThanOrEqualTo(root.get("createdAt"), startDateTime));
+            }
+            if (request.getCreatedAtEnd() != null && !request.getCreatedAtEnd().trim().isEmpty()) {
+                LocalDateTime endDateTime = LocalDate.parse(request.getCreatedAtEnd(), DateTimeFormatter.ISO_DATE).atTime(23, 59, 59);
+                predicates.add(criteriaBuilder.lessThanOrEqualTo(root.get("createdAt"), endDateTime));
+            }
+
+            // 승인 상태 검색
+            if (request.getApprovalStatus() != null && !request.getApprovalStatus().trim().isEmpty()) {
+                predicates.add(criteriaBuilder.equal(root.get("approvalStatus"), request.getApprovalStatus()));
+            }
+
+            // 권한으로 검색 (JOIN 필요)
+            if (request.getRoleName() != null && !request.getRoleName().trim().isEmpty()) {
+                var memberRolesJoin = root.join("memberRoles");
+                var roleJoin = memberRolesJoin.join("role");
+                predicates.add(criteriaBuilder.equal(roleJoin.get("roleName"), request.getRoleName()));
+            }
+
+            return criteriaBuilder.and(predicates.toArray(new Predicate[0]));
+        };
+
+        // 회원 목록 조회
+        Page<MemberEntity> memberPage = memberRepository.findAll(spec, pageable);
+
+        // 응답 DTO 생성
+        MemberListResponseDto responseDto = new MemberListResponseDto();
+        responseDto.setTotalCount(memberPage.getTotalElements());
+        responseDto.setPageSize(request.getPageSize());
+        responseDto.setPageNumber(request.getPageNumber());
+        responseDto.setTotalPages(memberPage.getTotalPages());
+
+        // 회원 정보 변환 (권한 정보 포함)
+        List<MemberListResponseDto.MemberDto> memberDtoList = new ArrayList<>();
+        for (MemberEntity entity : memberPage.getContent()) {
+            MemberListResponseDto.MemberDto memberDto = new MemberListResponseDto.MemberDto();
+            memberDto.setId(entity.getId());
+            memberDto.setUsername(entity.getUsername());
+            memberDto.setEmail(entity.getEmail());
+            memberDto.setNickname(entity.getNickname());
+            memberDto.setApprovalStatus(entity.getApprovalStatus());
+            if (entity.getCreatedAt() != null) {
+                memberDto.setCreatedAt(entity.getCreatedAt().toString());
+            }
+            if (entity.getUpdatedAt() != null) {
+                memberDto.setUpdatedAt(entity.getUpdatedAt().toString());
+            }
+
+            // 권한 정보 조회
+            CommonResponse<List<String>> roleListRes = roleService.getMemberRoles(entity.getId());
+            if (roleListRes != null && roleListRes.getResponse() != null) {
+                memberDto.setRoles(roleListRes.getResponse());
+            } else {
+                memberDto.setRoles(new ArrayList<>());
+            }
+
+            memberDtoList.add(memberDto);
+        }
+
+        responseDto.setMembers(memberDtoList);
+        commonResponse.setResponse(responseDto);
 
         return commonResponse;
     }
