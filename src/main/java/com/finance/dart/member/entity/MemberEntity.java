@@ -40,6 +40,9 @@ public class MemberEntity {
     @Column(nullable = false, unique = false)
     private String nickname;
 
+    @Column(name = "approval_status", nullable = false, length = 1)
+    private String approvalStatus = "N"; // Y: 승인됨, N: 미승인 (기본값: N)
+
     private LocalDateTime createdAt = LocalDateTime.now();
     private LocalDateTime updatedAt = LocalDateTime.now();
 

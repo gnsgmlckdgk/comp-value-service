@@ -59,6 +59,12 @@ public class SessionService {
             return response;
         }
 
+        //@ 회원 승인 상태 확인
+        if (!"Y".equals(memberEntity.getApprovalStatus())) {
+            response.setResponeInfo(ResponseEnum.MEMBER_NOT_APPROVED);
+            return response;
+        }
+
         //@ 세션정보 저장
         String sessionKey = UUID.randomUUID().toString();
         String redisKey = LoginDTO.redisSessionPrefix + sessionKey;
