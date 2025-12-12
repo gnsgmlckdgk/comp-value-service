@@ -239,6 +239,34 @@ public class MemberController {
     }
 
     /**
+     * 관리자용 회원정보 수정
+     * - 다른 회원의 정보를 수정하는 기능 (관리자 또는 슈퍼관리자만 가능)
+     * @param httpRequest
+     * @param reqBody
+     * @return
+     */
+    @PostMapping("/admin/update")
+    public ResponseEntity<CommonResponse<Member>> updateMemberByAdmin(
+            HttpServletRequest httpRequest,
+            @Valid @RequestBody AdminMemberUpdateDto reqBody) {
+
+        // 관리자 권한 체크 (ADMIN 또는 SUPER_ADMIN)
+        if (!sessionService.hasRole(httpRequest, Role.ADMIN.getRoleName()) &&
+                !sessionService.hasRole(httpRequest, Role.SUPER_ADMIN.getRoleName())) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                    .body(new CommonResponse<>(ResponseEnum.FORBIDDEN));
+        }
+
+        CommonResponse<Member> response = memberService.updateMemberByAdmin(
+                reqBody.getMemberId(),
+                reqBody.getEmail(),
+                reqBody.getNickname()
+        );
+
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+    /**
      * 관리자용 회원 탈퇴 (슈퍼관리자만 가능)
      * - 다른 회원을 탈퇴시키는 기능
      * @param httpRequest

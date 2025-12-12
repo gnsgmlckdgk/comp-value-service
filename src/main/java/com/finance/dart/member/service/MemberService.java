@@ -325,6 +325,45 @@ public class MemberService {
     }
 
     /**
+     * 관리자용 회원정보 수정
+     * @param memberId
+     * @param email
+     * @param nickname
+     * @return
+     */
+    public CommonResponse<Member> updateMemberByAdmin(Long memberId, String email, String nickname) {
+
+        CommonResponse<Member> commonResponse = new CommonResponse<>();
+
+        // 회원 조회
+        Optional<MemberEntity> memberOpt = memberRepository.findById(memberId);
+        if (memberOpt.isEmpty()) {
+            commonResponse.setResponeInfo(ResponseEnum.MEMBER_NOT_FOUND);
+            return commonResponse;
+        }
+
+        MemberEntity memberEntity = memberOpt.get();
+
+        // 수정 가능 필드 업데이트
+        if (email != null && !email.trim().isEmpty()) {
+            memberEntity.setEmail(email);
+        }
+        if (nickname != null && !nickname.trim().isEmpty()) {
+            memberEntity.setNickname(nickname);
+        }
+        memberEntity.setUpdatedAt(java.time.LocalDateTime.now());
+
+        // 저장
+        MemberEntity savedEntity = memberRepository.save(memberEntity);
+
+        // Entity -> DTO 변환
+        Member member = getMember(savedEntity.getId());
+        commonResponse.setResponse(member);
+
+        return commonResponse;
+    }
+
+    /**
      * 관리자용 회원 탈퇴 (슈퍼관리자만 가능)
      * @param memberId
      * @return

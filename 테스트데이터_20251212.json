@@ -252,7 +252,7 @@
 									}
 								},
 								"url": {
-									"raw": "http://localhost:18080/dart/role/member/1/role/2",
+									"raw": "http://localhost:18080/dart/role/member/11/role/2",
 									"protocol": "http",
 									"host": [
 										"localhost"
@@ -262,7 +262,7 @@
 										"dart",
 										"role",
 										"member",
-										"1",
+										"11",
 										"role",
 										"2"
 									]
@@ -285,7 +285,7 @@
 									}
 								},
 								"url": {
-									"raw": "http://localhost:18080/dart/role/member/1/role/2",
+									"raw": "http://localhost:18080/dart/role/member/11/role/2",
 									"protocol": "http",
 									"host": [
 										"localhost"
@@ -295,7 +295,7 @@
 										"dart",
 										"role",
 										"member",
-										"1",
+										"11",
 										"role",
 										"2"
 									]
@@ -328,34 +328,253 @@
 					]
 				},
 				{
-					"name": "회원가입",
-					"request": {
-						"method": "POST",
-						"header": [],
-						"body": {
-							"mode": "raw",
-							"raw": "{\n    \"username\" : \"user01\",\n    \"password\" : \"1q2w3e4r!\",\n    \"email\" : \"user01@test.com\",\n    \"nickname\" : \"유저01\"\n}",
-							"options": {
-								"raw": {
-									"language": "json"
+					"name": "회원",
+					"item": [
+						{
+							"name": "회원가입",
+							"request": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"username\" : \"user03\",\n    \"password\" : \"1q2w3e4r!\",\n    \"email\" : \"user03@test.com\",\n    \"nickname\" : \"유저03\"\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "http://localhost:18080/dart/member/join",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "18080",
+									"path": [
+										"dart",
+										"member",
+										"join"
+									]
 								}
-							}
+							},
+							"response": []
 						},
-						"url": {
-							"raw": "http://localhost:18080/dart/member/join",
-							"protocol": "http",
-							"host": [
-								"localhost"
-							],
-							"port": "18080",
-							"path": [
-								"dart",
-								"member",
-								"join"
-							]
+						{
+							"name": "회원정보 수정",
+							"request": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"email\": \"user02@gmail.com\",\n    \"nickname\": \"USER_test\"\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "http://localhost:18080/dart/member/update",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "18080",
+									"path": [
+										"dart",
+										"member",
+										"update"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "회원정보 등록승인여부 수정(관리자 전용)",
+							"request": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"id\": 11,\n    \"approvalStatus\": \"Y\"\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "http://localhost:18080/dart/member/update/approval",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "18080",
+									"path": [
+										"dart",
+										"member",
+										"update",
+										"approval"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "비밀번호 수정",
+							"request": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"currentPassword\": \"1q2w3e4r!\",\n    \"newPassword\": \"1q2w3e4r!\"\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "http://localhost:18080/dart/member/password",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "18080",
+									"path": [
+										"dart",
+										"member",
+										"password"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "회원탈퇴",
+							"request": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"password\": \"1q2w3e4r!\"\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "http://localhost:18080/dart/member/delete",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "18080",
+									"path": [
+										"dart",
+										"member",
+										"delete"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "회원수정(다른회원, 관리자전용)",
+							"request": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"memberId\": 28,\n  \"email\": \"newemail@example.com\",\n  \"nickname\": \"새닉네임\"\n}\n",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "http://localhost:18080/dart/member/admin/update",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "18080",
+									"path": [
+										"dart",
+										"member",
+										"admin",
+										"update"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "회원탈퇴(다른회원, 슈퍼관리자전용)",
+							"request": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"memberId\": 26\n}\n",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "http://localhost:18080/dart/member/admin/delete",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "18080",
+									"path": [
+										"dart",
+										"member",
+										"admin",
+										"delete"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "회원목록 조회",
+							"request": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"pageSize\": 2,\n  \"pageNumber\": 0\n}\n",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "http://localhost:18080/dart/member/list",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "18080",
+									"path": [
+										"dart",
+										"member",
+										"list"
+									]
+								},
+								"description": "POST [http://localhost:8080/member/list](http://localhost:8080/member/list)  \nContent-Type: application/json\n\n``` json\n{\n  \"pageSize\": 5,\n  \"pageNumber\": 0,\n  \"username\": \"test\",\n  \"createdAtStart\": \"2024-01-01\",\n  \"createdAtEnd\": \"2024-12-31\",\n  \"approvalStatus\": \"Y\"\n}\n\n ```\n\n검색값으로 필수 아님(NULL 가능)\n\n``` json\n{\n  \"pageSize\": 10,\n  \"pageNumber\": 0,\n  \"username\": \"test\",\n  \"email\": \"gmail\",\n  \"nickname\": \"사용자\",\n  \"createdAtStart\": \"2024-01-01\",\n  \"createdAtEnd\": \"2024-12-31\",\n  \"approvalStatus\": \"Y\",\n  \"roleName\": \"ROLE_USER\"\n}\n\n ```\n\n## 📊 검색 조건 정리\n\n| 필드 | 타입 | 검색 방식 | 예시 |\n| --- | --- | --- | --- |\n| username | String | LIKE '%검색어%' | \"admin\" |\n| email | String | LIKE '%검색어%' | \"gmail\" |\n| nickname | String | LIKE '%검색어%' | \"관리자\" |\n| createdAtStart | String | \\>= (YYYY-MM-DD) | \"2024-01-01\" |\n| createdAtEnd | String | <= (YYYY-MM-DD) | \"2024-12-31\" |\n| approvalStatus | String | \\= (Y/N) | \"Y\" |\n| roleName | String | \\= (정확히 일치) | \"ROLE_ADMIN\" |"
+							},
+							"response": []
 						}
-					},
-					"response": []
+					]
 				},
 				{
 					"name": "로그인",
@@ -382,6 +601,27 @@
 								"dart",
 								"member",
 								"login"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "로그아웃",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:18080/dart/member/logout",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "18080",
+							"path": [
+								"dart",
+								"member",
+								"logout"
 							]
 						}
 					},
