@@ -4,11 +4,7 @@ import com.finance.dart.common.constant.ResponseEnum;
 import com.finance.dart.common.dto.CommonResponse;
 import com.finance.dart.common.service.RedisComponent;
 import com.finance.dart.common.util.ConvertUtil;
-import com.finance.dart.member.dto.LoginDTO;
-import com.finance.dart.member.dto.Member;
-import com.finance.dart.member.dto.MemberJoinReqDto;
-import com.finance.dart.member.dto.MemberListRequestDto;
-import com.finance.dart.member.dto.MemberListResponseDto;
+import com.finance.dart.member.dto.*;
 import com.finance.dart.member.entity.MemberEntity;
 import com.finance.dart.member.entity.MemberRoleEntity;
 import com.finance.dart.member.entity.RoleEntity;
@@ -193,6 +189,49 @@ public class MemberService {
         // Entity -> DTO 변환
         Member member = getMember(savedEntity.getId());
         commonResponse.setResponse(member);
+
+        return commonResponse;
+    }
+
+    /**
+     * 회원정보 등록승인여부 수정
+     * @param memberApproval
+     * @return
+     */
+    public CommonResponse<MemberApproval> updateMemberApproval(MemberApproval memberApproval) {
+
+        CommonResponse<MemberApproval> commonResponse = new CommonResponse<>();
+
+        // 회원 조회
+        Optional<MemberEntity> memberOpt = memberRepository.findById(memberApproval.getId());
+        if (memberOpt.isEmpty()) {
+            commonResponse.setResponeInfo(ResponseEnum.MEMBER_NOT_FOUND);
+            return commonResponse;
+        }
+
+        MemberEntity memberEntity = memberOpt.get();
+
+        // 수정 가능 필드 업데이트
+        if(memberApproval.getApprovalStatus() != null) {
+            memberEntity.setApprovalStatus(memberApproval.getApprovalStatus());
+        }
+        memberEntity.setUpdatedAt(java.time.LocalDateTime.now());
+
+        // 저장
+        MemberEntity savedEntity = memberRepository.save(memberEntity);
+
+        // Entity -> DTO 변환
+        Optional<MemberEntity> memberEntityOptional = memberRepository.findById(savedEntity.getId());
+        if(memberEntityOptional.isPresent()) {
+            MemberEntity updatedEntity = memberEntityOptional.get();
+
+            MemberApproval responseMemberApproval = new MemberApproval();
+            responseMemberApproval.setId(updatedEntity.getId());
+            responseMemberApproval.setApprovalStatus(updatedEntity.getApprovalStatus());
+            responseMemberApproval.setUpdatedAt(updatedEntity.getUpdatedAt().toString());
+
+            commonResponse.setResponse(responseMemberApproval);
+        }
 
         return commonResponse;
     }

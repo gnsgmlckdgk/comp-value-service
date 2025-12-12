@@ -160,6 +160,27 @@ public class MemberController {
     }
 
     /**
+     * 회원정보 등록승인여부 수정
+     * @param request
+     * @param reqBody
+     * @return
+     */
+    @PostMapping("/update/approval")
+    public ResponseEntity<CommonResponse<MemberApproval>> updateMemberApproval(HttpServletRequest request, @RequestBody MemberApproval reqBody) {
+
+        // 관리자 권한 체크 (ADMIN 또는 SUPER_ADMIN)
+        if (!sessionService.hasRole(request, Role.ADMIN.getRoleName()) &&
+                !sessionService.hasRole(request, Role.SUPER_ADMIN.getRoleName())) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                    .body(new CommonResponse<>(ResponseEnum.FORBIDDEN));
+        }
+
+        CommonResponse<MemberApproval> response = memberService.updateMemberApproval(reqBody);
+
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+    /**
      * 비밀번호 변경
      * @param request
      * @param reqBody
