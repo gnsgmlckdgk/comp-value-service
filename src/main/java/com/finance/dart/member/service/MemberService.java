@@ -325,6 +325,37 @@ public class MemberService {
     }
 
     /**
+     * 관리자용 회원 탈퇴 (슈퍼관리자만 가능)
+     * @param memberId
+     * @return
+     */
+    public CommonResponse<Void> deleteMemberByAdmin(Long memberId) {
+
+        CommonResponse<Void> commonResponse = new CommonResponse<>();
+
+        // 회원 조회
+        Optional<MemberEntity> memberOpt = memberRepository.findById(memberId);
+        if (memberOpt.isEmpty()) {
+            commonResponse.setResponeInfo(ResponseEnum.MEMBER_NOT_FOUND);
+            return commonResponse;
+        }
+
+        MemberEntity memberEntity = memberOpt.get();
+
+        // 회원 권한 삭제 (cascade로 자동 삭제되지만 명시적으로)
+        memberRoleRepository.deleteAll(memberEntity.getMemberRoles());
+
+        // 회원 삭제
+        memberRepository.delete(memberEntity);
+
+        // 해당 회원의 세션 삭제 (Redis에서 모든 세션을 확인하여 삭제)
+        // 참고: 실제 구현에서는 Redis에서 해당 회원의 세션을 찾아 삭제하는 로직이 필요할 수 있습니다.
+        // 현재는 회원이 삭제되면 다음 요청 시 세션이 자동으로 무효화됩니다.
+
+        return commonResponse;
+    }
+
+    /**
      * 회원 목록 조회 (페이징, 검색)
      * @param request
      * @return

@@ -238,4 +238,27 @@ public class MemberController {
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
+    /**
+     * 관리자용 회원 탈퇴 (슈퍼관리자만 가능)
+     * - 다른 회원을 탈퇴시키는 기능
+     * @param httpRequest
+     * @param reqBody
+     * @return
+     */
+    @PostMapping("/admin/delete")
+    public ResponseEntity<CommonResponse<Void>> deleteMemberByAdmin(
+            HttpServletRequest httpRequest,
+            @Valid @RequestBody AdminMemberDeleteDto reqBody) {
+
+        // 슈퍼관리자 권한 체크
+        if (!sessionService.hasRole(httpRequest, Role.SUPER_ADMIN.getRoleName())) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                    .body(new CommonResponse<>(ResponseEnum.FORBIDDEN));
+        }
+
+        CommonResponse<Void> response = memberService.deleteMemberByAdmin(reqBody.getMemberId());
+
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
 }
