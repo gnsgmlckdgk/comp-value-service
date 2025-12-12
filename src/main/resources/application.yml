@@ -55,10 +55,19 @@ spring:
     type: caffeine
     caffeine:
       spec: maximumSize=1000,expireAfterWrite=60m
-
-## 톰캣 네이티브 로딩 시도 로그만 숨김
-#logging.level.org.apache.tomcat.jni.Library=ERROR
-#logging.level.org.apache.catalina.core.AprLifecycleListener=ERROR
+  mail:
+    host: smtp.naver.com
+    port: 587
+#    username: ${COMPVALUE_MAIL_USER}
+#    password: ${COMPVALUE_MAIL_PASS}
+    username: ghkdckdgk123@naver.com
+    password: 7BEC1QP6PW43
+    properties:
+      mail:
+        smtp:
+          auth: true  # SMTP 인증 활성화
+        starttls:
+          enable: true  # 암호화 활성화
 
 logging:
   level:
