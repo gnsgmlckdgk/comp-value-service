@@ -54,6 +54,7 @@ public class MemberService {
     private static final int VERIFICATION_CODE_MAX = 999999;
     private static final long PASSWORD_RESET_TTL_SECONDS = 300L;
     private static final int TEMPORARY_PASSWORD_LENGTH = 12;
+    private static final long PASSWORD_RESET_TTL_MINUTES = PASSWORD_RESET_TTL_SECONDS / 60;
 
 
     /**
@@ -705,11 +706,18 @@ public class MemberService {
      * @return 메일 내용
      */
     private String buildVerificationEmailContent(String verificationCode) {
+        String validityMessage;
+        if (PASSWORD_RESET_TTL_SECONDS < 60) {
+            validityMessage = "인증코드는 " + PASSWORD_RESET_TTL_SECONDS + "초간 유효합니다.";
+        } else {
+            validityMessage = "인증코드는 " + PASSWORD_RESET_TTL_MINUTES + "분간 유효합니다.";
+        }
+
         return "<html><body>" +
                 "<h2>비밀번호 재설정 인증코드</h2>" +
                 "<p>아래 인증코드를 입력하여 비밀번호 재설정을 진행해주세요.</p>" +
                 "<h3>" + verificationCode + "</h3>" +
-                "<p>인증코드는 5분간 유효합니다.</p>" +
+                "<p>" + validityMessage + "</p>" +
                 "</body></html>";
     }
 
