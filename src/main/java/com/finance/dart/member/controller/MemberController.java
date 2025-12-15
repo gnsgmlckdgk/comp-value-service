@@ -3,6 +3,7 @@ package com.finance.dart.member.controller;
 
 import com.finance.dart.common.constant.ResponseEnum;
 import com.finance.dart.common.dto.CommonResponse;
+import com.finance.dart.common.util.StringUtil;
 import com.finance.dart.member.dto.*;
 import com.finance.dart.member.enums.Role;
 import com.finance.dart.member.service.MemberService;
@@ -16,6 +17,9 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.ArrayList;
+import java.util.List;
 
 
 @Slf4j
@@ -237,6 +241,61 @@ public class MemberController {
 
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
+
+    /**
+     * email 로 userName 목록 조회
+     * @param request
+     * @return
+     */
+    @PostMapping("/find-usernames")
+    public ResponseEntity<CommonResponse<List<String>>> findUserNamesByEmail(@RequestBody Member request) {
+
+        List<String> response = new ArrayList<>();
+
+        if(!StringUtil.isStringEmpty(request.getEmail())) {
+            response = memberService.findUsernamesByEmail(request.getEmail());
+        }
+
+        return new ResponseEntity<>(new CommonResponse<>(response), HttpStatus.OK);
+    }
+
+    /**
+     * 비밀번호 재설정 요청 (인증코드 발송)
+     * @param reqBody
+     * @return
+     */
+    @PostMapping("/password/reset/request")
+    public ResponseEntity<CommonResponse<Void>> resetPasswordRequest(@Valid @RequestBody PasswordResetRequestDto reqBody) {
+
+        CommonResponse<Void> response = memberService.resetPasswordBeforeByEmail(
+                reqBody.getUsername(),
+                reqBody.getEmail()
+        );
+
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+    /**
+     * 비밀번호 재설정 인증 및 임시 비밀번호 발급
+     * @param reqBody
+     * @return
+     */
+    @PostMapping("/password/reset/verify")
+    public ResponseEntity<CommonResponse<PasswordResetResponseDto>> resetPasswordVerify(@Valid @RequestBody PasswordResetVerifyDto reqBody) {
+
+        CommonResponse<PasswordResetResponseDto> response = memberService.resetPasswordAfterByEmail(
+                reqBody.getUsername(),
+                reqBody.getEmail(),
+                reqBody.getVerificationCode()
+        );
+
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+
+
+
+    /** =================== 관리자 =================== **/
 
     /**
      * 관리자용 회원정보 수정

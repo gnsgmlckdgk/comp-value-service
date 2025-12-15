@@ -4,6 +4,7 @@ import com.finance.dart.common.constant.ResponseEnum;
 import com.finance.dart.common.dto.CommonResponse;
 import com.finance.dart.common.service.RedisComponent;
 import com.finance.dart.common.util.ConvertUtil;
+import com.finance.dart.mail.service.MailService;
 import com.finance.dart.member.dto.*;
 import com.finance.dart.member.entity.MemberEntity;
 import com.finance.dart.member.entity.MemberRoleEntity;
@@ -38,14 +39,21 @@ import java.util.Optional;
 @Service
 public class MemberService {
 
+    private final PasswordEncoder passwordEncoder;
+
     private final SessionService sessionService;
     private final RoleService roleService;
     private final RedisComponent redisComponent;
-    private final MemberRepository memberRepository;
-    private final PasswordEncoder passwordEncoder;
+    private final MailService mailService;
 
     private final RoleRepository roleRepository;
+    private final MemberRepository memberRepository;
     private final MemberRoleRepository memberRoleRepository;
+
+    private static final int VERIFICATION_CODE_MIN = 100000;
+    private static final int VERIFICATION_CODE_MAX = 999999;
+    private static final long PASSWORD_RESET_TTL_SECONDS = 300L;
+    private static final int TEMPORARY_PASSWORD_LENGTH = 12;
 
 
     /**
@@ -504,6 +512,205 @@ public class MemberService {
         commonResponse.setResponse(responseDto);
 
         return commonResponse;
+    }
+
+
+    /**
+     * 이메일로 회원 UserName 찾기
+     * @param email
+     * @return
+     */
+    public List<String> findUsernamesByEmail(String email) {
+
+        return memberRepository.findByEmail(email).stream()
+                .map(e -> {
+                    return e.getUsername();
+                })
+                .toList();
+    }
+
+    /**
+     * <pre>
+     * 비밀번호 초기화 전 단계
+     * - username 검색
+     * - 이메일 인증
+     * </pre>
+     * @param username
+     * @param email
+     * @return
+     */
+    public CommonResponse<Void> resetPasswordBeforeByEmail(String username, String email) {
+
+        CommonResponse<Void> commonResponse = new CommonResponse<>();
+
+        // 회원 조회
+        MemberEntity memberEntity = memberRepository.findByUsername(username);
+        if (memberEntity == null) {
+            commonResponse.setResponeInfo(ResponseEnum.MEMBER_NOT_FOUND);
+            return commonResponse;
+        }
+
+        // 이메일 일치 확인
+        if (!email.equals(memberEntity.getEmail())) {
+            commonResponse.setResponeInfo(ResponseEnum.MEMBER_NOT_FOUND);
+            return commonResponse;
+        }
+
+        // 인증코드 생성
+        String verificationCode = generateVerificationCode();
+
+        // 인증코드 메일 전송
+        String subject = "비밀번호 재설정 인증코드";
+        String content = buildVerificationEmailContent(verificationCode);
+        boolean isSent = mailService.sendHtmlMail(email, subject, content);
+
+        if (!isSent) {
+            commonResponse.setResponeInfo(ResponseEnum.MAIL_SEND_ERR);
+            return commonResponse;
+        }
+
+        // Redis에 인증코드 저장
+        String redisKey = buildRedisKey(email, username);
+        redisComponent.saveValueWithTtl(redisKey, verificationCode, PASSWORD_RESET_TTL_SECONDS);
+
+        // 응답 메시지 설정
+        commonResponse.setMessage(email + " 주소로 인증코드를 전송했습니다. 이메일을 확인해주세요.");
+
+        return commonResponse;
+    }
+
+    /**
+     * <pre>
+     * 비밀번호 초기화 후 단계
+     * - 인증코드 검증
+     * - 임시 비밀번호 생성 및 설정
+     * </pre>
+     * @param username
+     * @param email
+     * @param verificationCode
+     * @return
+     */
+    public CommonResponse<PasswordResetResponseDto> resetPasswordAfterByEmail(String username, String email, String verificationCode) {
+
+        CommonResponse<PasswordResetResponseDto> commonResponse = new CommonResponse<>();
+
+        // 회원 조회
+        MemberEntity memberEntity = memberRepository.findByUsername(username);
+        if (memberEntity == null) {
+            commonResponse.setResponeInfo(ResponseEnum.MEMBER_NOT_FOUND);
+            return commonResponse;
+        }
+
+        // 이메일 일치 확인
+        if (!email.equals(memberEntity.getEmail())) {
+            commonResponse.setResponeInfo(ResponseEnum.MEMBER_NOT_FOUND);
+            return commonResponse;
+        }
+
+        // Redis에서 인증코드 조회
+        String redisKey = buildRedisKey(email, username);
+        String savedCode = redisComponent.getValue(redisKey);
+
+        // 인증코드 만료 확인
+        if (savedCode == null || savedCode.isEmpty()) {
+            commonResponse.setResponeInfo(ResponseEnum.VERIFICATION_CODE_EXPIRED);
+            return commonResponse;
+        }
+
+        // 인증코드 일치 확인
+        if (!verificationCode.equals(savedCode)) {
+            commonResponse.setResponeInfo(ResponseEnum.VERIFICATION_CODE_NOT_MATCH);
+            return commonResponse;
+        }
+
+        // 임시 비밀번호 생성
+        String temporaryPassword = generateTemporaryPassword();
+
+        // 비밀번호 암호화 및 저장
+        String encryptedPassword = passwordEncoder.encode(temporaryPassword);
+        memberEntity.setPassword(encryptedPassword);
+        memberEntity.setUpdatedAt(LocalDateTime.now());
+        memberRepository.save(memberEntity);
+
+        // Redis에서 인증코드 삭제
+        redisComponent.deleteKey(redisKey);
+
+        // 응답 DTO 생성
+        PasswordResetResponseDto responseDto = new PasswordResetResponseDto();
+        responseDto.setUsername(username);
+        responseDto.setTemporaryPassword(temporaryPassword);
+        commonResponse.setResponse(responseDto);
+
+        return commonResponse;
+    }
+
+    /**
+     * 6자리 인증코드 생성
+     * @return 인증코드
+     */
+    private String generateVerificationCode() {
+        int code = (int)(Math.random() * (VERIFICATION_CODE_MAX - VERIFICATION_CODE_MIN + 1)) + VERIFICATION_CODE_MIN;
+        return String.valueOf(code);
+    }
+
+    /**
+     * 임시 비밀번호 생성 (영문 대소문자, 숫자, 특수문자 조합)
+     * @return 임시 비밀번호
+     */
+    private String generateTemporaryPassword() {
+        String upperCase = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+        String lowerCase = "abcdefghijklmnopqrstuvwxyz";
+        String digits = "0123456789";
+        String specialChars = "!@#$%^&*";
+        String allChars = upperCase + lowerCase + digits + specialChars;
+
+        StringBuilder password = new StringBuilder();
+
+        // 각 종류별로 최소 1개씩 포함
+        password.append(upperCase.charAt((int)(Math.random() * upperCase.length())));
+        password.append(lowerCase.charAt((int)(Math.random() * lowerCase.length())));
+        password.append(digits.charAt((int)(Math.random() * digits.length())));
+        password.append(specialChars.charAt((int)(Math.random() * specialChars.length())));
+
+        // 나머지 자리 랜덤 채우기
+        for (int i = 4; i < TEMPORARY_PASSWORD_LENGTH; i++) {
+            password.append(allChars.charAt((int)(Math.random() * allChars.length())));
+        }
+
+        // 문자열 섞기
+        char[] passwordArray = password.toString().toCharArray();
+        for (int i = passwordArray.length - 1; i > 0; i--) {
+            int j = (int)(Math.random() * (i + 1));
+            char temp = passwordArray[i];
+            passwordArray[i] = passwordArray[j];
+            passwordArray[j] = temp;
+        }
+
+        return new String(passwordArray);
+    }
+
+    /**
+     * 비밀번호 재설정 인증 메일 내용 생성
+     * @param verificationCode
+     * @return 메일 내용
+     */
+    private String buildVerificationEmailContent(String verificationCode) {
+        return "<html><body>" +
+                "<h2>비밀번호 재설정 인증코드</h2>" +
+                "<p>아래 인증코드를 입력하여 비밀번호 재설정을 진행해주세요.</p>" +
+                "<h3>" + verificationCode + "</h3>" +
+                "<p>인증코드는 5분간 유효합니다.</p>" +
+                "</body></html>";
+    }
+
+    /**
+     * Redis 키 생성
+     * @param email
+     * @param username
+     * @return Redis 키
+     */
+    private String buildRedisKey(String email, String username) {
+        return email + ":" + username;
     }
 
 }

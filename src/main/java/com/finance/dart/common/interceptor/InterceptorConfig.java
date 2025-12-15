@@ -15,6 +15,9 @@ public class InterceptorConfig implements WebMvcConfigurer {
     public void addInterceptors(InterceptorRegistry registry) {
         registry.addInterceptor(authInterceptor)
                 .addPathPatterns("/**")        // 인터셉트할 경로
-                .excludePathPatterns("/member/login", "/member/join", "/member/me", "/test/**");  // 예외
+                .excludePathPatterns(
+                        "/member/login", "/member/join", "/member/me",
+                        "/member/find-usernames" , "/member/password/reset/request", "/member/password/reset/verify",
+                        "/test/**");  // 예외
     }
 }

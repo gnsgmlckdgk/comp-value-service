@@ -30,6 +30,14 @@ public enum ResponseEnum {
 
     // 권한 관련 오류
     FORBIDDEN("40301", "접근 권한이 없습니다.", false, HttpStatus.FORBIDDEN),
+
+    // 메일 전송 오류
+    MAIL_SEND_ERR("50000", "메일 전송에 실패했습니다.", false, HttpStatus.INTERNAL_SERVER_ERROR),
+
+    // 인증코드 관련 오류
+    VERIFICATION_CODE_EXPIRED("40002", "인증코드가 만료되었습니다. 다시 요청해주세요.", false, HttpStatus.BAD_REQUEST),
+    VERIFICATION_CODE_NOT_MATCH("40003", "인증코드가 일치하지 않습니다.", false, HttpStatus.BAD_REQUEST),
+
     ;
 
 

@@ -23,7 +23,6 @@ public class MailController {
 
     @PostMapping("/send")
     public ResponseEntity<CommonResponse> send(@Valid @RequestBody MailSendDto body) {
-        //String code = String.valueOf((int)(Math.random() * 900000) + 100000);
         boolean isSend = mailService.sendEmail(body.getTo(), body.getSubject(), body.getContents());
 
         return new ResponseEntity<>(new CommonResponse(isSend), HttpStatus.OK);
@@ -31,7 +30,6 @@ public class MailController {
 
     @PostMapping("/send/html")
     public ResponseEntity<CommonResponse> sendHtml(@Valid @RequestBody MailSendDto body) {
-        //String code = String.valueOf((int)(Math.random() * 900000) + 100000);
         boolean isSend = mailService.sendHtmlMail(body.getTo(), body.getSubject(), body.getContents());
         return new ResponseEntity<>(new CommonResponse(isSend), HttpStatus.OK);
     }
