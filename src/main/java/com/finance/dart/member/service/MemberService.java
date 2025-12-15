@@ -539,9 +539,9 @@ public class MemberService {
      * @param email
      * @return
      */
-    public CommonResponse<Void> resetPasswordBeforeByEmail(String username, String email) {
+    public CommonResponse<PasswordResetRequestResponseDto> resetPasswordBeforeByEmail(String username, String email) {
 
-        CommonResponse<Void> commonResponse = new CommonResponse<>();
+        CommonResponse<PasswordResetRequestResponseDto> commonResponse = new CommonResponse<>();
 
         // 회원 조회
         MemberEntity memberEntity = memberRepository.findByUsername(username);
@@ -573,8 +573,18 @@ public class MemberService {
         String redisKey = buildRedisKey(email, username);
         redisComponent.saveValueWithTtl(redisKey, verificationCode, PASSWORD_RESET_TTL_SECONDS);
 
+        // 만료 시간 계산
+        LocalDateTime expiresAt = LocalDateTime.now().plusSeconds(PASSWORD_RESET_TTL_SECONDS);
+
+        // 응답 DTO 생성
+        PasswordResetRequestResponseDto responseDto = new PasswordResetRequestResponseDto();
+        responseDto.setEmail(email);
+        responseDto.setExpiresInSeconds(PASSWORD_RESET_TTL_SECONDS);
+        responseDto.setExpiresAt(expiresAt.toString());
+
         // 응답 메시지 설정
         commonResponse.setMessage(email + " 주소로 인증코드를 전송했습니다. 이메일을 확인해주세요.");
+        commonResponse.setResponse(responseDto);
 
         return commonResponse;
     }

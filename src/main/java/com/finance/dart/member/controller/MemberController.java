@@ -265,9 +265,9 @@ public class MemberController {
      * @return
      */
     @PostMapping("/password/reset/request")
-    public ResponseEntity<CommonResponse<Void>> resetPasswordRequest(@Valid @RequestBody PasswordResetRequestDto reqBody) {
+    public ResponseEntity<CommonResponse<PasswordResetRequestResponseDto>> resetPasswordRequest(@Valid @RequestBody PasswordResetRequestDto reqBody) {
 
-        CommonResponse<Void> response = memberService.resetPasswordBeforeByEmail(
+        CommonResponse<PasswordResetRequestResponseDto> response = memberService.resetPasswordBeforeByEmail(
                 reqBody.getUsername(),
                 reqBody.getEmail()
         );
