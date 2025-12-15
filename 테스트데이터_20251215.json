@@ -328,6 +328,105 @@
 					]
 				},
 				{
+					"name": "회원 찾기",
+					"item": [
+						{
+							"name": "이메일로 UserName 조회 (아이디 찾기)",
+							"request": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"email\" : \"dohauzi@gmail.com\"\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "http://localhost:18080/dart/member/find-usernames",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "18080",
+									"path": [
+										"dart",
+										"member",
+										"find-usernames"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "비밀번호 찾기(before)",
+							"request": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"username\": \"user02\",\n  \"email\": \"dohauzi@gmail.com\"\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "http://localhost:18080/dart/member/password/reset/request",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "18080",
+									"path": [
+										"dart",
+										"member",
+										"password",
+										"reset",
+										"request"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "비밀번호 찾기(after)",
+							"request": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"username\": \"user02\",\n  \"email\": \"dohauzi@gmail.com\",\n  \"verificationCode\": \"328708\"\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "http://localhost:18080/dart/member/password/reset/verify",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "18080",
+									"path": [
+										"dart",
+										"member",
+										"password",
+										"reset",
+										"verify"
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				},
+				{
 					"name": "회원",
 					"item": [
 						{
@@ -583,7 +682,7 @@
 						"header": [],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n    \"username\" : \"admin\",\n    \"password\" : \"1q2w3e4r!\"\n}",
+							"raw": "{\n    \"username\" : \"user02\",\n    \"password\" : \"4cE7U1@YVp8v\"\n}",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -2237,6 +2336,72 @@
 							"response": []
 						}
 					]
+				}
+			]
+		},
+		{
+			"name": "메일",
+			"item": [
+				{
+					"name": "메일 전송(평문)",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"to\" : \"gnsgmlckdgk@naver.com\",\n    \"subject\" : \"TEST\",\n    \"contents\" : \"Hello World\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost:18080/dart/mail/send",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "18080",
+							"path": [
+								"dart",
+								"mail",
+								"send"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "메일 전송(HTML)",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"to\" : \"gnsgmlckdgk@naver.com\",\n    \"subject\" : \"TEST\",\n    \"contents\" : \"<h1>Hello World</h1>\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost:18080/dart/mail/send/html",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "18080",
+							"path": [
+								"dart",
+								"mail",
+								"send",
+								"html"
+							]
+						}
+					},
+					"response": []
 				}
 			]
 		}
