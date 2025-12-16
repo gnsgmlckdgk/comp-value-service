@@ -1,6 +1,7 @@
 package com.finance.dart.api.common.controller;
 
 import com.finance.dart.api.domestic.service.schedule.CalCompanyStockPerValueTotalService;
+import com.finance.dart.common.config.EndPointConfig;
 import com.finance.dart.common.service.RedisComponent;
 import com.finance.dart.common.util.StringUtil;
 import lombok.AllArgsConstructor;
@@ -22,12 +23,14 @@ public class TestController {
 
 
 
+    @EndPointConfig.PublicEndpoint
     @GetMapping("/")
     public ResponseEntity<Object> test() {
         return new ResponseEntity<>("OK", HttpStatus.OK);
     }
 
 
+    @EndPointConfig.PublicEndpoint
     @PostMapping("/redis")
     public ResponseEntity<Object> redis(@RequestBody Map<String, Object> body) {
 
@@ -56,6 +59,7 @@ public class TestController {
         return new ResponseEntity<>(result, HttpStatus.OK);
     }
 
+    @EndPointConfig.PublicEndpoint
     @GetMapping("/schedule")
     public ResponseEntity<Object> scheduleTest() {
 

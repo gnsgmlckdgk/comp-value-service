@@ -9,7 +9,7 @@ import com.finance.dart.member.dto.*;
 import com.finance.dart.member.entity.MemberEntity;
 import com.finance.dart.member.entity.MemberRoleEntity;
 import com.finance.dart.member.entity.RoleEntity;
-import com.finance.dart.member.enums.Role;
+import com.finance.dart.member.enums.RoleConstants;
 import com.finance.dart.member.repository.MemberRepository;
 import com.finance.dart.member.repository.MemberRoleRepository;
 import com.finance.dart.member.repository.RoleRepository;
@@ -142,7 +142,7 @@ public class MemberService {
         MemberEntity joinMemberEntity = memberRepository.save(memberEntity);
 
         //@ 기본 권한 설정
-        Optional<RoleEntity> optRole = roleRepository.findByRoleName(Role.USER.getRoleName());
+        Optional<RoleEntity> optRole = roleRepository.findByRoleName(RoleConstants.ROLE_USER);
         if(optRole.isPresent()) {
             MemberRoleEntity mre = new MemberRoleEntity();
             mre.setMember(joinMemberEntity);

@@ -1,11 +1,12 @@
 package com.finance.dart.member.controller;
 
 
+import com.finance.dart.common.config.EndPointConfig;
 import com.finance.dart.common.constant.ResponseEnum;
 import com.finance.dart.common.dto.CommonResponse;
 import com.finance.dart.common.util.StringUtil;
 import com.finance.dart.member.dto.*;
-import com.finance.dart.member.enums.Role;
+import com.finance.dart.member.enums.RoleConstants;
 import com.finance.dart.member.service.MemberService;
 import com.finance.dart.member.service.SessionService;
 import jakarta.servlet.http.HttpServletRequest;
@@ -36,6 +37,7 @@ public class MemberController {
      * @param loginDTO
      * @return "" 응답은 로그인 실패
      */
+    @EndPointConfig.PublicEndpoint
     @PostMapping("/login")
     public ResponseEntity<CommonResponse<LoginDTO>> login(@Valid @RequestBody LoginDTO loginDTO) {
 
@@ -57,14 +59,12 @@ public class MemberController {
      * @param request
      * @return
      */
+    @EndPointConfig.RequireRole({RoleConstants.ROLE_ADMIN, RoleConstants.ROLE_SUPER_ADMIN})
     @GetMapping("/admin/users")
     public ResponseEntity<?> getUsers01(HttpServletRequest request) {
 
         CommonResponse response = new CommonResponse();
 
-        if (!sessionService.hasRole(request, Role.ADMIN.getRoleName())) {
-            return ResponseEntity.status(403).body("권한 없음");
-        }
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
@@ -73,14 +73,12 @@ public class MemberController {
      * @param request
      * @return
      */
+    @EndPointConfig.RequireRole({RoleConstants.ROLE_SUPER_ADMIN})
     @GetMapping("/super_admin/users")
     public ResponseEntity<?> getUsers02(HttpServletRequest request) {
 
         CommonResponse response = new CommonResponse();
 
-        if (!sessionService.hasRole(request, Role.SUPER_ADMIN.getRoleName())) {
-            return ResponseEntity.status(403).body("권한 없음");
-        }
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
@@ -106,6 +104,7 @@ public class MemberController {
      * @param memberJoinReqDto
      * @return
      */
+    @EndPointConfig.PublicEndpoint
     @PostMapping("/join")
     public ResponseEntity<CommonResponse<Member>> join(@Valid @RequestBody MemberJoinReqDto memberJoinReqDto) {
 
@@ -120,6 +119,7 @@ public class MemberController {
      * </pre>
      * @return
      */
+    @EndPointConfig.PublicEndpoint
     @GetMapping("/me")
     public ResponseEntity<CommonResponse> me(HttpServletRequest request) {
 
@@ -169,15 +169,9 @@ public class MemberController {
      * @param reqBody
      * @return
      */
+    @EndPointConfig.RequireRole({RoleConstants.ROLE_ADMIN, RoleConstants.ROLE_SUPER_ADMIN})
     @PostMapping("/update/approval")
     public ResponseEntity<CommonResponse<MemberApproval>> updateMemberApproval(HttpServletRequest request, @RequestBody MemberApproval reqBody) {
-
-        // 관리자 권한 체크 (ADMIN 또는 SUPER_ADMIN)
-        if (!sessionService.hasRole(request, Role.ADMIN.getRoleName()) &&
-                !sessionService.hasRole(request, Role.SUPER_ADMIN.getRoleName())) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN)
-                    .body(new CommonResponse<>(ResponseEnum.FORBIDDEN));
-        }
 
         CommonResponse<MemberApproval> response = memberService.updateMemberApproval(reqBody);
 
@@ -225,17 +219,11 @@ public class MemberController {
      * @param request
      * @return
      */
+    @EndPointConfig.RequireRole({RoleConstants.ROLE_ADMIN, RoleConstants.ROLE_SUPER_ADMIN})
     @PostMapping("/list")
     public ResponseEntity<CommonResponse<MemberListResponseDto>> getMemberList(
             HttpServletRequest httpRequest,
             @Valid @RequestBody MemberListRequestDto request) {
-
-        // 관리자 권한 체크 (ADMIN 또는 SUPER_ADMIN)
-        if (!sessionService.hasRole(httpRequest, Role.ADMIN.getRoleName()) &&
-            !sessionService.hasRole(httpRequest, Role.SUPER_ADMIN.getRoleName())) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN)
-                    .body(new CommonResponse<>(ResponseEnum.FORBIDDEN));
-        }
 
         CommonResponse<MemberListResponseDto> response = memberService.getMemberList(request);
 
@@ -247,6 +235,7 @@ public class MemberController {
      * @param request
      * @return
      */
+    @EndPointConfig.PublicEndpoint
     @PostMapping("/find-usernames")
     public ResponseEntity<CommonResponse<List<String>>> findUserNamesByEmail(@RequestBody Member request) {
 
@@ -264,6 +253,7 @@ public class MemberController {
      * @param reqBody
      * @return
      */
+    @EndPointConfig.PublicEndpoint
     @PostMapping("/password/reset/request")
     public ResponseEntity<CommonResponse<PasswordResetRequestResponseDto>> resetPasswordRequest(@Valid @RequestBody PasswordResetRequestDto reqBody) {
 
@@ -280,6 +270,7 @@ public class MemberController {
      * @param reqBody
      * @return
      */
+    @EndPointConfig.PublicEndpoint
     @PostMapping("/password/reset/verify")
     public ResponseEntity<CommonResponse<PasswordResetResponseDto>> resetPasswordVerify(@Valid @RequestBody PasswordResetVerifyDto reqBody) {
 
@@ -304,17 +295,11 @@ public class MemberController {
      * @param reqBody
      * @return
      */
+    @EndPointConfig.RequireRole({RoleConstants.ROLE_ADMIN, RoleConstants.ROLE_SUPER_ADMIN})
     @PostMapping("/admin/update")
     public ResponseEntity<CommonResponse<Member>> updateMemberByAdmin(
             HttpServletRequest httpRequest,
             @Valid @RequestBody AdminMemberUpdateDto reqBody) {
-
-        // 관리자 권한 체크 (ADMIN 또는 SUPER_ADMIN)
-        if (!sessionService.hasRole(httpRequest, Role.ADMIN.getRoleName()) &&
-                !sessionService.hasRole(httpRequest, Role.SUPER_ADMIN.getRoleName())) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN)
-                    .body(new CommonResponse<>(ResponseEnum.FORBIDDEN));
-        }
 
         CommonResponse<Member> response = memberService.updateMemberByAdmin(
                 reqBody.getMemberId(),
@@ -332,16 +317,11 @@ public class MemberController {
      * @param reqBody
      * @return
      */
+    @EndPointConfig.RequireRole({RoleConstants.ROLE_SUPER_ADMIN})
     @PostMapping("/admin/delete")
     public ResponseEntity<CommonResponse<Void>> deleteMemberByAdmin(
             HttpServletRequest httpRequest,
             @Valid @RequestBody AdminMemberDeleteDto reqBody) {
-
-        // 슈퍼관리자 권한 체크
-        if (!sessionService.hasRole(httpRequest, Role.SUPER_ADMIN.getRoleName())) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN)
-                    .body(new CommonResponse<>(ResponseEnum.FORBIDDEN));
-        }
 
         CommonResponse<Void> response = memberService.deleteMemberByAdmin(reqBody.getMemberId());
 

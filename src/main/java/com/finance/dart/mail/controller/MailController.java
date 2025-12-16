@@ -19,8 +19,6 @@ public class MailController {
 
     private final MailService mailService;
 
-    // TODO: 개발중
-
     @PostMapping("/send")
     public ResponseEntity<CommonResponse> send(@Valid @RequestBody MailSendDto body) {
         boolean isSend = mailService.sendEmail(body.getTo(), body.getSubject(), body.getContents());

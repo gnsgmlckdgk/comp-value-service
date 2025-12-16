@@ -1,20 +1,20 @@
 package com.finance.dart.board.service;
 
 import com.finance.dart.board.dto.FreeBoardDto;
-import com.finance.dart.board.entity.FreeBoard;
 import com.finance.dart.board.dto.FreeBoardListResponseDto;
+import com.finance.dart.board.entity.FreeBoard;
 import com.finance.dart.board.repository.FreeBoardRepository;
 import com.finance.dart.member.dto.Member;
 import com.finance.dart.member.entity.MemberEntity;
+import com.finance.dart.member.enums.RoleConstants;
 import com.finance.dart.member.service.MemberService;
 import com.finance.dart.member.service.SessionService;
-import com.finance.dart.member.enums.Role;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.AllArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import jakarta.servlet.http.HttpServletRequest;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -214,8 +214,8 @@ public class FreeBoardService {
         Long writerId = board.getMember().getId();
 
         // SUPER_ADMIN 또는 ADMIN 권한이면 모두 삭제 가능
-        boolean isSuperAdmin = sessionService.hasRole(request, Role.SUPER_ADMIN.getRoleName());
-        boolean isAdmin = sessionService.hasRole(request, Role.ADMIN.getRoleName());
+        boolean isSuperAdmin = sessionService.hasRole(request, RoleConstants.ROLE_SUPER_ADMIN);
+        boolean isAdmin = sessionService.hasRole(request, RoleConstants.ROLE_ADMIN);
 
         if (isSuperAdmin || isAdmin) {
             return;
