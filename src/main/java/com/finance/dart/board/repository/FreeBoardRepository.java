@@ -3,53 +3,57 @@ package com.finance.dart.board.repository;
 import com.finance.dart.board.entity.FreeBoard;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.repository.JpaRepository;
+
+import java.util.List;
 
 
 public interface FreeBoardRepository extends JpaRepository<FreeBoard, Long> {
     // 필요한 커스텀 메서드 추가 가능
 
     /**
-     * 검색어 추가 목록 조회
+     * 공지글 전체 조회 (페이징 없음)
+     */
+    List<FreeBoard> findByNoticeTrue(Sort sort);
+
+    /**
+     * 일반글 조회 (notice = false)
+     */
+    Page<FreeBoard> findByNoticeFalse(Pageable pageable);
+
+    /**
+     * 검색어 추가 목록 조회 (일반글만)
      * @param title 제목
      * @param content 내용
      * @param pageable
      * @return
      */
-    Page<FreeBoard> findByTitleContainingOrContentContaining(String title, String content, Pageable pageable);
+    Page<FreeBoard> findByNoticeFalseAndTitleContainingOrNoticeFalseAndContentContaining(String title, String content, Pageable pageable);
 
     /**
-     * 검색어 추가 목록 조회
+     * 검색어 추가 목록 조회 (일반글만)
      * @param content 내용
      * @param pageable
      * @return
      */
-    Page<FreeBoard> findByContentContaining(String content, Pageable pageable);
+    Page<FreeBoard> findByNoticeFalseAndContentContaining(String content, Pageable pageable);
 
     /**
-     * 검색어 추가 목록 조회
+     * 검색어 추가 목록 조회 (일반글만)
      * @param title 제목
      * @param pageable
      * @return
      */
-    Page<FreeBoard> findByTitleContaining(String title, Pageable pageable);
+    Page<FreeBoard> findByNoticeFalseAndTitleContaining(String title, Pageable pageable);
 
     /**
-     * 검색어 추가 목록 조회
-     * @param author 작성자 (Deprecated - author 필드 사용)
-     * @param pageable
-     * @return
-     */
-    @Deprecated
-    Page<FreeBoard> findByAuthorContaining(String author, Pageable pageable);
-
-    /**
-     * 작성자 닉네임으로 검색 (member.nickname 사용)
+     * 작성자 닉네임으로 검색 (member.nickname 사용, 일반글만)
      * @param nickname 작성자 닉네임
      * @param pageable
      * @return
      */
-    Page<FreeBoard> findByMember_NicknameContaining(String nickname, Pageable pageable);
+    Page<FreeBoard> findByNoticeFalseAndMember_NicknameContaining(String nickname, Pageable pageable);
 
 }
 

@@ -10,8 +10,9 @@ import java.util.List;
 @Data
 public class FreeBoardListResponseDto {
 
-    private List<FreeBoardDto> data; // 게시글 목록
-    private long total;              // 전체 건수
+    private List<FreeBoardDto> notices; // 공지글 목록
+    private List<FreeBoardDto> posts;   // 일반글 목록
+    private long totalPosts;            // 일반글 전체 건수 (페이징용)
 }
 
 

@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.finance.dart.member.entity.MemberEntity;
 import jakarta.persistence.*;
 import lombok.Data;
+
 import java.time.LocalDateTime;
 
 @Data
@@ -34,6 +35,13 @@ public class FreeBoard {
     private String author;
 
     private Integer viewCount = 0;
+
+    @Column(name = "is_notice")
+    private boolean notice = false;
+
+    @Column(name = "is_secret")
+    private boolean secret = false;
+
 
     private LocalDateTime createdAt = LocalDateTime.now();
     private LocalDateTime updatedAt = LocalDateTime.now();

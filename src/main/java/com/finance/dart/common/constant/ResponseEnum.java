@@ -38,6 +38,9 @@ public enum ResponseEnum {
     VERIFICATION_CODE_EXPIRED("40002", "인증코드가 만료되었습니다. 다시 요청해주세요.", false, HttpStatus.BAD_REQUEST),
     VERIFICATION_CODE_NOT_MATCH("40003", "인증코드가 일치하지 않습니다.", false, HttpStatus.BAD_REQUEST),
 
+    // 게시판 관련 오류 (200 응답)
+    BIZ_ERROR("20001", "요청 처리 중 오류가 발생했습니다.", false, HttpStatus.OK),
+
     ;
 
 

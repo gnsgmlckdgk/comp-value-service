@@ -30,4 +30,15 @@ public class GlobalExceptionHandler {
                 .status(response.getHttpStatus())
                 .body(response);
     }
+
+    @ExceptionHandler(BizException.class)
+    public ResponseEntity<CommonResponse> handleBizException(BizException ex) {
+
+        CommonResponse response = new CommonResponse(ResponseEnum.BIZ_ERROR);
+        response.setMessage(ex.getMessage());
+
+        return ResponseEntity
+                .status(response.getHttpStatus())
+                .body(response);
+    }
 }

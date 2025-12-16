@@ -12,6 +12,8 @@ public class FreeBoardDto {
     private String title;           // 제목
     private String content;         // 내용
     private Integer viewCount;      // 조회수
+    private boolean notice;         // 공지글 여부
+    private boolean secret;         // 비밀글 여부
 
     // 작성자 정보
     private Long memberId;          // 작성자 ID (프론트에서 본인 글 확인용)

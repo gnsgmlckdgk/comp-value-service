@@ -4,6 +4,7 @@ import com.finance.dart.board.dto.FreeBoardDto;
 import com.finance.dart.board.dto.FreeBoardListResponseDto;
 import com.finance.dart.board.entity.FreeBoard;
 import com.finance.dart.board.repository.FreeBoardRepository;
+import com.finance.dart.common.exception.BizException;
 import com.finance.dart.member.dto.Member;
 import com.finance.dart.member.entity.MemberEntity;
 import com.finance.dart.member.enums.RoleConstants;
@@ -13,6 +14,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import lombok.AllArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -32,13 +34,27 @@ public class FreeBoardService {
 
     /**
      * Entity -> DTO 변환
+     * @param board 게시글 엔티티
+     * @param loginMemberId 로그인한 회원 ID (비밀글 체크용, null 가능)
      */
-    private FreeBoardDto convertToDto(FreeBoard board) {
+    private FreeBoardDto convertToDto(FreeBoard board, Long loginMemberId) {
         FreeBoardDto dto = new FreeBoardDto();
         dto.setId(board.getId());
-        dto.setTitle(board.getTitle());
-        dto.setContent(board.getContent());
         dto.setViewCount(board.getViewCount());
+        dto.setNotice(board.isNotice());
+        dto.setSecret(board.isSecret());
+
+        // 비밀글 처리: 본인 글이 아니면 제목/내용 마스킹
+        boolean isOwner = loginMemberId != null && board.getMember() != null
+                          && loginMemberId.equals(board.getMember().getId());
+
+        if (board.isSecret() && !isOwner) {
+            dto.setTitle("🔒 비밀글입니다");
+            dto.setContent("");
+        } else {
+            dto.setTitle(board.getTitle());
+            dto.setContent(board.getContent());
+        }
 
         // 작성자 정보
         MemberEntity member = board.getMember();
@@ -63,7 +79,16 @@ public class FreeBoardService {
         // 로그인 회원 정보
         Member member = memberService.getLoginMember(request);
         if (member == null) {
-            throw new RuntimeException("로그인이 필요합니다.");
+            throw new BizException("로그인이 필요합니다.");
+        }
+
+        // 공지글 작성 권한 체크 (관리자만 가능)
+        if (boardDto.isNotice()) {
+            boolean isAdmin = sessionService.hasRole(request, RoleConstants.ROLE_ADMIN);
+            boolean isSuperAdmin = sessionService.hasRole(request, RoleConstants.ROLE_SUPER_ADMIN);
+            if (!isAdmin && !isSuperAdmin) {
+                throw new BizException("공지글 작성 권한이 없습니다.");
+            }
         }
 
         // 최소한의 정보만 가진 MemberEntity 구성 (id, username, nickname 정도만 사용)
@@ -77,62 +102,109 @@ public class FreeBoardService {
         board.setTitle(boardDto.getTitle());
         board.setContent(boardDto.getContent());
         board.setMember(memberEntity);
+        board.setNotice(boardDto.isNotice());
+        board.setSecret(boardDto.isSecret());
         board.setCreatedAt(LocalDateTime.now());
         board.setUpdatedAt(LocalDateTime.now());
 
         FreeBoard savedBoard = freeBoardRepository.save(board);
 
         // Entity -> DTO 변환하여 반환
-        return convertToDto(savedBoard);
+        return convertToDto(savedBoard, member.getId());
     }
 
     /**
      * ID로 게시글 조회 (조회수 증가)
      */
     @Transactional
-    public FreeBoardDto getBoardById(Long id) {
+    public FreeBoardDto getBoardById(HttpServletRequest request, Long id) {
         Optional<FreeBoard> boardOpt = freeBoardRepository.findById(id);
         FreeBoard board = boardOpt.orElseThrow(() ->
-                new RuntimeException("Board not found with id: " + id));
+                new BizException("게시글을 찾을 수 없습니다."));
+
+        // 로그인 회원 정보 (비밀글 체크용)
+        Member loginMember = null;
+        try {
+            loginMember = memberService.getLoginMember(request);
+        } catch (Exception e) {
+            // 로그인하지 않은 경우 loginMember는 null로 유지
+        }
+
+        Long loginMemberId = loginMember != null ? loginMember.getId() : null;
+
+        // 비밀글인 경우 본인만 확인가능
+        if (board.isSecret()) {
+            boolean isOwner = loginMemberId != null && board.getMember() != null
+                              && loginMemberId.equals(board.getMember().getId());
+//            boolean isAdmin = loginMemberId != null && sessionService.hasRole(request, RoleConstants.ROLE_ADMIN);
+//            boolean isSuperAdmin = loginMemberId != null && sessionService.hasRole(request, RoleConstants.ROLE_SUPER_ADMIN);
+
+            if (!isOwner) {
+                throw new BizException("비밀글은 작성자 본인만 조회할 수 있습니다.");
+            }
+        }
 
         // 조회수 증가
         board.setViewCount(board.getViewCount() + 1);
         freeBoardRepository.save(board);
 
-        return convertToDto(board);
+        return convertToDto(board, loginMemberId);
     }
 
     /**
      * 모든 게시글 조회 (페이징, 검색)
+     * - 공지글은 페이징 없이 전체 조회 (등록일 DESC)
+     * - 일반글은 페이징 적용하여 조회
      */
     @Transactional(readOnly = true)
-    public FreeBoardListResponseDto getAllBoards(Pageable pageable, String search, String sgubun) {
+    public FreeBoardListResponseDto getAllBoards(HttpServletRequest request, Pageable pageable, String search, String sgubun) {
 
-        Page<FreeBoard> page;
-
-        // 검색 값 투입
-        if("1".equals(sgubun)) {          // 제목으로 검색
-            page = freeBoardRepository.findByTitleContaining(search, pageable);
-        } else if("2".equals(sgubun)) {   // 작성자로 검색
-            page = freeBoardRepository.findByMember_NicknameContaining(search, pageable);
-        } else if("3".equals(sgubun)) {   // 내용으로 검색
-            page = freeBoardRepository.findByContentContaining(search, pageable);
-        } else if("4".equals(sgubun)) {   // 제목, 내용으로 검색
-            page = freeBoardRepository.findByTitleContainingOrContentContaining(search, search, pageable);
-        } else {    // 전체 조회
-            page = freeBoardRepository.findAll(pageable);
+        // 로그인 회원 정보 (비밀글 마스킹용)
+        Member loginMember = null;
+        try {
+            loginMember = memberService.getLoginMember(request);
+        } catch (Exception e) {
+            // 로그인하지 않은 경우 loginMember는 null로 유지
         }
+        Long loginMemberId = loginMember != null ? loginMember.getId() : null;
 
-        // Entity -> DTO 변환
-        List<FreeBoardDto> boards = page.getContent().stream()
-                .map(this::convertToDto)
+        // 1. 공지글 전체 조회 (페이징 없음, 등록일 DESC)
+        List<FreeBoard> noticeBoards = freeBoardRepository.findByNoticeTrue(
+                Sort.by(Sort.Direction.DESC, "createdAt")
+        );
+
+        List<FreeBoardDto> notices = noticeBoards.stream()
+                .map(board -> convertToDto(board, loginMemberId))
                 .collect(Collectors.toList());
 
-        long totalElements = page.getTotalElements();
+        // 2. 일반글 조회 (페이징 적용, notice = false)
+        Page<FreeBoard> postsPage;
 
+        // 검색 값 투입 (일반글만)
+        if("1".equals(sgubun)) {          // 제목으로 검색
+            postsPage = freeBoardRepository.findByNoticeFalseAndTitleContaining(search, pageable);
+        } else if("2".equals(sgubun)) {   // 작성자로 검색
+            postsPage = freeBoardRepository.findByNoticeFalseAndMember_NicknameContaining(search, pageable);
+        } else if("3".equals(sgubun)) {   // 내용으로 검색
+            postsPage = freeBoardRepository.findByNoticeFalseAndContentContaining(search, pageable);
+        } else if("4".equals(sgubun)) {   // 제목, 내용으로 검색
+            postsPage = freeBoardRepository.findByNoticeFalseAndTitleContainingOrNoticeFalseAndContentContaining(search, search, pageable);
+        } else {    // 전체 조회 (일반글만)
+            postsPage = freeBoardRepository.findByNoticeFalse(pageable);
+        }
+
+        // Entity -> DTO 변환 (비밀글 마스킹 처리 포함)
+        List<FreeBoardDto> posts = postsPage.getContent().stream()
+                .map(board -> convertToDto(board, loginMemberId))
+                .collect(Collectors.toList());
+
+        long totalPosts = postsPage.getTotalElements();
+
+        // 응답 조립
         FreeBoardListResponseDto response = new FreeBoardListResponseDto();
-        response.setData(boards);
-        response.setTotal(totalElements);
+        response.setNotices(notices);
+        response.setPosts(posts);
+        response.setTotalPosts(totalPosts);
 
         return response;
     }
@@ -144,7 +216,7 @@ public class FreeBoardService {
     public FreeBoardDto updateBoard(HttpServletRequest request, Long id, FreeBoardDto boardDto) {
         Optional<FreeBoard> boardOpt = freeBoardRepository.findById(id);
         FreeBoard board = boardOpt.orElseThrow(() ->
-                new RuntimeException("Board not found with id: " + id));
+                new BizException("게시글을 찾을 수 없습니다."));
 
         // 로그인 회원 정보
         Member loginMember = memberService.getLoginMember(request);
@@ -152,14 +224,25 @@ public class FreeBoardService {
         // 권한 체크
         validateUpdatePermission(request, loginMember, board);
 
+        // 공지글 수정 권한 체크 (관리자만 가능)
+        if (boardDto.isNotice()) {
+            boolean isAdmin = sessionService.hasRole(request, RoleConstants.ROLE_ADMIN);
+            boolean isSuperAdmin = sessionService.hasRole(request, RoleConstants.ROLE_SUPER_ADMIN);
+            if (!isAdmin && !isSuperAdmin) {
+                throw new BizException("공지글 수정 권한이 없습니다.");
+            }
+        }
+
         // 수정
         board.setTitle(boardDto.getTitle());
         board.setContent(boardDto.getContent());
+        board.setNotice(boardDto.isNotice());
+        board.setSecret(boardDto.isSecret());
         board.setUpdatedAt(LocalDateTime.now());
 
         FreeBoard savedBoard = freeBoardRepository.save(board);
 
-        return convertToDto(savedBoard);
+        return convertToDto(savedBoard, loginMember.getId());
     }
 
     /**
@@ -168,7 +251,7 @@ public class FreeBoardService {
     public void deleteBoard(HttpServletRequest request, Long id) {
         Optional<FreeBoard> boardOpt = freeBoardRepository.findById(id);
         FreeBoard board = boardOpt.orElseThrow(() ->
-                new RuntimeException("Board not found with id: " + id));
+                new BizException("게시글을 찾을 수 없습니다."));
 
         // 로그인 회원 정보
         Member loginMember = memberService.getLoginMember(request);
@@ -187,7 +270,7 @@ public class FreeBoardService {
     private void validateUpdatePermission(HttpServletRequest request, Member loginMember, FreeBoard board) {
 
         if (loginMember == null) {
-            throw new RuntimeException("로그인이 필요합니다.");
+            throw new BizException("로그인이 필요합니다.");
         }
 
         Long loginMemberId = loginMember.getId();
@@ -195,7 +278,7 @@ public class FreeBoardService {
 
         // 본인 글인지 체크
         if (!loginMemberId.equals(writerId)) {
-            throw new RuntimeException("해당 게시글을 수정할 권한이 없습니다.");
+            throw new BizException("해당 게시글을 수정할 권한이 없습니다.");
         }
     }
 
@@ -207,7 +290,7 @@ public class FreeBoardService {
     private void validateDeletePermission(HttpServletRequest request, Member loginMember, FreeBoard board) {
 
         if (loginMember == null) {
-            throw new RuntimeException("로그인이 필요합니다.");
+            throw new BizException("로그인이 필요합니다.");
         }
 
         Long loginMemberId = loginMember.getId();
@@ -223,7 +306,7 @@ public class FreeBoardService {
 
         // 그 외 권한은 본인 글만 삭제 가능
         if (!loginMemberId.equals(writerId)) {
-            throw new RuntimeException("해당 게시글을 삭제할 권한이 없습니다.");
+            throw new BizException("해당 게시글을 삭제할 권한이 없습니다.");
         }
     }
 

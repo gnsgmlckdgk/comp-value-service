@@ -26,6 +26,7 @@ public class FreeBoardController {
 
     @GetMapping("")
     public ResponseEntity<CommonResponse<FreeBoardListResponseDto>> getFreeBoard(
+            HttpServletRequest request,
             @RequestParam(name = "page",defaultValue = "0") int page,
             @RequestParam(name = "size", defaultValue = "10") int size,
             @RequestParam(name = "search", defaultValue = "") String search,
@@ -33,15 +34,17 @@ public class FreeBoardController {
     ) {
 
         Pageable pageable = PageRequest.of("".equals(page) ? 0 : page, size, Sort.by(Sort.Direction.DESC, "createdAt"));
-        FreeBoardListResponseDto response = freeBoardService.getAllBoards(pageable, search, sgubun);
+        FreeBoardListResponseDto response = freeBoardService.getAllBoards(request, pageable, search, sgubun);
 
         return new ResponseEntity<>(new CommonResponse<>(response), HttpStatus.OK);
     }
 
     @GetMapping("/view/{id}")
-    public ResponseEntity<CommonResponse<FreeBoardDto>> viewFreeBoard(@PathVariable("id") Long id) {
+    public ResponseEntity<CommonResponse<FreeBoardDto>> viewFreeBoard(
+            HttpServletRequest request,
+            @PathVariable("id") Long id) {
 
-        FreeBoardDto board = freeBoardService.getBoardById(id);
+        FreeBoardDto board = freeBoardService.getBoardById(request, id);
 
         return new ResponseEntity<>(new CommonResponse<>(board), HttpStatus.OK);
     }
