@@ -189,6 +189,8 @@ public class FreeBoardService {
             postsPage = freeBoardRepository.findByNoticeFalseAndContentContaining(search, pageable);
         } else if("4".equals(sgubun)) {   // 제목, 내용으로 검색
             postsPage = freeBoardRepository.findByNoticeFalseAndTitleContainingOrNoticeFalseAndContentContaining(search, search, pageable);
+        } else if("5".equals(sgubun)) {   // 아이디로 검색
+            postsPage = freeBoardRepository.findByNoticeFalseAndMember_UsernameContaining(search, pageable);
         } else {    // 전체 조회 (일반글만)
             postsPage = freeBoardRepository.findByNoticeFalse(pageable);
         }

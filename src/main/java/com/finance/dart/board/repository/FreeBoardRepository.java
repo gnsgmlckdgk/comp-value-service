@@ -55,5 +55,13 @@ public interface FreeBoardRepository extends JpaRepository<FreeBoard, Long> {
      */
     Page<FreeBoard> findByNoticeFalseAndMember_NicknameContaining(String nickname, Pageable pageable);
 
+    /**
+     * 작성자 아이디로 검색 (member.username 사용, 일반글만)
+     * @param username 작성자 아이디
+     * @param pageable
+     * @return
+     */
+    Page<FreeBoard> findByNoticeFalseAndMember_UsernameContaining(String username, Pageable pageable);
+
 }
 
