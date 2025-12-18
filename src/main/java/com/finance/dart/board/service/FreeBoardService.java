@@ -4,6 +4,7 @@ import com.finance.dart.board.dto.FreeBoardDto;
 import com.finance.dart.board.dto.FreeBoardListResponseDto;
 import com.finance.dart.board.entity.FreeBoard;
 import com.finance.dart.board.repository.FreeBoardRepository;
+import com.finance.dart.board.util.ImageSizeValidator;
 import com.finance.dart.common.exception.BizException;
 import com.finance.dart.member.dto.Member;
 import com.finance.dart.member.entity.MemberEntity;
@@ -81,6 +82,9 @@ public class FreeBoardService {
         if (member == null) {
             throw new BizException("로그인이 필요합니다.");
         }
+
+        // 이미지 크기 검증
+        ImageSizeValidator.validateImageSize(boardDto.getContent());
 
         // 공지글 작성 권한 체크 (관리자만 가능)
         if (boardDto.isNotice()) {
@@ -225,6 +229,9 @@ public class FreeBoardService {
 
         // 권한 체크
         validateUpdatePermission(request, loginMember, board);
+
+        // 이미지 크기 검증
+        ImageSizeValidator.validateImageSize(boardDto.getContent());
 
         // 공지글 수정 권한 체크 (관리자만 가능)
         if (boardDto.isNotice()) {
