@@ -1,6 +1,7 @@
 package com.finance.dart.common.service;
 
 import com.finance.dart.common.util.ClientUtil;
+import com.finance.dart.common.util.DateUtil;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.ParameterizedTypeReference;
@@ -32,7 +33,15 @@ public class HttpClientService {
     public <T> ResponseEntity<T> exchangeSync(
             String url, HttpMethod method, HttpEntity<?> entity, Class<T> responseType) {
 
+        long startTime = DateUtil.getCurrentNanoTime();
+
         ResponseEntity<T> response = restTemplate.exchange(url, method, entity, responseType);
+
+        long elapsedTime = DateUtil.getElapsedTimeMillis(startTime);
+        if(log.isDebugEnabled()) {
+            log.debug("API 호출 완료 - URL: {}, Method: {}, 응답시간: {}ms, 상태코드: {}",
+                url, method, elapsedTime, response.getStatusCode());
+        }
 
         return response;
     }
@@ -53,7 +62,16 @@ public class HttpClientService {
         final HttpEntity<?> httpEntity = ClientUtil.createHttpEntity(MediaType.APPLICATION_JSON, httpHeaders, body);
 
         if(log.isDebugEnabled()) log.debug("전송 요청 정보 = url[{}], method[{}], entity[{}], responseType[{}]", url, method, httpEntity, responseType);
+
+        long startTime = DateUtil.getCurrentNanoTime();
+
         ResponseEntity<T> response = restTemplate.exchange(url, method, httpEntity, responseType);
+
+        long elapsedTime = DateUtil.getElapsedTimeMillis(startTime);
+        if(log.isDebugEnabled()) {
+            log.debug("API 호출 완료 - URL: {}, Method: {}, 응답시간: {}ms, 상태코드: {}",
+                url, method, elapsedTime, response.getStatusCode());
+        }
 
         return response;
     }
@@ -70,7 +88,16 @@ public class HttpClientService {
             String url, HttpMethod method, ParameterizedTypeReference<T> responseType
     ) {
         final HttpEntity<?> httpEntity = ClientUtil.createHttpEntity(MediaType.APPLICATION_JSON);
+
+        long startTime = DateUtil.getCurrentNanoTime();
+
         ResponseEntity<T> response = restTemplate.exchange(url, method, httpEntity, responseType);
+
+        long elapsedTime = DateUtil.getElapsedTimeMillis(startTime);
+        if(log.isDebugEnabled()) {
+            log.debug("API 호출 완료 - URL: {}, Method: {}, 응답시간: {}ms, 상태코드: {}",
+                url, method, elapsedTime, response.getStatusCode());
+        }
 
         return response;
     }

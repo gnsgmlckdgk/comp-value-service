@@ -14,6 +14,33 @@ public class DateUtil {
         return LocalDateTime.now().format(DateTimeFormatter.ofPattern(pattern));
     }
 
+    /**
+     * 현재 시간을 나노초 단위로 반환
+     * @return 나노초 timestamp
+     */
+    public static long getCurrentNanoTime() {
+        return System.nanoTime();
+    }
+
+    /**
+     * 두 시간 사이의 경과 시간을 밀리초로 계산
+     * @param startNanoTime 시작 시간 (나노초)
+     * @param endNanoTime 종료 시간 (나노초)
+     * @return 경과 시간 (밀리초)
+     */
+    public static long getElapsedTimeMillis(long startNanoTime, long endNanoTime) {
+        return (endNanoTime - startNanoTime) / 1_000_000;
+    }
+
+    /**
+     * 시작 시간부터 현재까지의 경과 시간을 밀리초로 계산
+     * @param startNanoTime 시작 시간 (나노초)
+     * @return 경과 시간 (밀리초)
+     */
+    public static long getElapsedTimeMillis(long startNanoTime) {
+        return getElapsedTimeMillis(startNanoTime, System.nanoTime());
+    }
+
 
     /**
      * <pre>

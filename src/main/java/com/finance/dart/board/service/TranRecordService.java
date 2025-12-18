@@ -25,6 +25,10 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.*;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.stream.Collectors;
 
 @Slf4j
 @AllArgsConstructor
@@ -37,6 +41,9 @@ public class TranRecordService {
     private final CompanyProfileSearchService companyProfileSearchService;      // 기업 프로파일 검색 서비스
     private final ForexQuoteService forexQuoteService;                          // 외환시세 조회 서비스
     private final AfterTradeService afterTradeService;                          // 애프터마켓 시세 조회 서비스
+
+    // 병렬 처리용 스레드 풀 (최대 10개 동시 실행)
+    private final ExecutorService executorService = Executors.newFixedThreadPool(10);
 
 
     /**
@@ -123,23 +130,28 @@ public class TranRecordService {
         // 거래기록 조회
         List<TranRecordEntity> tranRecordEntityList = tranRecordRepository.findByMember_Id(memberId);
 
-        // 티커 분류
-        Map<String, Double> tickerValueMap = new HashMap<>();
+        // 티커 분류 (중복 제거)
+        Set<String> uniqueTickers = new LinkedHashSet<>();
         for(TranRecordEntity tranRecordEntity : tranRecordEntityList) {
-            tickerValueMap.put(tranRecordEntity.getSymbol(), 0.0);
+            uniqueTickers.add(tranRecordEntity.getSymbol());
         }
 
-        // 현재가 조회
-        for(String ticker : tickerValueMap.keySet()) {
-            TranRecordCurValueResDto curValue = getCurValue(ticker);
-            tickerValueMap.put(ticker, (curValue == null || curValue.getCurrentPrice() == null) ?
-                    0 : curValue.getCurrentPrice());
+        // 현재가 조회 (병렬 처리)
+        List<TranRecordCurValueResDto> curValues = getCurValues(uniqueTickers);
+
+        // 티커별 현재가 맵 구성
+        Map<String, Double> tickerValueMap = new HashMap<>();
+        if(curValues != null) {
+            for(TranRecordCurValueResDto curValue : curValues) {
+                tickerValueMap.put(curValue.getSymbol(),
+                    (curValue.getCurrentPrice() == null) ? 0.0 : curValue.getCurrentPrice());
+            }
         }
 
         // 현재가 세팅
         for(TranRecordEntity tranRecordEntity : tranRecordEntityList) {
             TranRecordDto tranRecordDto = ConvertUtil.parseObject(tranRecordEntity, TranRecordDto.class);
-            tranRecordDto.setCurrentPrice(tickerValueMap.get(tranRecordDto.getSymbol()));
+            tranRecordDto.setCurrentPrice(tickerValueMap.getOrDefault(tranRecordDto.getSymbol(), 0.0));
             tranRecordDtoList.add(tranRecordDto);
         }
 
@@ -181,7 +193,7 @@ public class TranRecordService {
     }
 
     /**
-     * 현재가격 조회(다건)
+     * 현재가격 조회(다건) - 병렬 처리 버전
      * @param symbolSet
      * @return
      */
@@ -191,54 +203,66 @@ public class TranRecordService {
             return null;
         }
 
-        List<TranRecordCurValueResDto> resultList = new LinkedList<>();
         List<String> symbolList = symbolSet.stream().toList();
 
-        for(String symbol : symbolList) {
-
-            TranRecordCurValueResDto tranRecordCurValueResDto = new TranRecordCurValueResDto();
-
-            // 정규장
-            List<ForexQuoteResDto> forexQuoteResDtoList = forexQuoteService.findForexQuote(new ForexQuoteReqDto(symbol));
-            // 애프터장
-            List<AfterTradeResDto> afterTradeResDtoList = afterTradeService.findAfterTrade(new AfterTradeReqDto(symbol));
-
-            if(forexQuoteResDtoList == null && forexQuoteResDtoList.size() == 0) tranRecordCurValueResDto.setSymbol(symbol);
-            else {
-                ForexQuoteResDto forexQuoteResDto = forexQuoteResDtoList.get(0);
-                tranRecordCurValueResDto.setCurrentPrice(forexQuoteResDto.getPrice());
-
-                if(afterTradeResDtoList != null || afterTradeResDtoList.size() > 0) {
-
-                    AfterTradeResDto afterTradeResDto = afterTradeResDtoList.get(0);
-
-                    long quoteTimestamp = forexQuoteResDto.getTimestamp();      // 정규장
-                    long afterTradeTimestamp = afterTradeResDto.getTimestamp(); // 애프터마켓
-
-                    if(afterTradeTimestamp > quoteTimestamp) {  // 애프터마켓이 더 최신
-                        tranRecordCurValueResDto.setCurrentPrice(afterTradeResDto.getPrice());
+        // 각 심볼에 대해 병렬로 API 호출
+        List<CompletableFuture<TranRecordCurValueResDto>> futures = symbolList.stream()
+                .map(symbol -> CompletableFuture.supplyAsync(() -> {
+                    try {
+                        return fetchCurrentPriceForSymbol(symbol);
+                    } catch (Exception e) {
+                        log.error("심볼 {} 가격 조회 중 오류 발생: {}", symbol, e.getMessage());
+                        // 오류 발생 시 기본값 반환
+                        TranRecordCurValueResDto errorDto = new TranRecordCurValueResDto();
+                        errorDto.setSymbol(symbol);
+                        errorDto.setCurrentPrice(0.0);
+                        errorDto.setUpdatedAt(DateUtil.getToday("yyyy-MM-dd HH:mm:ss"));
+                        return errorDto;
                     }
+                }, executorService))
+                .collect(Collectors.toList());
+
+        // 모든 비동기 작업이 완료될 때까지 대기하고 결과 수집
+        return futures.stream()
+                .map(CompletableFuture::join)
+                .collect(Collectors.toList());
+    }
+
+    /**
+     * 단일 심볼에 대한 현재가 조회 (병렬 처리용 헬퍼 메서드)
+     * @param symbol
+     * @return
+     */
+    private TranRecordCurValueResDto fetchCurrentPriceForSymbol(String symbol) {
+        TranRecordCurValueResDto tranRecordCurValueResDto = new TranRecordCurValueResDto();
+        tranRecordCurValueResDto.setSymbol(symbol);
+
+        // 정규장과 애프터장 API 호출 (각 심볼에 대해 병렬로 실행됨)
+        List<ForexQuoteResDto> forexQuoteResDtoList = forexQuoteService.findForexQuote(new ForexQuoteReqDto(symbol));
+        List<AfterTradeResDto> afterTradeResDtoList = afterTradeService.findAfterTrade(new AfterTradeReqDto(symbol));
+
+        // 정규장 데이터 처리
+        if(forexQuoteResDtoList == null || forexQuoteResDtoList.isEmpty()) {
+            tranRecordCurValueResDto.setCurrentPrice(0.0);
+        } else {
+            ForexQuoteResDto forexQuoteResDto = forexQuoteResDtoList.get(0);
+            tranRecordCurValueResDto.setCurrentPrice(forexQuoteResDto.getPrice());
+
+            // 애프터장 데이터가 있고 더 최신이면 업데이트
+            if(afterTradeResDtoList != null && !afterTradeResDtoList.isEmpty()) {
+                AfterTradeResDto afterTradeResDto = afterTradeResDtoList.get(0);
+
+                long quoteTimestamp = forexQuoteResDto.getTimestamp();      // 정규장
+                long afterTradeTimestamp = afterTradeResDto.getTimestamp(); // 애프터마켓
+
+                if(afterTradeTimestamp > quoteTimestamp) {  // 애프터마켓이 더 최신
+                    tranRecordCurValueResDto.setCurrentPrice(afterTradeResDto.getPrice());
                 }
-
             }
-
-            // 이전 버전(2025.10.30)
-//            List<CompanyProfileDataResDto> profiles = companyProfileSearchService.findProfileListBySymbol(symbol);
-//
-//            if(profiles == null || profiles.size() == 0) {
-//                tranRecordCurValueResDto.setSymbol(symbol);
-//
-//            } else {
-//                CompanyProfileDataResDto profile = profiles.get(0);
-//                tranRecordCurValueResDto.setSymbol(profile.getSymbol());
-//                tranRecordCurValueResDto.setCurrentPrice(profile.getPrice());
-//            }
-
-            tranRecordCurValueResDto.setUpdatedAt(DateUtil.getToday("yyyy-MM-dd HH:mm:ss"));
-            resultList.add(tranRecordCurValueResDto);
         }
 
-        return resultList;
+        tranRecordCurValueResDto.setUpdatedAt(DateUtil.getToday("yyyy-MM-dd HH:mm:ss"));
+        return tranRecordCurValueResDto;
     }
 
     /**
