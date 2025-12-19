@@ -2,8 +2,8 @@ package com.finance.dart.api.openai.service;
 
 import com.finance.dart.api.openai.dto.ChatGptRequest;
 import com.finance.dart.api.openai.dto.ChatGptResponse;
-import com.finance.dart.common.service.ConfigService;
-import com.finance.dart.common.service.HttpClientService;
+import com.finance.dart.common.component.ConfigComponent;
+import com.finance.dart.common.component.HttpClientComponent;
 import lombok.AllArgsConstructor;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpMethod;
@@ -18,8 +18,8 @@ import java.util.Map;
 @Service
 public class OpenAiService {
 
-    private final ConfigService configService;
-    private final HttpClientService clientService;
+    private final ConfigComponent configComponent;
+    private final HttpClientComponent clientService;
 
 
     private static final String GPT_MODEL = "gpt-3.5-turbo";
@@ -33,7 +33,7 @@ public class OpenAiService {
     public String askGpt(String prompt) {
 
         //@ 요청 세팅
-        final String API_KEY = configService.getOpenAiApiKey(); // OpenAI API 키
+        final String API_KEY = configComponent.getOpenAiApiKey(); // OpenAI API 키
 
         // 요청헤더
         Map<String, String> httpHeaders = new LinkedHashMap<>();

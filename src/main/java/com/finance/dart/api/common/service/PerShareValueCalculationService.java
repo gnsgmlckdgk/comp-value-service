@@ -28,7 +28,7 @@ public class PerShareValueCalculationService {
 
 
     /**
-     * 한 주당 가치를 계산한다.
+     * 한 주당 가치를 계산한다. V2
      *
      * @param req
      * @return
@@ -105,6 +105,127 @@ public class PerShareValueCalculationService {
         return result;
     }
 
+    /**
+     * 한 주당 가치를 계산한다. V3
+     *
+     * @param req
+     * @return
+     */
+    public String calPerValueV3(CompanySharePriceCalculator req, CompanySharePriceResultDetail resultDetail) {
+
+        if(log.isDebugEnabled()) log.debug("CompanySharePriceCalculator = {}", req);
+
+        final String per = req.getPer();                                    // PER
+        final String incomGrowth = req.getOperatingIncomeGrowth();          // 영업이익 성장율
+        final String epsGrowth = req.getEpsgrowth();                        // EPS 성장율
+        final String assetsTotal = req.getCurrentAssetsTotal();             // 유동자산합계
+        final String liabilitiesTotal = req.getCurrentLiabilitiesTotal();   // 유동부채합계
+        final String intangibleAssets = req.getIntangibleAssets();          // 무형자산
+        final String totalDebt = req.getTotalDebt();                        // 총부채
+        final String cash = req.getCashAndCashEquivalents();                // 현금성 자산
+        final String currentRatio = req.getCurrentRatio();                  // 유동비율
+        final String investmentAssets = req.getInvestmentAssets();          // 투자자산 (비유동자산 내)
+        final String issuedShares = req.getIssuedShares();                  // 발행주식수
+
+        final String K = StringUtil.defaultString(getLiabilityFactor(Double.parseDouble(currentRatio)));    // 유동부채 차감 비율
+
+        // STEP01 ------------------------------------------------------------------------------------------------------
+        // (영업이익 3년 평균 × 성장률 보정 PER)
+        // 1. 영업이익 3년 평균 계산
+        final String operatingProfitAvg = calOperatingProfitAvg(
+                req.getOperatingProfitPrePre(),
+                req.getOperatingProfitPre(),
+                req.getOperatingProfitCurrent()
+        );
+
+        // 2. 성장률 보정 PER
+        // PER에 성장률(g)을 단순 가산하여 적정 PER을 보정
+        // (×(1+g))은 보수적이면서 실제 시장 밸류에 근접
+        String adjustedPER;
+        String STEP01;
+
+        BigDecimal perVal = new BigDecimal(per);
+        if (perVal.signum() <= 0 || perVal.compareTo(new BigDecimal("100")) > 0) {
+            // PER 0 미만이면 적자기업으로 자산가치로만 평가
+            // PER이 100 정도가 넘으면 정상적으로 해석 불가한 상황으로(적자 직전, 실적 급감 구간, 초기 성장주) 의미없는 데이터로 판단
+
+            BigDecimal revenueGrowthVal = new BigDecimal(req.getRevenueGrowth());
+
+            if(perVal.signum() <= 0) {
+                resultDetail.set적자기업(true);
+            }
+
+            // 조건: 매출성장률 > 20% (0.2)
+            if (revenueGrowthVal.compareTo(new BigDecimal("0.2")) > 0) {
+                // PSR 기반 계산
+
+                // 매출액
+                String revenue = req.getRevenue();
+
+                String psr = req.getPsr();
+                BigDecimal psrVal = new BigDecimal(psr);
+                BigDecimal maxPsr = new BigDecimal("10");   // PSR상한 (20~30인 기업(SaaS 등)이 있으면 과대평가 위험)
+                if(psrVal.compareTo(maxPsr) > 0) {
+                    psr = maxPsr.toPlainString();
+                }
+
+                String growthFactor = getRevenueGrowthFactor(revenueGrowthVal); // 보정계수
+
+                adjustedPER = "0";  // PER 기반 아니므로
+                STEP01 = CalUtil.multi(CalUtil.multi(revenue, psr), growthFactor);
+
+                resultDetail.set매출기반평가(true);
+                resultDetail.set매출액(revenue);
+                resultDetail.setPSR(psr);
+                resultDetail.set매출성장률(revenueGrowthVal.toPlainString());
+                resultDetail.set매출성장률보정계수(growthFactor);
+
+            } else {
+                // 자산가치만 계산
+                // 아래 플래그면 "자산가치 기준으로만 평가됨"을 안내
+                // 자산가치로만 계산하면 성장 잠재력 높은 적자기업 은 값이 왜곡됨 (예: 테슬라 초기, 아마존 초기, 쿠팡 등)
+                adjustedPER = "0";
+                STEP01 = "0";
+                resultDetail.set수익가치계산불가(true);
+            }
+
+        } else {
+            adjustedPER = CalUtil.multi(per, CalUtil.add("1", incomGrowth));
+            STEP01 = CalUtil.multi(operatingProfitAvg, adjustedPER);
+
+        }
+
+        resultDetail.setPER(per);
+        resultDetail.set영업이익성장률(incomGrowth);
+        resultDetail.set성장률보정PER(adjustedPER);
+        resultDetail.setPEG(calPeg(per, epsGrowth));  // PEG 는 영업이익 성장률이 아닌 EPS 성장률
+
+        // STEP02 ------------------------------------------------------------------------------------------------------
+        // (유동자산 − (유동부채 × 비율) + 투자자산)
+        final String STEP02 = CalUtil.add(CalUtil.sub(assetsTotal, CalUtil.multi(liabilitiesTotal, K)), investmentAssets);
+
+        // STEP03 ------------------------------------------------------------------------------------------------------
+        // (무형자산 × 30%)
+        final String STEP03 = CalUtil.multi(intangibleAssets, "0.3");
+
+        // STEP04 (계산에서 제외됨) ------------------------------------------------------------------------------------------------------
+        // (최근 3년 평균 R&D)
+        resultDetail.set연구개발비_평균(calRnDAvg(req.getRndPrePre(), req.getRndPre(), req.getRndCurrent()));
+
+        // STEP05 ------------------------------------------------------------------------------------------------------
+        // (순부채)
+        String netDebt = CalUtil.sub(totalDebt, cash);
+        final String STEP05 = netDebt;
+        resultDetail.set순부채(netDebt);
+
+        // 계산
+        String rst01 = CalUtil.add(STEP01, STEP02);
+        String rst02 = CalUtil.add(rst01, STEP03);
+        String rst04 = CalUtil.sub(rst02, STEP05);
+        String result = CalUtil.divide(rst04, issuedShares, RoundingMode.HALF_EVEN);
+
+        return result;
+    }
 
     /**
      * 한 주당 가치를 계산한다.
@@ -324,4 +445,30 @@ public class PerShareValueCalculationService {
 //
 //        return pegValue;
     }
+
+    /**
+     * 매출성장률에 따른 보정계수
+     * @param revenueGrowth
+     * @return
+     */
+    private String getRevenueGrowthFactor(BigDecimal revenueGrowth) {
+        // 20% 미만: PSR 적용 안함 (기존 자산가치만)
+        // 20% ~ 30%: 0.3
+        // 30% ~ 50%: 0.5
+        // 50% ~ 80%: 0.7
+        // 80% 이상: 0.9 (상한)
+
+        if (revenueGrowth.compareTo(new BigDecimal("0.2")) < 0) {
+            return null;  // PSR 미적용
+        } else if (revenueGrowth.compareTo(new BigDecimal("0.3")) < 0) {
+            return "0.3";
+        } else if (revenueGrowth.compareTo(new BigDecimal("0.5")) < 0) {
+            return "0.5";
+        } else if (revenueGrowth.compareTo(new BigDecimal("0.8")) < 0) {
+            return "0.7";
+        } else {
+            return "0.9";  // 상한
+        }
+    }
+
 }

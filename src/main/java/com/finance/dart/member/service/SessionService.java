@@ -4,7 +4,7 @@ import com.finance.dart.common.config.AppProperties;
 import com.finance.dart.common.constant.ResponseEnum;
 import com.finance.dart.common.dto.CommonResponse;
 import com.finance.dart.common.exception.UnauthorizedException;
-import com.finance.dart.common.service.RedisComponent;
+import com.finance.dart.common.component.RedisComponent;
 import com.finance.dart.common.util.StringUtil;
 import com.finance.dart.member.dto.LoginDTO;
 import com.finance.dart.member.entity.MemberEntity;

@@ -56,6 +56,17 @@ public class CompanySharePriceResultDetail {
     private String 예외메세지_영업이익 = "N/A";
     private String 예외메시지_발행주식수 = "N/A";
 
+    /** V3 추가 **/
+    // PER 이 100 이상일 시 수익가치 평가 불가능한 기업으로 판단 (적자 직전, 실적 급감 구간, 초기 성장주)
+    private boolean 수익가치계산불가 = false;
+    private boolean 적자기업 = false;
+    private boolean 매출기반평가 = false; // PER 이 마이너스거나 100이상인데 매출액 성장률이 높으면 매출기반으로 평가
+    private String 매출액 = "N/A";
+    private String 매출성장률 = "N/A";
+    private String 매출성장률보정계수 = "N/A";
+    private String PSR = "N/A";
+
+
     public CompanySharePriceResultDetail(String unit) {
         this.단위 = unit;
     }

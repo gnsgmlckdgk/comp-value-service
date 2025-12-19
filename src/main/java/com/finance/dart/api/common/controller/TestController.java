@@ -2,7 +2,7 @@ package com.finance.dart.api.common.controller;
 
 import com.finance.dart.api.domestic.service.schedule.CalCompanyStockPerValueTotalService;
 import com.finance.dart.common.config.EndPointConfig;
-import com.finance.dart.common.service.RedisComponent;
+import com.finance.dart.common.component.RedisComponent;
 import com.finance.dart.common.util.StringUtil;
 import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;

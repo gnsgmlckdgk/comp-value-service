@@ -5,8 +5,8 @@ import com.finance.dart.api.abroad.dto.sec.statement.USD;
 import com.finance.dart.api.abroad.dto.sec.statement.Units;
 import com.finance.dart.api.abroad.enums.SecApiList;
 import com.finance.dart.api.abroad.util.sec.*;
-import com.finance.dart.common.service.ConfigService;
-import com.finance.dart.common.service.HttpClientService;
+import com.finance.dart.common.component.ConfigComponent;
+import com.finance.dart.common.component.HttpClientComponent;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.ParameterizedTypeReference;
@@ -26,8 +26,8 @@ import java.util.Map;
 @Service
 public class SecFinStatementService {
 
-    private final ConfigService configService;
-    private final HttpClientService httpClientService;
+    private final ConfigComponent configComponent;
+    private final HttpClientComponent httpClientComponent;
 
 
     /**
@@ -333,7 +333,7 @@ public class SecFinStatementService {
         try {
             //@ 요청
             ResponseEntity<T> response =
-                    httpClientService.exchangeSync(url, HttpMethod.GET, headers, null, typeRef);
+                    httpClientComponent.exchangeSync(url, HttpMethod.GET, headers, null, typeRef);
 
             //@ 응답데이터 가공
             T responseBody = response.getBody();

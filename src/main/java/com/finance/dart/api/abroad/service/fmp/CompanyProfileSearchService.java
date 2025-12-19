@@ -3,8 +3,8 @@ package com.finance.dart.api.abroad.service.fmp;
 import com.finance.dart.api.abroad.dto.fmp.company.CompanyProfileDataReqDto;
 import com.finance.dart.api.abroad.dto.fmp.company.CompanyProfileDataResDto;
 import com.finance.dart.api.abroad.enums.FmpApiList;
-import com.finance.dart.common.service.ConfigService;
-import com.finance.dart.common.service.HttpClientService;
+import com.finance.dart.common.component.ConfigComponent;
+import com.finance.dart.common.component.HttpClientComponent;
 import com.finance.dart.common.util.ClientUtil;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -23,8 +23,8 @@ import java.util.List;
 @Service
 public class CompanyProfileSearchService {
 
-    private final ConfigService configService;
-    private final HttpClientService httpClientService;
+    private final ConfigComponent configComponent;
+    private final HttpClientComponent httpClientComponent;
 
 
     /**
@@ -38,7 +38,7 @@ public class CompanyProfileSearchService {
     public List<CompanyProfileDataResDto> findProfileListBySymbol(String symbol) {
 
         //@ 요청 데이터 세팅
-        String apiKey = configService.getFmpApiKey();
+        String apiKey = configComponent.getFmpApiKey();
         String url = FmpApiList.CompanyProfileData.url;
 
         CompanyProfileDataReqDto paramDto = CompanyProfileDataReqDto.of(apiKey, symbol);
@@ -46,7 +46,7 @@ public class CompanyProfileSearchService {
 
         //@ 요청
         ResponseEntity<List<CompanyProfileDataResDto>> response =
-                httpClientService.exchangeSync(url, HttpMethod.GET, new ParameterizedTypeReference<>() {});
+                httpClientComponent.exchangeSync(url, HttpMethod.GET, new ParameterizedTypeReference<>() {});
 
         //@ 응답데이터 가공
         List<CompanyProfileDataResDto> findCompanySymbolResDtoList = response.getBody();

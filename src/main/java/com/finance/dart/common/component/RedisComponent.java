@@ -1,4 +1,4 @@
-package com.finance.dart.common.service;
+package com.finance.dart.common.component;
 
 
 import lombok.RequiredArgsConstructor;

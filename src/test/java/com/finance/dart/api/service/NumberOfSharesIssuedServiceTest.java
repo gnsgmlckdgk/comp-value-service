@@ -2,8 +2,8 @@ package com.finance.dart.api.service;
 
 import com.finance.dart.api.common.service.NumberOfSharesIssuedService;
 import com.finance.dart.api.domestic.dto.NumberOfSharesIssuedResDTO;
-import com.finance.dart.common.service.ConfigService;
-import com.finance.dart.common.service.HttpClientService;
+import com.finance.dart.common.component.ConfigComponent;
+import com.finance.dart.common.component.HttpClientComponent;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -22,10 +22,10 @@ import static org.mockito.Mockito.when;
 public class NumberOfSharesIssuedServiceTest {
 
     @Mock
-    private HttpClientService httpClientService;
+    private HttpClientComponent httpClientComponent;
 
     @Mock
-    private ConfigService configService;
+    private ConfigComponent configComponent;
 
     @InjectMocks
     private NumberOfSharesIssuedService numberOfSharesIssuedService;
@@ -38,8 +38,8 @@ public class NumberOfSharesIssuedServiceTest {
 
     @BeforeEach
     void setUp() {
-        when(configService.getDartApiKey()).thenReturn(dummyApiKey);
-        when(httpClientService.exchangeSync(anyString(), eq(HttpMethod.GET), any(HttpEntity.class), eq(String.class)))
+        when(configComponent.getDartApiKey()).thenReturn(dummyApiKey);
+        when(httpClientComponent.exchangeSync(anyString(), eq(HttpMethod.GET), any(HttpEntity.class), eq(String.class)))
                 .thenReturn(ResponseEntity.ok(dummyResponseJson));
     }
 

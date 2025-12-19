@@ -7,7 +7,7 @@ import com.finance.dart.api.domestic.enums.ExchangeCd;
 import com.finance.dart.api.domestic.service.DomesticStockCalculationService;
 import com.finance.dart.api.domestic.service.CorpCodeService;
 import com.finance.dart.api.domestic.service.FinancialStatementService;
-import com.finance.dart.common.service.HttpClientService;
+import com.finance.dart.common.component.HttpClientComponent;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -40,7 +40,7 @@ class DomesticStockCalculationServiceTest {
     private NumberOfSharesIssuedService numberOfSharesIssuedService;
 
     @Mock
-    private HttpClientService httpClientService;
+    private HttpClientComponent httpClientComponent;
 
     @InjectMocks
     private DomesticStockCalculationService service;
@@ -124,7 +124,7 @@ class DomesticStockCalculationServiceTest {
                 .thenReturn(dummySharesRes);
 
         // 모킹: httpClientService.exchangeSync(...) – 현재 가격 조회용
-        when(httpClientService.exchangeSync(anyString(), any(HttpMethod.class), any(HttpEntity.class), any()))
+        when(httpClientComponent.exchangeSync(anyString(), any(HttpMethod.class), any(HttpEntity.class), any()))
                 .thenReturn(ResponseEntity.ok(dummyStockPriceDTO));
 
         // 실제 메서드 실행

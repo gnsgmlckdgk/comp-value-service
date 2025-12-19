@@ -4,8 +4,8 @@ import com.finance.dart.api.abroad.consts.ExchangeConst;
 import com.finance.dart.api.abroad.dto.fmp.company.FindCompanySymbolReqDto;
 import com.finance.dart.api.abroad.dto.fmp.company.FindCompanySymbolResDto;
 import com.finance.dart.api.abroad.enums.FmpApiList;
-import com.finance.dart.common.service.ConfigService;
-import com.finance.dart.common.service.HttpClientService;
+import com.finance.dart.common.component.ConfigComponent;
+import com.finance.dart.common.component.HttpClientComponent;
 import com.finance.dart.common.util.ClientUtil;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -25,8 +25,8 @@ import java.util.stream.Stream;
 @Service
 public class CompanySymbolSearchService {
 
-    private final ConfigService configService;
-    private final HttpClientService httpClientService;
+    private final ConfigComponent configComponent;
+    private final HttpClientComponent httpClientComponent;
 
 
     /**
@@ -68,7 +68,7 @@ public class CompanySymbolSearchService {
     public List<FindCompanySymbolResDto> findSymbolListBySymbol(String symbol) {
 
         //@ 요청 데이터 세팅
-        String apiKey = configService.getFmpApiKey();
+        String apiKey = configComponent.getFmpApiKey();
         String url = FmpApiList.CompanyStockSymbolSearchBySymbol.url;
 
         FindCompanySymbolReqDto paramDto = FindCompanySymbolReqDto.ofQuery(apiKey, symbol);
@@ -76,7 +76,7 @@ public class CompanySymbolSearchService {
 
         //@ 요청
         ResponseEntity<List<FindCompanySymbolResDto>> response =
-                httpClientService.exchangeSync(url, HttpMethod.GET, new ParameterizedTypeReference<>() {});
+                httpClientComponent.exchangeSync(url, HttpMethod.GET, new ParameterizedTypeReference<>() {});
 
         //@ 응답데이터 가공
         List<FindCompanySymbolResDto> findCompanySymbolResDtoList = response.getBody();
@@ -93,7 +93,7 @@ public class CompanySymbolSearchService {
     public List<FindCompanySymbolResDto> findSymbolListByCompanyName(String companyName) {
 
         //@ 요청 데이터 세팅
-        String apiKey = configService.getFmpApiKey();
+        String apiKey = configComponent.getFmpApiKey();
         String url = FmpApiList.CompanyStockSymbolSearchByCompanyName.url;
 
         FindCompanySymbolReqDto paramDto = FindCompanySymbolReqDto.ofQuery(apiKey, companyName);
@@ -101,7 +101,7 @@ public class CompanySymbolSearchService {
 
         //@ 요청
         ResponseEntity<List<FindCompanySymbolResDto>> response =
-                httpClientService.exchangeSync(url, HttpMethod.GET, new ParameterizedTypeReference<>() {});
+                httpClientComponent.exchangeSync(url, HttpMethod.GET, new ParameterizedTypeReference<>() {});
 
         //@ 응답데이터 가공
         List<FindCompanySymbolResDto> findCompanySymbolResDtoList = response.getBody();

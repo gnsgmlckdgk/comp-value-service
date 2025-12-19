@@ -2,8 +2,8 @@ package com.finance.dart.api.domestic.service;
 
 import com.finance.dart.api.domestic.dto.DisclosuerInfoReqDTO;
 import com.finance.dart.api.domestic.dto.DisclosuerInfoResDTO;
-import com.finance.dart.common.service.ConfigService;
-import com.finance.dart.common.service.HttpClientService;
+import com.finance.dart.common.component.ConfigComponent;
+import com.finance.dart.common.component.HttpClientComponent;
 import com.finance.dart.common.util.ClientUtil;
 import com.google.gson.Gson;
 import lombok.AllArgsConstructor;
@@ -24,8 +24,8 @@ import java.util.Map;
 @AllArgsConstructor
 public class DisclosuerInfoService {
 
-    private final HttpClientService httpClientService;
-    private final ConfigService configService;
+    private final HttpClientComponent httpClientComponent;
+    private final ConfigComponent configComponent;
     private final Gson gson = new Gson();
 
     /**
@@ -35,7 +35,7 @@ public class DisclosuerInfoService {
      * @return 공시정보 응답 DTO
      */
     public DisclosuerInfoResDTO getDisclosuerInfo(DisclosuerInfoReqDTO request) {
-        final String apiKey = configService.getDartApiKey();
+        final String apiKey = configComponent.getDartApiKey();
         final HttpEntity<?> httpEntity = ClientUtil.createHttpEntity(MediaType.APPLICATION_JSON);
         String url = "https://opendart.fss.or.kr/api/list.json";
 
@@ -44,7 +44,7 @@ public class DisclosuerInfoService {
         queryParams.put("crtfc_key", apiKey);
 
         url = ClientUtil.addQueryParams(url, queryParams, true);
-        ResponseEntity<DisclosuerInfoResDTO> response = httpClientService.exchangeSync(
+        ResponseEntity<DisclosuerInfoResDTO> response = httpClientComponent.exchangeSync(
                 url,
                 HttpMethod.GET,
                 httpEntity,

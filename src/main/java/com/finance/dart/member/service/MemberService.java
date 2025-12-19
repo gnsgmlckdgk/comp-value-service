@@ -2,7 +2,7 @@ package com.finance.dart.member.service;
 
 import com.finance.dart.common.constant.ResponseEnum;
 import com.finance.dart.common.dto.CommonResponse;
-import com.finance.dart.common.service.RedisComponent;
+import com.finance.dart.common.component.RedisComponent;
 import com.finance.dart.common.util.ConvertUtil;
 import com.finance.dart.mail.service.MailService;
 import com.finance.dart.member.dto.*;

@@ -1,8 +1,8 @@
 package com.finance.dart.api.common.service;
 
 import com.finance.dart.api.domestic.dto.NumberOfSharesIssuedResDTO;
-import com.finance.dart.common.service.ConfigService;
-import com.finance.dart.common.service.HttpClientService;
+import com.finance.dart.common.component.ConfigComponent;
+import com.finance.dart.common.component.HttpClientComponent;
 import com.finance.dart.common.util.ClientUtil;
 import com.google.gson.Gson;
 import lombok.AllArgsConstructor;
@@ -24,8 +24,8 @@ import java.util.Map;
 @AllArgsConstructor
 public class NumberOfSharesIssuedService {
 
-    private final HttpClientService httpClientService;
-    private final ConfigService configService;
+    private final HttpClientComponent httpClientComponent;
+    private final ConfigComponent configComponent;
     private final Gson gson = new Gson();
 
     /**
@@ -37,7 +37,7 @@ public class NumberOfSharesIssuedService {
      * @return NumberOfSharesIssuedResDTO 객체
      */
     public NumberOfSharesIssuedResDTO getNumberOfSharesIssued(String corpCode, String bsnsYear, String reprtCode) {
-        final String apiKey = configService.getDartApiKey();
+        final String apiKey = configComponent.getDartApiKey();
         final HttpEntity<?> httpEntity = ClientUtil.createHttpEntity(MediaType.APPLICATION_JSON);
         String url = "https://opendart.fss.or.kr/api/stockTotqySttus.json";
 
@@ -50,7 +50,7 @@ public class NumberOfSharesIssuedService {
         url = ClientUtil.addQueryParams(url, params);
         if(log.isDebugEnabled()) log.debug("Request URL: {}", url);
 
-        ResponseEntity<String> response = httpClientService.exchangeSync(url, HttpMethod.GET, httpEntity, String.class);
+        ResponseEntity<String> response = httpClientComponent.exchangeSync(url, HttpMethod.GET, httpEntity, String.class);
         String responseBody = response.getBody();
         if(log.isDebugEnabled()) log.debug("Response Body: {}", responseBody);
 

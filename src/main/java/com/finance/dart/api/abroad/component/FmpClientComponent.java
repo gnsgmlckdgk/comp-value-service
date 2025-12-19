@@ -2,8 +2,8 @@ package com.finance.dart.api.abroad.component;
 
 import com.finance.dart.api.abroad.dto.fmp.FmpReqCommon;
 import com.finance.dart.api.abroad.enums.FmpApiList;
-import com.finance.dart.common.service.ConfigService;
-import com.finance.dart.common.service.HttpClientService;
+import com.finance.dart.common.component.ConfigComponent;
+import com.finance.dart.common.component.HttpClientComponent;
 import com.finance.dart.common.util.ClientUtil;
 import lombok.AllArgsConstructor;
 import org.springframework.core.ParameterizedTypeReference;
@@ -15,8 +15,8 @@ import org.springframework.stereotype.Component;
 @Component
 public class FmpClientComponent {
 
-    private final ConfigService configService;
-    private final HttpClientService httpClientService;
+    private final ConfigComponent configComponent;
+    private final HttpClientComponent httpClientComponent;
 
     /**
      * FMP API GET 요청 전송
@@ -26,14 +26,14 @@ public class FmpClientComponent {
     public <T extends FmpReqCommon, R> R sendGet(FmpApiList fmpApi, T requestData, ParameterizedTypeReference<R> responseType) {
 
         //@ 요청 데이터
-        requestData.setApikey(configService.getFmpApiKey());
+        requestData.setApikey(configComponent.getFmpApiKey());
 
         String url = fmpApi.url;
         url = ClientUtil.addQueryParams(url, requestData, true);
 
         //@ 요청
         ResponseEntity<R> response =
-                httpClientService.exchangeSync(url, HttpMethod.GET, responseType);
+                httpClientComponent.exchangeSync(url, HttpMethod.GET, responseType);
 
         return response.getBody();
     }

@@ -15,23 +15,40 @@ public class CompanySharePriceCalculator {
     @SerializedName("unit")
     private String unit;
 
+    // 영업이익 ====================================
     /**
      * 전전기 영업이익
      */
     @SerializedName("operatingProfitPrePre")
     private String operatingProfitPrePre;
-
     /**
      * 전기 영업이익
      */
     @SerializedName("operatingProfitPre")
     private String operatingProfitPre;
-
     /**
      * 당기 영업이익
      */
     @SerializedName("operatingProfitCurrent")
     private String operatingProfitCurrent;
+
+    // 매출액 (V3 추가) ====================================
+    /**
+     * 매출액 (3년 평균 또는 당기)
+     */
+    @SerializedName("revenue")
+    private String revenue;
+    /**
+     * 매출 성장률
+     */
+    @SerializedName("revenueGrowth")
+    private String revenueGrowth;
+    /**
+     * PSR (Price to Sales Ratio)
+     */
+    @SerializedName("psr")
+    private String psr;
+
 
     /**
      * 유동자산합계

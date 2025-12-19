@@ -3,8 +3,8 @@ package com.finance.dart.api.service;
 import com.finance.dart.api.domestic.dto.DisclosuerInfoReqDTO;
 import com.finance.dart.api.domestic.dto.DisclosuerInfoResDTO;
 import com.finance.dart.api.domestic.service.DisclosuerInfoService;
-import com.finance.dart.common.service.ConfigService;
-import com.finance.dart.common.service.HttpClientService;
+import com.finance.dart.common.component.ConfigComponent;
+import com.finance.dart.common.component.HttpClientComponent;
 import com.google.gson.Gson;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -24,10 +24,10 @@ import static org.mockito.Mockito.when;
 public class DisclosuerInfoServiceTest {
 
     @Mock
-    private HttpClientService httpClientService;
+    private HttpClientComponent httpClientComponent;
 
     @Mock
-    private ConfigService configService;
+    private ConfigComponent configComponent;
 
     @InjectMocks
     private DisclosuerInfoService disclosuerInfoService;
@@ -47,10 +47,10 @@ public class DisclosuerInfoServiceTest {
         dummyResponse = new DisclosuerInfoResDTO();
         // 예: dummyResponse.setSomeResult("resultValue");
 
-        when(configService.getDartApiKey()).thenReturn(dummyApiKey);
+        when(configComponent.getDartApiKey()).thenReturn(dummyApiKey);
 
         // httpClientService.exchangeSync() 호출 시 dummyResponse를 포함한 ResponseEntity 반환
-        when(httpClientService.exchangeSync(anyString(), eq(HttpMethod.GET), any(HttpEntity.class), eq(DisclosuerInfoResDTO.class)))
+        when(httpClientComponent.exchangeSync(anyString(), eq(HttpMethod.GET), any(HttpEntity.class), eq(DisclosuerInfoResDTO.class)))
                 .thenReturn(ResponseEntity.ok(dummyResponse));
     }
 

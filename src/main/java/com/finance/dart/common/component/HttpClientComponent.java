@@ -1,4 +1,4 @@
-package com.finance.dart.common.service;
+package com.finance.dart.common.component;
 
 import com.finance.dart.common.util.ClientUtil;
 import com.finance.dart.common.util.DateUtil;
@@ -17,7 +17,7 @@ import java.util.Map;
 @Slf4j
 @Service
 @AllArgsConstructor
-public class HttpClientService {
+public class HttpClientComponent {
 
     private final RestTemplate restTemplate;
 

@@ -2,8 +2,8 @@ package com.finance.dart.api.service;
 
 import com.finance.dart.api.domestic.dto.CorpCodeDTO;
 import com.finance.dart.api.domestic.service.CorpCodeService;
-import com.finance.dart.common.service.ConfigService;
-import com.finance.dart.common.service.HttpClientService;
+import com.finance.dart.common.component.ConfigComponent;
+import com.finance.dart.common.component.HttpClientComponent;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
@@ -28,10 +28,10 @@ import static org.mockito.Mockito.when;
 class CorpCodeServiceTest {
 
     @Mock
-    private HttpClientService httpClientService;
+    private HttpClientComponent httpClientComponent;
 
     @Mock
-    private ConfigService configService;
+    private ConfigComponent configComponent;
 
     @InjectMocks
     private CorpCodeService corpCodeService;
@@ -57,11 +57,11 @@ class CorpCodeServiceTest {
     @BeforeEach
     void setUp() throws IOException {
         MockitoAnnotations.openMocks(this);
-        when(configService.getDartApiKey()).thenReturn(dummyApiKey);
+        when(configComponent.getDartApiKey()).thenReturn(dummyApiKey);
         // 실제 압축된 XML 데이터를 dummyZipBytes로 생성
         byte[] dummyZipBytes = createZipBytes("dummy.xml", dummyXml);
         // httpClientService.exchangeSync() 호출 시 dummyZipBytes를 반환하도록 설정
-        when(httpClientService.exchangeSync(anyString(), eq(HttpMethod.GET), any(HttpEntity.class), eq(byte[].class)))
+        when(httpClientComponent.exchangeSync(anyString(), eq(HttpMethod.GET), any(HttpEntity.class), eq(byte[].class)))
                 .thenReturn(ResponseEntity.ok(dummyZipBytes));
     }
 

@@ -1,4 +1,4 @@
-package com.finance.dart.common.service;
+package com.finance.dart.common.component;
 
 import lombok.AllArgsConstructor;
 import org.springframework.core.env.Environment;
@@ -9,7 +9,7 @@ import org.springframework.stereotype.Component;
  */
 @Component
 @AllArgsConstructor
-public class ConfigService {
+public class ConfigComponent {
 
     private final Environment env;
 

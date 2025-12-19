@@ -7,7 +7,7 @@ import com.finance.dart.api.domestic.dto.*;
 import com.finance.dart.api.domestic.enums.ExchangeCd;
 import com.finance.dart.api.domestic.enums.FsDiv;
 import com.finance.dart.api.domestic.enums.ReprtCode;
-import com.finance.dart.common.service.HttpClientService;
+import com.finance.dart.common.component.HttpClientComponent;
 import com.finance.dart.common.util.CalUtil;
 import com.finance.dart.common.util.ClientUtil;
 import com.finance.dart.common.util.DateUtil;
@@ -40,7 +40,7 @@ public class DomesticStockCalculationService {
     private final CorpCodeService corpCodeService;
     private final FinancialStatementService financialStatementService;
     private final NumberOfSharesIssuedService numberOfSharesIssuedService;
-    private final HttpClientService httpClientService;
+    private final HttpClientComponent httpClientComponent;
 
     @Getter
     public static class CalculationContext {
@@ -140,7 +140,7 @@ public class DomesticStockCalculationService {
         headersData.put("User-Agent", "Mozilla/5.0");
 
         try {
-            ResponseEntity<StockPriceDTO> response = httpClientService.exchangeSync(
+            ResponseEntity<StockPriceDTO> response = httpClientComponent.exchangeSync(
                     url, HttpMethod.GET,
                     ClientUtil.createHttpEntity(MediaType.APPLICATION_JSON, headersData, null),
                     StockPriceDTO.class
