@@ -112,6 +112,24 @@ public enum FmpApiList {
 
     /** ========== 주식관련 데이터 조회 ========== **/
 
+    /** 주식 스크리너 **/
+    StockScreener(
+            "Screener (Stock) API",
+            "https://financialmodelingprep.com/api/v3/stock-screener",
+            HttpMethod.GET,
+            "https://site.financialmodelingprep.com/developer/docs/legacy/stock-screener-api",
+            "주식 정보 조회 API"
+    ),
+
+    /** 최근 12개월 재무 비율 조회 **/
+    RatiosTTM(
+            "Ratios TTM API",
+            "https://financialmodelingprep.com/api/v3/ratios-ttm/{symbol}",
+            HttpMethod.GET,
+            "https://site.financialmodelingprep.com/developer/docs/legacy/financial-ratio-free-api",
+            "최근 12개월 재무 비율 조회 API"
+    ),
+
     /** 외환 시세 조회(환율정보 조회) **/
     ForexQuote(
             "Forex Quote API",
@@ -159,7 +177,6 @@ public enum FmpApiList {
             "https://site.financialmodelingprep.com/developer/docs/stable/index-historical-price-eod-full",
             "기록 인덱스 전체 차트 조회 API"
     ),
-
     ;
 
     public final String name;

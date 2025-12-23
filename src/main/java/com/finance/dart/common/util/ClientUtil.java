@@ -5,6 +5,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 
 import java.util.Collections;
+import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
@@ -95,9 +96,13 @@ public class ClientUtil {
         final String FIRST_DIV = "?";
         final String DIV = "&";
 
+        // URL 동적 치환, {키}
+        Map<String, String> workParamData = new LinkedHashMap<>(paramData);
+        url = replacePlaceholders(url, workParamData);
+
         boolean first = true;
-        for(String key : paramData.keySet()) {
-            String data = paramData.get(key);
+        for(String key : workParamData.keySet()) {
+            String data = workParamData.get(key);
 
             if(first) {
                 url += FIRST_DIV + key + "=" + data;
@@ -107,5 +112,32 @@ public class ClientUtil {
 
         return url;
     }
+
+    /**
+     * <pre>
+     * 동적 URL 데이터 변환
+     * {키}
+     * </pre>
+     * @param template
+     * @param params
+     * @return
+     */
+    public static String replacePlaceholders(String template, Map<String, String> params) {
+        String result = template;
+
+        Iterator<Map.Entry<String, String>> iterator = params.entrySet().iterator();
+        while (iterator.hasNext()) {
+            Map.Entry<String, String> entry = iterator.next();
+            String placeholder = "{" + entry.getKey() + "}";
+
+            if (result.contains(placeholder)) {
+                result = result.replace(placeholder, entry.getValue());
+                iterator.remove();
+            }
+        }
+
+        return result;
+    }
+
 
 }

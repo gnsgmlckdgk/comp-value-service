@@ -22,6 +22,10 @@ import com.finance.dart.api.abroad.dto.fmp.quote.AfterTradeReqDto;
 import com.finance.dart.api.abroad.dto.fmp.quote.AfterTradeResDto;
 import com.finance.dart.api.abroad.dto.fmp.quote.StockQuoteReqDto;
 import com.finance.dart.api.abroad.dto.fmp.quote.StockQuoteResDto;
+import com.finance.dart.api.abroad.dto.fmp.ratiosttm.RatiosTtmReqDto;
+import com.finance.dart.api.abroad.dto.fmp.ratiosttm.RatiosTtmResDto;
+import com.finance.dart.api.abroad.dto.fmp.stockscreener.StockScreenerReqDto;
+import com.finance.dart.api.abroad.dto.fmp.stockscreener.StockScreenerResDto;
 import com.finance.dart.api.abroad.service.fmp.*;
 import com.finance.dart.common.dto.CommonResponse;
 import lombok.AllArgsConstructor;
@@ -51,6 +55,8 @@ public class FinStatFmpController {
     private final ForexQuoteService forexQuoteService;
     private final StockQuoteService stockQuoteService;                          // 주식 시세 조회 서비스
     private final AfterTradeService afterTradeService;                          // 애프터마켓 시세 조회 서비스
+    private final StockScreenerService stockScreenerService;                    // 주식 스크리너 서비스
+    private final RatiosTtmService ratiosTtmService;                            // 최근 12개월 재무 비율 조회 서비스
 
 
     /**
@@ -200,4 +206,29 @@ public class FinStatFmpController {
         return new ResponseEntity<>(new CommonResponse<>(response), HttpStatus.OK);
     }
 
+    /**
+     * 주식 스크리너 API
+     * @param requestDto
+     * @return
+     */
+    @PostMapping("/screener/stock")
+    public ResponseEntity<CommonResponse<List<StockScreenerResDto>>> screenerStock(@RequestBody StockScreenerReqDto requestDto) {
+
+        List<StockScreenerResDto> response = stockScreenerService.findStockScreener(requestDto);
+
+        return new ResponseEntity<>(new CommonResponse<>(response), HttpStatus.OK);
+    }
+
+    /**
+     * 최근 12개월 재무 비율 조회
+     * @param requestDto
+     * @return
+     */
+    @PostMapping("/ratios/ttm")
+    public ResponseEntity<CommonResponse<List<RatiosTtmResDto>>> ratiosTTM(@RequestBody RatiosTtmReqDto requestDto) {
+
+        List<RatiosTtmResDto> response = ratiosTtmService.findRatiosTTM(requestDto);
+
+        return new ResponseEntity<>(new CommonResponse<>(response), HttpStatus.OK);
+    }
 }
