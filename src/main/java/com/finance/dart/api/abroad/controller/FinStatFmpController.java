@@ -22,6 +22,7 @@ import com.finance.dart.api.abroad.dto.fmp.quote.AfterTradeReqDto;
 import com.finance.dart.api.abroad.dto.fmp.quote.AfterTradeResDto;
 import com.finance.dart.api.abroad.dto.fmp.quote.StockQuoteReqDto;
 import com.finance.dart.api.abroad.dto.fmp.quote.StockQuoteResDto;
+import com.finance.dart.api.abroad.dto.fmp.ratiosttm.RatiosTtmArrReqDto;
 import com.finance.dart.api.abroad.dto.fmp.ratiosttm.RatiosTtmReqDto;
 import com.finance.dart.api.abroad.dto.fmp.ratiosttm.RatiosTtmResDto;
 import com.finance.dart.api.abroad.dto.fmp.stockscreener.StockScreenerReqDto;
@@ -38,6 +39,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
+import java.util.Map;
 
 @Slf4j
 @RestController
@@ -231,4 +233,18 @@ public class FinStatFmpController {
 
         return new ResponseEntity<>(new CommonResponse<>(response), HttpStatus.OK);
     }
+
+    /**
+     * 최근 12개월 재무 비율 조회 (다건)
+     * @param requestDto
+     * @return
+     */
+    @PostMapping("/ratios/ttm/arr")
+    public ResponseEntity<CommonResponse<Map<String, List<RatiosTtmResDto>>>> ratiosTTMArr(@RequestBody RatiosTtmArrReqDto requestDto) {
+
+        Map<String, List<RatiosTtmResDto>> response = ratiosTtmService.findRatiosTTM(requestDto);
+
+        return new ResponseEntity<>(new CommonResponse<>(response), HttpStatus.OK);
+    }
+
 }

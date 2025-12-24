@@ -50,7 +50,7 @@ import java.util.concurrent.TimeUnit;
 @Service
 public class US_StockCalFromFpmService {
 
-    private final int TRSC_DELAY = 100;    // 0.1s
+    private final int TRSC_DELAY = 10;    // 0.01s
 
     private final RequestContext requestContext;    // 요청 컨텍스트
     private final RedisComponent redisComponent;    // Redis 컴포넌트
