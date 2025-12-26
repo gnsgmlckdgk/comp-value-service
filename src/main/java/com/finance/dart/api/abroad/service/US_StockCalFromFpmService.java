@@ -28,6 +28,7 @@ import com.finance.dart.api.common.dto.CompanySharePriceResultDetail;
 import com.finance.dart.api.common.service.PerShareValueCalculationService;
 import com.finance.dart.common.component.RedisComponent;
 import com.finance.dart.common.component.RedisKeyGenerator;
+import com.finance.dart.common.exception.BizException;
 import com.finance.dart.common.util.CalUtil;
 import com.finance.dart.common.util.DateUtil;
 import com.finance.dart.common.util.StringUtil;
@@ -131,6 +132,8 @@ public class US_StockCalFromFpmService {
      */
     public List<CompanySharePriceResult> calPerValueListV3(String symbols, String detail) throws Exception {
 
+        final int MAX_CAL_SYMBOL_SIZE = 30; // 한번에 조회 가능 건수
+
         List<CompanySharePriceResult> resultList = new LinkedList<>();
 
         if(symbols == null) return null;
@@ -138,6 +141,10 @@ public class US_StockCalFromFpmService {
                 .map(String::trim)
                 .filter(s -> !s.isEmpty())
                 .toList();
+
+        if(symbolList.size() > MAX_CAL_SYMBOL_SIZE) {
+            throw new BizException("동시 조회는 " + MAX_CAL_SYMBOL_SIZE + "건 까지만 가능합니다.");
+        }
 
         for(String symbol : symbolList) {
             CompanySharePriceResult result = calPerValueV3(symbol);
