@@ -45,6 +45,15 @@ public class CommonResponse<T> {
         this.response = response;
     }
 
+    public CommonResponse(boolean isSuccess, String code, String message, HttpStatus httpStatus, T response) {
+        this.isSuccess = isSuccess;
+        this.code = code;
+        this.message = message;
+        this.httpStatus = httpStatus;
+        this.response = response;
+    }
+
+
     public CommonResponse(ResponseEnum responseEnum) {
         setResponeInfo(responseEnum);
     }

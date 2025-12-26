@@ -1,6 +1,8 @@
 package com.finance.dart.common.interceptor;
 
 import com.finance.dart.common.config.EndPointConfig;
+import com.finance.dart.common.constant.ResponseEnum;
+import com.finance.dart.common.exception.BizException;
 import com.finance.dart.member.service.SessionService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -62,7 +64,7 @@ public class CommonInterceptor implements HandlerInterceptor {
                             Arrays.toString(requiredRoles), userRoles);
                 }
                 response.setStatus(HttpServletResponse.SC_FORBIDDEN); // 403
-                return false;
+                throw new BizException(ResponseEnum.FORBIDDEN);
             }
         }
 

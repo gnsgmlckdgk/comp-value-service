@@ -34,11 +34,12 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(BizException.class)
     public ResponseEntity<CommonResponse> handleBizException(BizException ex) {
 
-        CommonResponse response = new CommonResponse(ResponseEnum.BIZ_ERROR);
-        response.setMessage(ex.getMessage());
+        CommonResponse response = new CommonResponse(
+                false, ex.getCode(), ex.getMessage(), ex.getHttpStatus(), ex.getBody()
+        );
 
         return ResponseEntity
-                .status(response.getHttpStatus())
+                .status(ex.getHttpStatus())
                 .body(response);
     }
 }
