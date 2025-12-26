@@ -45,12 +45,12 @@ public class CommonInterceptor implements HandlerInterceptor {
         EndPointConfig.RequireRole requireRole =
                 handlerMethod.getMethodAnnotation(EndPointConfig.RequireRole.class);
 
+        // 사용자의 현재 권한 목록
+        List<String> userRoles = sessionService.getRolesFromSession(request);
+
         if (requireRole != null) {
             // 필요한 권한 목록
             String[] requiredRoles = requireRole.value();
-
-            // 사용자의 현재 권한 목록
-            List<String> userRoles = sessionService.getRolesFromSession(request);
 
             // 필요한 권한 중 하나라도 가지고 있는지 확인
             boolean hasRequiredRole = Arrays.stream(requiredRoles)
@@ -65,6 +65,9 @@ public class CommonInterceptor implements HandlerInterceptor {
                 return false;
             }
         }
+
+        // 사용자 권한세션 갱신(TTL 갱신)
+        sessionService.updateLoginRolesTTL(request, userRoles);
 
         return true;
     }

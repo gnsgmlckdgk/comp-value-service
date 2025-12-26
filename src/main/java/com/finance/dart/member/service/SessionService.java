@@ -1,10 +1,11 @@
 package com.finance.dart.member.service;
 
+import com.finance.dart.common.component.RedisComponent;
 import com.finance.dart.common.config.AppProperties;
 import com.finance.dart.common.constant.ResponseEnum;
 import com.finance.dart.common.dto.CommonResponse;
+import com.finance.dart.common.exception.BizException;
 import com.finance.dart.common.exception.UnauthorizedException;
-import com.finance.dart.common.component.RedisComponent;
 import com.finance.dart.common.util.StringUtil;
 import com.finance.dart.member.dto.LoginDTO;
 import com.finance.dart.member.entity.MemberEntity;
@@ -239,6 +240,23 @@ public class SessionService {
         }
 
         return List.of(rolesValue.split(","));
+    }
+
+    public void updateLoginRolesTTL(HttpServletRequest request, List<String> userRoles) {
+
+        String sessionId = getSessionId(request);
+        if (sessionId == null) {
+            throw new BizException(ResponseEnum.LOGIN_SESSION_EXPIRED.getMessage());
+        }
+
+        String memberId = redisComponent.getValue(LoginDTO.redisSessionPrefix + sessionId);
+        if (memberId == null) {
+            throw new BizException(ResponseEnum.LOGIN_SESSION_EXPIRED.getMessage());
+        }
+
+        // 권한정보 갱신
+        String userRolesData = String.join(",", userRoles != null ? userRoles : List.of());
+        redisComponent.saveValueWithTtl(LoginDTO.redisRolesPrefix + memberId, userRolesData, TIMEOUT_MINUTES, TimeUnit.MINUTES);
     }
 
     /**
