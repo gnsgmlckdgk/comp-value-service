@@ -61,6 +61,7 @@ public class CompanySharePriceResultDetail {
     private boolean 수익가치계산불가 = false;
     private boolean 적자기업 = false;
     private boolean 매출기반평가 = false; // PER 이 마이너스거나 100이상인데 매출액 성장률이 높으면 매출기반으로 평가
+    private boolean 흑자전환기업 = false; // 전기 적자에서 당기 흑자로 전환된 기업
     private String 매출액 = "N/A";
     private String 매출성장률 = "N/A";
     private String 매출성장률보정계수 = "N/A";

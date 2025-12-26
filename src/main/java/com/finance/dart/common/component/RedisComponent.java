@@ -76,6 +76,16 @@ public class RedisComponent {
         redisTemplate.delete(key);
     }
 
+    /**
+     * 패턴으로 데이터 삭제
+     * @param pattern
+     */
+    public void deleteKeys(String pattern) {
+        Set<String> keys = scanKeys(pattern);
+        if (!keys.isEmpty()) {
+            redisTemplate.delete(keys);  // 한 번에 삭제
+        }
+    }
 
     /**
      * 패턴 키 조회

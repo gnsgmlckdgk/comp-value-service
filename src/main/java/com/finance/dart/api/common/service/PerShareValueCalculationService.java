@@ -190,9 +190,32 @@ public class PerShareValueCalculationService {
             }
 
         } else {
-            adjustedPER = CalUtil.multi(per, CalUtil.add("1", incomGrowth));
-            STEP01 = CalUtil.multi(operatingProfitAvg, adjustedPER);
+            // 전기/당기 영업이익으로 흑자전환 여부 판단
+            BigDecimal preProfitVal = new BigDecimal(req.getOperatingProfitPre());
+            BigDecimal curProfitVal = new BigDecimal(req.getOperatingProfitCurrent());
+            BigDecimal g = new BigDecimal(incomGrowth);
 
+            if (preProfitVal.signum() < 0 && curProfitVal.signum() > 0) {
+                // 흑자전환 기업: 성장률 대신 보수적 계수 적용 (30% 프리미엄)
+                adjustedPER = CalUtil.multi(per, "1.3");
+                resultDetail.set흑자전환기업(true);
+            } else if (preProfitVal.signum() < 0 && curProfitVal.signum() < 0) {
+                // 연속 적자: 성장률 보정 안함
+                adjustedPER = per;
+            } else {
+                // 정상 케이스: 기존 공식 + 성장률 상한 100% 제한 (성장률 100% 이상은 일시적 현상 유지 불가하다 판단)
+                BigDecimal gCapped = g.min(new BigDecimal("1.0"));
+                adjustedPER = CalUtil.multi(per, CalUtil.add("1", gCapped.toPlainString()));
+            }
+
+            // 최종 안전장치: adjustedPER 상한 (PER의 2.5배)
+            BigDecimal adjustedPERVal = new BigDecimal(adjustedPER);
+            BigDecimal maxAdjustedPER = perVal.multiply(new BigDecimal("2.5"));
+            if (adjustedPERVal.compareTo(maxAdjustedPER) > 0) {
+                adjustedPER = maxAdjustedPER.setScale(4, RoundingMode.HALF_UP).toPlainString();
+            }
+
+            STEP01 = CalUtil.multi(operatingProfitAvg, adjustedPER);
         }
 
         resultDetail.setPER(per);

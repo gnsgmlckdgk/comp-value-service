@@ -2,8 +2,8 @@ package com.finance.dart.api.common.controller;
 
 import com.finance.dart.api.common.service.schedule.RecommendedStocks;
 import com.finance.dart.api.domestic.service.schedule.CalCompanyStockPerValueTotalService;
-import com.finance.dart.common.config.EndPointConfig;
 import com.finance.dart.common.component.RedisComponent;
+import com.finance.dart.common.config.EndPointConfig;
 import com.finance.dart.common.util.StringUtil;
 import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -54,7 +54,11 @@ public class TestController {
                 redisComponent.deleteKey(key);
                 yield "삭제완료";
             }
-            case "AK" -> redisComponent.scanKeys(pattern).toString();
+            case "PS" -> redisComponent.scanKeys(pattern).toString();
+            case "PD" -> {
+                redisComponent.deleteKeys(pattern);
+                yield "삭제완료";
+            }
             default -> "타입값이 올바르지 않습니다.";
         };
 
