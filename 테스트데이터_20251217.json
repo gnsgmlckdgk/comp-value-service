@@ -37,7 +37,7 @@
 						"header": [],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n    \"type\" : \"AK\",\n    \"key\" : \"session:15295d5d-6a52-4f4b-9fdf-8a3315d3be90\",\n    \"value\" : \"\",\n    \"ttl\" : 20,\n    \"pattern\" : \"*\"\n}",
+							"raw": "{\n    \"type\" : \"PD\",\n    \"key\" : \"compvalue\",\n    \"pattern\" : \"compvalue:*\",\n    \"value\" : \"\",\n    \"ttl\" : 20\n}",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -56,7 +56,8 @@
 								"test",
 								"redis"
 							]
-						}
+						},
+						"description": "``` java\nString result = switch (type) {\n            case \"I\" -> {\n                if(ttl == 0) redisComponent.saveValue(key, value);\n                else redisComponent.saveValueWithTtl(key, value, ttl);\n                yield \"등록완료\";\n            }\n            case \"S\" -> redisComponent.getValue(key);\n            case \"D\" -> {\n                redisComponent.deleteKey(key);\n                yield \"삭제완료\";\n            }\n            case \"PS\" -> redisComponent.scanKeys(pattern).toString();\n            case \"PD\" -> {\n                redisComponent.deleteKeys(pattern);\n                yield \"삭제완료\";\n            }\n            default -> \"타입값이 올바르지 않습니다.\";\n        };\n\n ```"
 					},
 					"response": []
 				},
@@ -66,7 +67,7 @@
 						"method": "GET",
 						"header": [],
 						"url": {
-							"raw": "http://localhost:18080/dart/test/schedule",
+							"raw": "http://localhost:18080/dart/schd/schedule",
 							"protocol": "http",
 							"host": [
 								"localhost"
@@ -74,7 +75,7 @@
 							"port": "18080",
 							"path": [
 								"dart",
-								"test",
+								"schd",
 								"schedule"
 							]
 						}
@@ -1186,7 +1187,7 @@
 												"method": "GET",
 												"header": [],
 												"url": {
-													"raw": "http://localhost:18080/dart/main/cal/per_value/abroad/v3?symbol=KO",
+													"raw": "http://localhost:18080/dart/main/cal/per_value/abroad/v3?symbol=ALL",
 													"protocol": "http",
 													"host": [
 														"localhost"
@@ -1203,7 +1204,7 @@
 													"query": [
 														{
 															"key": "symbol",
-															"value": "KO",
+															"value": "ALL",
 															"description": "AAPL(0000320193), KO(0000021344), KGC"
 														}
 													]
@@ -2158,7 +2159,7 @@
 							"name": "스케줄러",
 							"item": [
 								{
-									"name": "추천 기업 필터링 스케줄러(테스트)",
+									"name": "추천 기업 필터링 스케줄러(수동)",
 									"request": {
 										"method": "POST",
 										"header": [],
@@ -2172,7 +2173,7 @@
 											}
 										},
 										"url": {
-											"raw": "http://localhost:18080/dart/test/recommended-stocks",
+											"raw": "http://localhost:18080/dart/schd/recommended-stocks",
 											"protocol": "http",
 											"host": [
 												"localhost"
@@ -2180,7 +2181,7 @@
 											"port": "18080",
 											"path": [
 												"dart",
-												"test",
+												"schd",
 												"recommended-stocks"
 											]
 										}
