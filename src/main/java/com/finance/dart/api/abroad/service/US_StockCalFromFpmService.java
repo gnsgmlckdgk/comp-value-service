@@ -553,6 +553,8 @@ public class US_StockCalFromFpmService {
     private CompanySharePriceCalculator getCalParamDataV3(String symbol, CompanySharePriceResult result, CompanySharePriceResultDetail resultDetail)
             throws InterruptedException {
 
+        if(log.isDebugEnabled()) log.debug("[계산 로그] [{}] {} 계산 시작", symbol, result.get기업명());
+
         CompanySharePriceCalculator calParam = new CompanySharePriceCalculator();
 
         //@ 필요데이터 조회
@@ -642,12 +644,19 @@ public class US_StockCalFromFpmService {
 
         //@ 유동비율
         String ratio;
-        if("0".equals(assetsCurrent) && "0".equals(liabilitiesCurrent)) {
-            // 유동자산과 유동부채가 모두 0인 경우: 보수적으로 1.0 설정 (전액 차감)
+        if("0".equals(liabilitiesCurrent) && "0".equals(assetsCurrent)) {
+            // 둘 다 0인 경우: 보수적으로 1.0 설정
             ratio = "1.0";
+        } else if("0".equals(liabilitiesCurrent)) {
+            // 유동부채만 0인 경우: K값 계산에 영향 없음 (0 × K = 0)
+            ratio = "2.0";
+        } else if("0".equals(assetsCurrent)) {
+            // 유동자산만 0인 경우: 매우 위험 → 전액 차감
+            ratio = "0.0";
         } else {
-            ratio = CalUtil.divide(assetsCurrent, liabilitiesCurrent, 2, RoundingMode.HALF_UP);  // 백분율은 제외
+            ratio = CalUtil.divide(assetsCurrent, liabilitiesCurrent, 2, RoundingMode.HALF_UP);
         }
+
         calParam.setCurrentRatio(ratio);
         resultDetail.set유동비율(ratio);
 
