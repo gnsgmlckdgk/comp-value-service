@@ -33,11 +33,11 @@ public class RecommendedStocksProcessor {
     /** 테스트용 최대 처리 건수 (0이면 전체 처리) */
     public static final int MAX_PROCESS_COUNT_FOR_TEST = 0;
 
-    /** 1분당 최대 API 호출 건수 (300건 제한, 200건으로 설정) */
-    private static final int API_CALLS_PER_MINUTE = 200;
+    /** API 동시 호출 건수 (1분당 300건 제한, TCP 동시연결개수 제한때문에 1초당 10건이 FMP 권장) */
+    private static final int API_CALLS_PER_MINUTE = 10;
 
-    /** API 호출 간격 (ms) - 1분 = 60,000ms */
-    private static final long API_BATCH_INTERVAL_MS = 60_000L;
+    /** API 호출 간격 (ms) - 1분 = 60,000ms, 3초 간격 */
+    private static final long API_BATCH_INTERVAL_MS = 3000L;
 
     /** Redis TTL (24시간) */
     private static final long REDIS_TTL_HOURS = 24;
