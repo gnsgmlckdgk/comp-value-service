@@ -682,7 +682,7 @@
 						"header": [],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n    \"username\" : \"admin\",\n    \"password\" : \"1q2w3e4r!\"\n}",
+							"raw": "{\n    \"username\" : \"user01\",\n    \"password\" : \"1q2w3e4r1!\"\n}",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -959,12 +959,262 @@
 								}
 							},
 							"response": []
+						},
+						{
+							"name": "기업 가치 수동계산(한글)",
+							"request": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"단위\" : \"\",\n    \"전전기영업이익\" : \"\",\n    \"전기영업이익\" : \"\",\n    \"당기영업이익\" : \"\",\n    \"유동자산합계\" : \"\",\n    \"유동부채합계\" : \"\",\n    \"유동비율\" : \"\",\n    \"투자자산\" : \"\",\n    \"고정부채\" : \"\",\n    \"발행주식수\" : \"\"\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "http://localhost:18080/dart/main/cal/per_value/manual/ko",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "18080",
+									"path": [
+										"dart",
+										"main",
+										"cal",
+										"per_value",
+										"manual",
+										"ko"
+									]
+								}
+							},
+							"response": []
 						}
 					]
 				},
 				{
 					"name": "해외기업",
 					"item": [
+						{
+							"name": "기업가치 계산",
+							"item": [
+								{
+									"name": "다건",
+									"item": [
+										{
+											"name": "기업 가치 계산(다건)",
+											"request": {
+												"method": "GET",
+												"header": [],
+												"url": {
+													"raw": "http://localhost:18080/dart/main/cal/per_value/abroad/arr?symbol=AAPL,KO",
+													"protocol": "http",
+													"host": [
+														"localhost"
+													],
+													"port": "18080",
+													"path": [
+														"dart",
+														"main",
+														"cal",
+														"per_value",
+														"abroad",
+														"arr"
+													],
+													"query": [
+														{
+															"key": "symbol",
+															"value": "AAPL,KO",
+															"description": "AAPL(0000320193), KO(0000021344), KGC,KO"
+														},
+														{
+															"key": "detail",
+															"value": "F",
+															"disabled": true
+														}
+													]
+												}
+											},
+											"response": []
+										},
+										{
+											"name": "기업 가치 계산(다건) V2",
+											"request": {
+												"method": "GET",
+												"header": [],
+												"url": {
+													"raw": "http://localhost:18080/dart/main/cal/per_value/abroad/arr/v2?symbol=TSLA, AMZN, MSFT, NVDA, GOOGL, META, NFLX, JPM, V, BAC",
+													"protocol": "http",
+													"host": [
+														"localhost"
+													],
+													"port": "18080",
+													"path": [
+														"dart",
+														"main",
+														"cal",
+														"per_value",
+														"abroad",
+														"arr",
+														"v2"
+													],
+													"query": [
+														{
+															"key": "symbol",
+															"value": "TSLA, AMZN, MSFT, NVDA, GOOGL, META, NFLX, JPM, V, BAC",
+															"description": "AAPL(0000320193), KO(0000021344), KGC,KO"
+														},
+														{
+															"key": "detail",
+															"value": "F",
+															"disabled": true
+														}
+													]
+												}
+											},
+											"response": []
+										},
+										{
+											"name": "기업 가치 계산(다건) V3",
+											"request": {
+												"method": "GET",
+												"header": [],
+												"url": {
+													"raw": "http://localhost:18080/dart/main/cal/per_value/abroad/arr/v3?symbol=TSLA, AMZN, MSFT, NVDA, GOOGL, META, NFLX, JPM, V, BAC",
+													"protocol": "http",
+													"host": [
+														"localhost"
+													],
+													"port": "18080",
+													"path": [
+														"dart",
+														"main",
+														"cal",
+														"per_value",
+														"abroad",
+														"arr",
+														"v3"
+													],
+													"query": [
+														{
+															"key": "symbol",
+															"value": "TSLA, AMZN, MSFT, NVDA, GOOGL, META, NFLX, JPM, V, BAC",
+															"description": "AAPL(0000320193), KO(0000021344), KGC,KO"
+														},
+														{
+															"key": "detail",
+															"value": "F",
+															"disabled": true
+														}
+													]
+												}
+											},
+											"response": []
+										}
+									]
+								},
+								{
+									"name": "단건",
+									"item": [
+										{
+											"name": "기업 가치 계산",
+											"request": {
+												"method": "GET",
+												"header": [],
+												"url": {
+													"raw": "http://localhost:18080/dart/main/cal/per_value/abroad?symbol=AAPL",
+													"protocol": "http",
+													"host": [
+														"localhost"
+													],
+													"port": "18080",
+													"path": [
+														"dart",
+														"main",
+														"cal",
+														"per_value",
+														"abroad"
+													],
+													"query": [
+														{
+															"key": "symbol",
+															"value": "AAPL",
+															"description": "AAPL(0000320193), KO(0000021344), KGC"
+														}
+													]
+												}
+											},
+											"response": []
+										},
+										{
+											"name": "기업 가치 계산 V2",
+											"request": {
+												"method": "GET",
+												"header": [],
+												"url": {
+													"raw": "http://localhost:18080/dart/main/cal/per_value/abroad/v2?symbol=KO",
+													"protocol": "http",
+													"host": [
+														"localhost"
+													],
+													"port": "18080",
+													"path": [
+														"dart",
+														"main",
+														"cal",
+														"per_value",
+														"abroad",
+														"v2"
+													],
+													"query": [
+														{
+															"key": "symbol",
+															"value": "KO",
+															"description": "AAPL(0000320193), KO(0000021344), KGC"
+														}
+													]
+												}
+											},
+											"response": []
+										},
+										{
+											"name": "기업 가치 계산 V3",
+											"request": {
+												"method": "GET",
+												"header": [],
+												"url": {
+													"raw": "http://localhost:18080/dart/main/cal/per_value/abroad/v3?symbol=KO",
+													"protocol": "http",
+													"host": [
+														"localhost"
+													],
+													"port": "18080",
+													"path": [
+														"dart",
+														"main",
+														"cal",
+														"per_value",
+														"abroad",
+														"v3"
+													],
+													"query": [
+														{
+															"key": "symbol",
+															"value": "KO",
+															"description": "AAPL(0000320193), KO(0000021344), KGC"
+														}
+													]
+												}
+											},
+											"response": []
+										}
+									]
+								}
+							]
+						},
 						{
 							"name": "기업정보(FMP)",
 							"item": [
@@ -1725,6 +1975,75 @@
 										}
 									},
 									"response": []
+								},
+								{
+									"name": "최근 12개월 재무 비율 조회",
+									"request": {
+										"method": "POST",
+										"header": [],
+										"body": {
+											"mode": "raw",
+											"raw": "{\n    \"symbol\" : \"AAPL\"\n}",
+											"options": {
+												"raw": {
+													"language": "json"
+												}
+											}
+										},
+										"url": {
+											"raw": "http://localhost:18080/dart/abroad/company/financial/fmp/ratios/ttm",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "18080",
+											"path": [
+												"dart",
+												"abroad",
+												"company",
+												"financial",
+												"fmp",
+												"ratios",
+												"ttm"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "최근 12개월 재무 비율 조회 (다건)",
+									"request": {
+										"method": "POST",
+										"header": [],
+										"body": {
+											"mode": "raw",
+											"raw": "{\n    \"symbol\" : [\"AAPL\", \"KO\", \"MSFT\"]\n}",
+											"options": {
+												"raw": {
+													"language": "json"
+												}
+											}
+										},
+										"url": {
+											"raw": "http://localhost:18080/dart/abroad/company/financial/fmp/ratios/ttm/arr",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "18080",
+											"path": [
+												"dart",
+												"abroad",
+												"company",
+												"financial",
+												"fmp",
+												"ratios",
+												"ttm",
+												"arr"
+											]
+										}
+									},
+									"response": []
 								}
 							]
 						},
@@ -1797,138 +2116,100 @@
 							]
 						},
 						{
-							"name": "기업 가치 계산",
-							"request": {
-								"method": "GET",
-								"header": [],
-								"url": {
-									"raw": "http://localhost:18080/dart/main/cal/per_value/abroad?symbol=AAPL",
-									"protocol": "http",
-									"host": [
-										"localhost"
-									],
-									"port": "18080",
-									"path": [
-										"dart",
-										"main",
-										"cal",
-										"per_value",
-										"abroad"
-									],
-									"query": [
-										{
-											"key": "symbol",
-											"value": "AAPL",
-											"description": "AAPL(0000320193), KO(0000021344), KGC"
-										}
-									]
-								}
-							},
-							"response": []
-						},
-						{
-							"name": "기업 가치 계산 V2",
-							"request": {
-								"method": "GET",
-								"header": [],
-								"url": {
-									"raw": "http://localhost:18080/dart/main/cal/per_value/abroad/v2?symbol=AAPL",
-									"protocol": "http",
-									"host": [
-										"localhost"
-									],
-									"port": "18080",
-									"path": [
-										"dart",
-										"main",
-										"cal",
-										"per_value",
-										"abroad",
-										"v2"
-									],
-									"query": [
-										{
-											"key": "symbol",
-											"value": "AAPL",
-											"description": "AAPL(0000320193), KO(0000021344), KGC"
-										}
-									]
-								}
-							},
-							"response": []
-						},
-						{
-							"name": "기업 가치 계산(다건)",
-							"request": {
-								"method": "GET",
-								"header": [],
-								"url": {
-									"raw": "http://localhost:18080/dart/main/cal/per_value/abroad/arr?symbol=AAPL,KO",
-									"protocol": "http",
-									"host": [
-										"localhost"
-									],
-									"port": "18080",
-									"path": [
-										"dart",
-										"main",
-										"cal",
-										"per_value",
-										"abroad",
-										"arr"
-									],
-									"query": [
-										{
-											"key": "symbol",
-											"value": "AAPL,KO",
-											"description": "AAPL(0000320193), KO(0000021344), KGC,KO"
+							"name": "주식 스크리닝(FMP)",
+							"item": [
+								{
+									"name": "주식 스크리닝",
+									"request": {
+										"method": "POST",
+										"header": [],
+										"body": {
+											"mode": "raw",
+											"raw": "{\n  \"marketCapMoreThan\": 2000000000,\n  \"marketCapLowerThan\": 500000000000,\n  \"priceMoreThan\": null,\n  \"priceLowerThan\": null,\n  \"betaMoreThan\": null,\n  \"betaLowerThan\": 1.5,\n  \"volumeMoreThan\": 100000,\n  \"volumeLowerThan\": null,\n  \"dividendMoreThan\": null,\n  \"dividendLowerThan\": null,\n  \"isEtf\": false,\n  \"isFund\": false,\n  \"isActivelyTrading\": true,\n  \"sector\": null,\n  \"industry\": null,\n  \"country\": \"US\",\n  \"exchange\": \"NYSE,NASDAQ\",\n  \"limit\": 10000\n}",
+											"options": {
+												"raw": {
+													"language": "json"
+												}
+											}
 										},
-										{
-											"key": "detail",
-											"value": "F",
-											"disabled": true
+										"url": {
+											"raw": "http://localhost:18080/dart/abroad/company/financial/fmp/screener/stock",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "18080",
+											"path": [
+												"dart",
+												"abroad",
+												"company",
+												"financial",
+												"fmp",
+												"screener",
+												"stock"
+											]
 										}
-									]
+									},
+									"response": []
 								}
-							},
-							"response": []
+							]
 						},
 						{
-							"name": "기업 가치 계산(다건) V2",
-							"request": {
-								"method": "GET",
-								"header": [],
-								"url": {
-									"raw": "http://localhost:18080/dart/main/cal/per_value/abroad/arr/v2?symbol=TSLA, AMZN, MSFT, NVDA, GOOGL, META, NFLX, JPM, V, BAC",
-									"protocol": "http",
-									"host": [
-										"localhost"
-									],
-									"port": "18080",
-									"path": [
-										"dart",
-										"main",
-										"cal",
-										"per_value",
-										"abroad",
-										"arr",
-										"v2"
-									],
-									"query": [
-										{
-											"key": "symbol",
-											"value": "TSLA, AMZN, MSFT, NVDA, GOOGL, META, NFLX, JPM, V, BAC",
-											"description": "AAPL(0000320193), KO(0000021344), KGC,KO"
+							"name": "스케줄러",
+							"item": [
+								{
+									"name": "추천 기업 필터링 스케줄러(테스트)",
+									"request": {
+										"method": "POST",
+										"header": [],
+										"body": {
+											"mode": "raw",
+											"raw": "{\n    \"maxCount\" : 5\n}",
+											"options": {
+												"raw": {
+													"language": "json"
+												}
+											}
 										},
-										{
-											"key": "detail",
-											"value": "F",
-											"disabled": true
+										"url": {
+											"raw": "http://localhost:18080/dart/test/recommended-stocks",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "18080",
+											"path": [
+												"dart",
+												"test",
+												"recommended-stocks"
+											]
 										}
-									]
+									},
+									"response": []
+								},
+								{
+									"name": "추천 기업 조회(미국)",
+									"request": {
+										"method": "GET",
+										"header": [],
+										"url": {
+											"raw": "http://localhost:18080/dart/main/rem/usstock",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "18080",
+											"path": [
+												"dart",
+												"main",
+												"rem",
+												"usstock"
+											]
+										}
+									},
+									"response": []
 								}
-							},
-							"response": []
+							]
 						}
 					]
 				},
@@ -1965,39 +2246,6 @@
 							"response": []
 						}
 					]
-				},
-				{
-					"name": "기업 가치 수동계산(한글)",
-					"request": {
-						"method": "POST",
-						"header": [],
-						"body": {
-							"mode": "raw",
-							"raw": "{\n    \"단위\" : \"\",\n    \"전전기영업이익\" : \"\",\n    \"전기영업이익\" : \"\",\n    \"당기영업이익\" : \"\",\n    \"유동자산합계\" : \"\",\n    \"유동부채합계\" : \"\",\n    \"유동비율\" : \"\",\n    \"투자자산\" : \"\",\n    \"고정부채\" : \"\",\n    \"발행주식수\" : \"\"\n}",
-							"options": {
-								"raw": {
-									"language": "json"
-								}
-							}
-						},
-						"url": {
-							"raw": "http://localhost:18080/dart/main/cal/per_value/manual/ko",
-							"protocol": "http",
-							"host": [
-								"localhost"
-							],
-							"port": "18080",
-							"path": [
-								"dart",
-								"main",
-								"cal",
-								"per_value",
-								"manual",
-								"ko"
-							]
-						}
-					},
-					"response": []
 				}
 			]
 		},

@@ -5,6 +5,8 @@ import com.finance.dart.api.abroad.service.US_StockCalFromSecService;
 import com.finance.dart.api.common.dto.CompanySharePriceCalculator;
 import com.finance.dart.api.common.dto.CompanySharePriceResult;
 import com.finance.dart.api.common.service.PerShareValueCalculationService;
+import com.finance.dart.api.common.service.RecommendedCompanyService;
+import com.finance.dart.api.common.service.schedule.RecommendedStocksProcessor;
 import com.finance.dart.api.domestic.service.DomesticStockCalculationService;
 import com.finance.dart.common.dto.CommonResponse;
 import jakarta.annotation.Nullable;
@@ -28,6 +30,7 @@ public class MainController {
     private final US_StockCalFromSecService US_StockCalFromSecService;              // 미국주식계산 서비스(SEC)
     private final US_StockCalFromFpmService US_StockCalFromFmpService;              // 미국주식계산 서비스(FMP)
     private final PerShareValueCalculationService perShareValueCalculationService;  // 가치계산 서비스
+    private final RecommendedCompanyService recommendedCompanyService;              // 기업추천 서비스
 
 
     /**
@@ -196,6 +199,19 @@ public class MainController {
         responseMap.put("result", response);
 
         return new ResponseEntity<>(responseMap, HttpStatus.OK);
+    }
+
+    /**
+     * 추천 미국 거래소 기업 조회
+     * @return
+     */
+    @GetMapping("/rem/usstock")
+    public ResponseEntity<CommonResponse<List<RecommendedStocksProcessor.RecommendedStockData>>> findRecommenedCompany() {
+
+        CommonResponse<List<RecommendedStocksProcessor.RecommendedStockData>> response =
+                new CommonResponse<>(recommendedCompanyService.getAbroadCompany());
+
+        return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
 }
