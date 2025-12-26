@@ -12,4 +12,21 @@ public class RedisKeyGenerator {
         return "compvalue:abroad:calvalue:"+version+":"+symbol;
     }
 
+    /**
+     * 추천 종목 전체 목록
+     * @return compvalue:abroad:recommended:all
+     */
+    public static String genRecommendedStocksAll() {
+        return "compvalue:abroad:recommended:all";
+    }
+
+    /**
+     * 추천 종목 개별 데이터
+     * @param symbol 기업티커
+     * @return compvalue:abroad:recommended:stock:{symbol}
+     */
+    public static String genRecommendedStock(String symbol) {
+        return "compvalue:abroad:recommended:stock:" + symbol;
+    }
+
 }
