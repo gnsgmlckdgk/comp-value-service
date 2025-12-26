@@ -641,7 +641,13 @@ public class US_StockCalFromFpmService {
         resultDetail.set유동부채합계(liabilitiesCurrent);
 
         //@ 유동비율
-        String ratio = CalUtil.divide(assetsCurrent, liabilitiesCurrent, 2, RoundingMode.HALF_UP);  // 백분율은 제외
+        String ratio;
+        if("0".equals(assetsCurrent) && "0".equals(liabilitiesCurrent)) {
+            // 유동자산과 유동부채가 모두 0인 경우: 보수적으로 1.0 설정 (전액 차감)
+            ratio = "1.0";
+        } else {
+            ratio = CalUtil.divide(assetsCurrent, liabilitiesCurrent, 2, RoundingMode.HALF_UP);  // 백분율은 제외
+        }
         calParam.setCurrentRatio(ratio);
         resultDetail.set유동비율(ratio);
 
