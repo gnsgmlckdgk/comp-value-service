@@ -31,6 +31,8 @@ import java.util.List;
 @Service
 public class StockEvaluationService {
 
+    private final int MAX_EVALUATION_SYMBOLS = 50;  // 한번에 조회할 수 있는 최대 개수
+
     private final RedisComponent redisComponent;
     private final US_StockCalFromFpmService stockCalFromFpmService;
     private final CompanyProfileSearchService profileSearchService;
@@ -44,6 +46,17 @@ public class StockEvaluationService {
         List<StockEvaluationResponse> responses = new ArrayList<>();
 
         if (request.getSymbols() == null || request.getSymbols().isEmpty()) {
+            return responses;
+        }
+
+        if(request.getSymbols().size() > MAX_EVALUATION_SYMBOLS) {
+            StockEvaluationResponse errorResponse = StockEvaluationResponse.builder()
+                    .symbol("")
+                    .totalScore(0.0)
+                    .grade("ERROR")
+                    .recommendation("평가 실패: 거래 당 " + MAX_EVALUATION_SYMBOLS + "건 이하로 조회가능합니다.")
+                    .build();
+            responses.add(errorResponse);
             return responses;
         }
 
