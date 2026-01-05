@@ -41,9 +41,17 @@ public class StockEvaluationResponse {
     private String currentPrice;
 
     /**
+     * <pre>
      * 주당 가치 (적정가)
+     * 적정가가 너무 높은 경우 조정됨
+     * </pre>
      */
     private String fairValue;
+
+    /**
+     * 계산된 주당 가치 (실제 계산값)
+     */
+    private String calFairValue;
 
     /**
      * 가격 차이 (주당가치 - 현재가격)

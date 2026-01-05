@@ -109,6 +109,7 @@ public class StockEvaluationService {
         CompanySharePriceResultDetail detail = result.get상세정보();
         String currentPrice = result.get현재가격();
         String fairValue = result.get주당가치();
+        String calFairValue = result.get계산된주당가치();
 
         List<StepEvaluationDetail> stepDetails = new ArrayList<>();
         double step1Score = evaluateStep1(detail, stepDetails);
@@ -133,6 +134,7 @@ public class StockEvaluationService {
                 .companyName(result.get기업명())
                 .currentPrice(currentPrice)
                 .fairValue(fairValue)
+                .calFairValue(calFairValue)
                 .priceDifference(priceDifference)
                 .priceGapPercent(priceGapPercent)
                 .totalScore(totalScore)

@@ -20,9 +20,10 @@ public class CompanySharePriceResult {
 
     private String 주식코드 = "";
 
-    private String 주당가치 = "";    // 1주당 가치
-    private String 현재가격 = "";    // 현재주식가격
-    private String 확인시간 = "";    // yyyyMMdd HH:mm:ss
+    private String 주당가치 = "";         // 1주당 가치 (조정된 적정가)
+    private String 계산된주당가치 = "";   // 계산된 원본 적정가
+    private String 현재가격 = "";         // 현재주식가격
+    private String 확인시간 = "";         // yyyyMMdd HH:mm:ss
 
     @JsonInclude(JsonInclude.Include.NON_NULL)
     private CompanySharePriceResultDetail 상세정보;

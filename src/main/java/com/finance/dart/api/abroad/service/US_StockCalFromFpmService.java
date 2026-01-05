@@ -19,6 +19,8 @@ import com.finance.dart.api.abroad.dto.fmp.incomestatement.IncomeStatReqDto;
 import com.finance.dart.api.abroad.dto.fmp.incomestatement.IncomeStatResDto;
 import com.finance.dart.api.abroad.dto.fmp.incomestatgrowth.IncomeStatGrowthReqDto;
 import com.finance.dart.api.abroad.dto.fmp.incomestatgrowth.IncomeStatGrowthResDto;
+import com.finance.dart.api.abroad.dto.fmp.chart.StockPriceVolumeReqDto;
+import com.finance.dart.api.abroad.dto.fmp.chart.StockPriceVolumeResDto;
 import com.finance.dart.api.abroad.service.fmp.*;
 import com.finance.dart.api.common.constants.RequestContextConst;
 import com.finance.dart.api.common.context.RequestContext;
@@ -37,7 +39,10 @@ import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
@@ -64,6 +69,7 @@ public class US_StockCalFromFpmService {
     private final IncomeStatGrowthService incomeStatGrowthService;              // 영업이익 성장률 조회 서비스
     private final CompanyProfileSearchService profileSearchService;             // 해외기업 정보조회 서비스
     private final ForexQuoteService forexQuoteService;                          // 외환시세 조회 서비스
+    private final StockPriceVolumeService stockPriceVolumeService;              // 주가 차트 조회 서비스
 
     private final PerShareValueCalculationService sharePriceCalculatorService;  // 가치 계산 서비스
 
@@ -280,10 +286,40 @@ public class US_StockCalFromFpmService {
 
 
         //@2. 계산 ---------------------------------
-        result.set주당가치(sharePriceCalculatorService.calPerValueV3(calParam, resultDetail));
+        String 계산된주당가치 = sharePriceCalculatorService.calPerValueV3(calParam, resultDetail);
+
+        //@2-1. 3년내 최고가 조회 및 적정가 조정 ---------------------------------
+        String 조정된주당가치;
+        Double historicalHigh3Y = get3YearsHistoricalHighPrice(symbol);
+
+        if (historicalHigh3Y != null) {
+            BigDecimal 계산값 = new BigDecimal(계산된주당가치);
+            BigDecimal 최고가 = BigDecimal.valueOf(historicalHigh3Y);
+
+            if (계산값.compareTo(최고가) > 0) {
+                // 계산된 적정가가 3년내 최고가보다 높으면 최고가의 80%로 조정
+                조정된주당가치 = 최고가.multiply(new BigDecimal("0.8"))
+                                  .setScale(2, RoundingMode.HALF_UP)
+                                  .toPlainString();
+                if(log.isDebugEnabled()) {
+                    log.debug("[적정가 조정] {} - 계산값({}) > 3년내최고가({}) → 조정값({})",
+                             symbol, 계산값, 최고가, 조정된주당가치);
+                }
+            } else {
+                조정된주당가치 = 계산된주당가치;
+            }
+        } else {
+            // 3년내 최고가 조회 실패시 원본값 사용 (신생기업 등)
+            조정된주당가치 = 계산된주당가치;
+            if(log.isDebugEnabled()) {
+                log.debug("[적정가 조정] {} - 3년내 최고가 데이터 없음, 원본값 사용", symbol);
+            }
+        }
 
         //@3. 결과 조립 ---------------------------------
         if(StringUtil.isStringEmpty(result.get결과메시지())) result.set결과메시지("정상 처리되었습니다.");
+        result.set주당가치(조정된주당가치);              // 조정된 적정가
+        result.set계산된주당가치(계산된주당가치);        // 원본 계산값
         result.set현재가격(StringUtil.defaultString(companyProfile.getPrice()));
         result.set확인시간(DateUtil.getToday("yyyy-MM-dd HH:mm:ss"));
         setRstDetailContextData(resultDetail);
@@ -849,6 +885,48 @@ public class US_StockCalFromFpmService {
         if(resList == null || resList.size() == 0) return -1;
 
         return resList.get(0).getPrice();
+    }
+
+    /**
+     * 3년 내 최고가 조회
+     * @param symbol 심볼
+     * @return 3년 내 최고가 (조회 실패 또는 데이터 없으면 null)
+     */
+    private Double get3YearsHistoricalHighPrice(String symbol) {
+        try {
+            // 3년 전 날짜 계산
+            LocalDate today = LocalDate.now();
+            LocalDate threeYearsAgo = today.minusYears(3);
+
+            StockPriceVolumeReqDto reqDto = new StockPriceVolumeReqDto(
+                symbol,
+                threeYearsAgo.format(DateTimeFormatter.ISO_LOCAL_DATE),
+                today.format(DateTimeFormatter.ISO_LOCAL_DATE)
+            );
+
+            Thread.sleep(TRSC_DELAY);
+            List<StockPriceVolumeResDto> priceHistory = stockPriceVolumeService.findStockPriceVolume(reqDto);
+
+            // 데이터 없으면 null 반환 (신생기업의 경우 3년 데이터 없을 수 있음)
+            if (priceHistory == null || priceHistory.isEmpty()) {
+                if(log.isDebugEnabled()) log.debug("[3년내 최고가] {} - 데이터 없음 (신생기업 가능성)", symbol);
+                return null;
+            }
+
+            // 최고가 추출
+            Double highPrice = priceHistory.stream()
+                .map(StockPriceVolumeResDto::getHigh)
+                .filter(h -> h != null)
+                .max(Double::compare)
+                .orElse(null);
+
+            if(log.isDebugEnabled()) log.debug("[3년내 최고가] {} - ${}", symbol, highPrice);
+            return highPrice;
+
+        } catch (Exception e) {
+            log.warn("[3년내 최고가] {} - 조회 실패: {}", symbol, e.getMessage());
+            return null;
+        }
     }
 
 }
