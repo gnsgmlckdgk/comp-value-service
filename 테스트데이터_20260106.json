@@ -37,7 +37,7 @@
 						"header": [],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n    \"type\" : \"AK\",\n    \"key\" : \"session:15295d5d-6a52-4f4b-9fdf-8a3315d3be90\",\n    \"value\" : \"\",\n    \"ttl\" : 20,\n    \"pattern\" : \"*\"\n}",
+							"raw": "{\n    \"type\" : \"PD\",\n    \"key\" : \"compvalue\",\n    \"pattern\" : \"compvalue:*\",\n    \"value\" : \"\",\n    \"ttl\" : 20\n}",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -56,7 +56,8 @@
 								"test",
 								"redis"
 							]
-						}
+						},
+						"description": "``` java\nString result = switch (type) {\n            case \"I\" -> {\n                if(ttl == 0) redisComponent.saveValue(key, value);\n                else redisComponent.saveValueWithTtl(key, value, ttl);\n                yield \"등록완료\";\n            }\n            case \"S\" -> redisComponent.getValue(key);\n            case \"D\" -> {\n                redisComponent.deleteKey(key);\n                yield \"삭제완료\";\n            }\n            case \"PS\" -> redisComponent.scanKeys(pattern).toString();\n            case \"PD\" -> {\n                redisComponent.deleteKeys(pattern);\n                yield \"삭제완료\";\n            }\n            default -> \"타입값이 올바르지 않습니다.\";\n        };\n\n ```"
 					},
 					"response": []
 				},
@@ -66,7 +67,7 @@
 						"method": "GET",
 						"header": [],
 						"url": {
-							"raw": "http://localhost:18080/dart/test/schedule",
+							"raw": "http://localhost:18080/dart/schd/schedule",
 							"protocol": "http",
 							"host": [
 								"localhost"
@@ -74,7 +75,7 @@
 							"port": "18080",
 							"path": [
 								"dart",
-								"test",
+								"schd",
 								"schedule"
 							]
 						}
@@ -682,7 +683,7 @@
 						"header": [],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n    \"username\" : \"user01\",\n    \"password\" : \"1q2w3e4r1!\"\n}",
+							"raw": "{\n    \"username\" : \"user01\",\n    \"password\" : \"\"\n}",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -743,6 +744,27 @@
 								"member",
 								"me",
 								"info"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "로그인 여부 확인",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:18080/dart/member/me",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "18080",
+							"path": [
+								"dart",
+								"member",
+								"me"
 							]
 						}
 					},
@@ -1186,7 +1208,7 @@
 												"method": "GET",
 												"header": [],
 												"url": {
-													"raw": "http://localhost:18080/dart/main/cal/per_value/abroad/v3?symbol=KO",
+													"raw": "http://localhost:18080/dart/main/cal/per_value/abroad/v3?symbol=AAPL",
 													"protocol": "http",
 													"host": [
 														"localhost"
@@ -1203,7 +1225,7 @@
 													"query": [
 														{
 															"key": "symbol",
-															"value": "KO",
+															"value": "AAPL",
 															"description": "AAPL(0000320193), KO(0000021344), KGC"
 														}
 													]
@@ -2009,6 +2031,41 @@
 										}
 									},
 									"response": []
+								},
+								{
+									"name": "최근 12개월 재무 비율 조회 (다건)",
+									"request": {
+										"method": "POST",
+										"header": [],
+										"body": {
+											"mode": "raw",
+											"raw": "{\n    \"symbol\" : [\"AAPL\", \"KO\", \"MSFT\"]\n}",
+											"options": {
+												"raw": {
+													"language": "json"
+												}
+											}
+										},
+										"url": {
+											"raw": "http://localhost:18080/dart/abroad/company/financial/fmp/ratios/ttm/arr",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "18080",
+											"path": [
+												"dart",
+												"abroad",
+												"company",
+												"financial",
+												"fmp",
+												"ratios",
+												"ttm",
+												"arr"
+											]
+										}
+									},
+									"response": []
 								}
 							]
 						},
@@ -2090,7 +2147,7 @@
 										"header": [],
 										"body": {
 											"mode": "raw",
-											"raw": "{\n  \"marketCapMoreThan\": 2000000000,\n  \"marketCapLowerThan\": 500000000000,\n  \"priceMoreThan\": null,\n  \"priceLowerThan\": null,\n  \"betaMoreThan\": null,\n  \"betaLowerThan\": 1.5,\n  \"volumeMoreThan\": 100000,\n  \"volumeLowerThan\": null,\n  \"dividendMoreThan\": null,\n  \"dividendLowerThan\": null,\n  \"isEtf\": false,\n  \"isFund\": false,\n  \"isActivelyTrading\": true,\n  \"sector\": null,\n  \"industry\": null,\n  \"country\": \"US\",\n  \"exchange\": \"NYSE,NASDAQ\",\n  \"limit\": 1500\n}",
+											"raw": "{\n  \"marketCapMoreThan\": 2000000000,\n  \"marketCapLowerThan\": 500000000000,\n  \"priceMoreThan\": null,\n  \"priceLowerThan\": null,\n  \"betaMoreThan\": null,\n  \"betaLowerThan\": 1.5,\n  \"volumeMoreThan\": 100000,\n  \"volumeLowerThan\": null,\n  \"dividendMoreThan\": null,\n  \"dividendLowerThan\": null,\n  \"isEtf\": false,\n  \"isFund\": false,\n  \"isActivelyTrading\": true,\n  \"sector\": null,\n  \"industry\": null,\n  \"country\": \"US\",\n  \"exchange\": \"NYSE,NASDAQ\",\n  \"limit\": 10000\n}",
 											"options": {
 												"raw": {
 													"language": "json"
@@ -2112,6 +2169,94 @@
 												"fmp",
 												"screener",
 												"stock"
+											]
+										}
+									},
+									"response": []
+								}
+							]
+						},
+						{
+							"name": "추천기업",
+							"item": [
+								{
+									"name": "추천 기업 필터링 스케줄러(수동)",
+									"request": {
+										"method": "POST",
+										"header": [],
+										"body": {
+											"mode": "raw",
+											"raw": "{\n    \"maxCount\" : 5\n}",
+											"options": {
+												"raw": {
+													"language": "json"
+												}
+											}
+										},
+										"url": {
+											"raw": "http://localhost:18080/dart/schd/recommended-stocks",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "18080",
+											"path": [
+												"dart",
+												"schd",
+												"recommended-stocks"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "추천 기업 조회(미국)",
+									"request": {
+										"method": "GET",
+										"header": [],
+										"url": {
+											"raw": "http://localhost:18080/dart/main/rem/usstock",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "18080",
+											"path": [
+												"dart",
+												"main",
+												"rem",
+												"usstock"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "추천 기업 평가",
+									"request": {
+										"method": "POST",
+										"header": [],
+										"body": {
+											"mode": "raw",
+											"raw": "{\n  \"symbols\": [\"AAPL\", \"MSFT\"]\n}\n",
+											"options": {
+												"raw": {
+													"language": "json"
+												}
+											}
+										},
+										"url": {
+											"raw": "http://localhost:18080/dart/main/evaluate/stocks",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "18080",
+											"path": [
+												"dart",
+												"main",
+												"evaluate",
+												"stocks"
 											]
 										}
 									},

@@ -68,9 +68,6 @@ public class CommonInterceptor implements HandlerInterceptor {
             }
         }
 
-        // 사용자 권한세션 갱신(TTL 갱신)
-        sessionService.updateLoginRolesTTL(request, userRoles);
-
         return true;
     }
 

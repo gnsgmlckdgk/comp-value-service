@@ -194,9 +194,30 @@ public class SessionService {
             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED); // 401
             throw new UnauthorizedException(ResponseEnum.LOGIN_SESSION_EXPIRED.getMessage());
         } else {
-            // 세션 관련 모든 Redis 키 TTL 일괄 갱신
-            refreshSessionTtl(sessionId);
+            // TTL 갱신 제외 URL 체크
+            String requestUri = request.getRequestURI();
+            if (!isExcludedFromTtlRefresh(requestUri)) {
+                // 세션 관련 모든 Redis 키 TTL 일괄 갱신
+                refreshSessionTtl(sessionId);
+            }
         }
+    }
+
+    /**
+     * TTL 갱신에서 제외할 URL 목록
+     */
+    private static final List<String> TTL_REFRESH_EXCLUDE_URLS = List.of(
+            "/member/me/info"
+    );
+
+    /**
+     * TTL 갱신 제외 URL인지 확인
+     * @param requestUri 요청 URI
+     * @return true: 갱신 제외
+     */
+    private boolean isExcludedFromTtlRefresh(String requestUri) {
+        return TTL_REFRESH_EXCLUDE_URLS.stream()
+                .anyMatch(requestUri::endsWith);
     }
 
     /**
