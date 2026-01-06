@@ -1,11 +1,8 @@
 package com.finance.dart.member.dto;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
-import jakarta.persistence.*;
-import jakarta.validation.constraints.NotBlank;
 import lombok.Data;
 
-import java.time.LocalDateTime;
 import java.util.List;
 
 @Data
@@ -18,4 +15,7 @@ public class Member {
     private String createdAt;
     private String updatedAt;
     private List<String> roles;
+
+    private Long sessionTTL;    // 로그인세션남은시간
+    private Long rolesTTL;      // 권한세션남은시간
 }

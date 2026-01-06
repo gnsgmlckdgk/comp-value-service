@@ -104,4 +104,14 @@ public class RedisComponent {
         return keys;
     }
 
+    /**
+     * redis TTL 확인
+     * @param key
+     * @return -1 : TTL없는 키
+     *         -2 : 키 없음
+     */
+    public Long getTTL(String key) {
+        return redisTemplate.getExpire(key, TimeUnit.SECONDS);
+    }
+
 }
