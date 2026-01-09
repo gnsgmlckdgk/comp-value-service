@@ -98,14 +98,20 @@ public class HttpClientComponent {
     ) {
         final HttpEntity<?> httpEntity = ClientUtil.createHttpEntity(MediaType.APPLICATION_JSON);
 
+        if(log.isDebugEnabled()) {
+            log.debug("API 호출 시작 - URL: {}, Method: {}", url, method);
+        }
+
         long startTime = DateUtil.getCurrentNanoTime();
 
-        ResponseEntity<T> response = restTemplate.exchange(url, method, httpEntity, responseType);
+        // URL이 이미 인코딩되어 있으므로 URI.create()를 사용하여 이중 인코딩 방지
+        URI uri = URI.create(url);
+        ResponseEntity<T> response = restTemplate.exchange(uri, method, httpEntity, responseType);
 
         long elapsedTime = DateUtil.getElapsedTimeMillis(startTime);
         if(log.isDebugEnabled()) {
-            log.debug("API 호출 완료 - URL: {}, Method: {}, 응답시간: {}ms, 상태코드: {}",
-                url, method, elapsedTime, response.getStatusCode());
+            log.debug("API 호출 완료 - URI: {}, Method: {}, 응답시간: {}ms, 상태코드: {}, 응답바디: {}",
+                uri, method, elapsedTime, response.getStatusCode(), response.getBody());
         }
 
         return response;

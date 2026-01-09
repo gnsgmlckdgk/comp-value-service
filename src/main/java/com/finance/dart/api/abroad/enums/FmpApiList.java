@@ -5,6 +5,43 @@ import org.springframework.http.HttpMethod;
 
 public enum FmpApiList {
 
+    /** ========== 관련 코드 조회(섹터 및 산업군 관련 조회) ========== **/
+
+    AvailableExchanges (
+            "Available Exchanges API",
+            "https://financialmodelingprep.com/stable/available-exchanges",
+            HttpMethod.GET,
+            "https://site.financialmodelingprep.com/developer/docs/stable/available-exchanges",
+            "거래소 목록 조회 API"
+    ),
+
+
+    AvailableSectors (
+            "Available Sectors API",
+            "https://financialmodelingprep.com/stable/available-sectors",
+            HttpMethod.GET,
+            "https://site.financialmodelingprep.com/developer/docs/stable/available-sectors",
+            "사용가능한 섹터 목록 조회 API"
+    ),
+
+    AvailablesIndustries (
+            "Available Industries API",
+            "https://financialmodelingprep.com/stable/available-industries",
+            HttpMethod.GET,
+            "https://site.financialmodelingprep.com/developer/docs/stable/available-industries",
+            "사용가능한 산업 목록 조회 API"
+    ),
+
+    AvailableCountries (
+            "Available Countries API",
+            "https://financialmodelingprep.com/stable/available-countries",
+            HttpMethod.GET,
+            "https://site.financialmodelingprep.com/developer/docs/stable/available-countries",
+            "사용가능한 국가코드 목록 조회 API"
+    ),
+
+
+
     /** ========== 거래소 및 기업 조회 ========== **/
 
     /** Symbol로 거래소심볼 조회 **/

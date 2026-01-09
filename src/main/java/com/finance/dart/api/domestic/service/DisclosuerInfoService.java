@@ -43,7 +43,7 @@ public class DisclosuerInfoService {
         Map<String, String> queryParams = gson.fromJson(gson.toJson(request), Map.class);
         queryParams.put("crtfc_key", apiKey);
 
-        url = ClientUtil.addQueryParams(url, queryParams, true);
+        url = ClientUtil.addQueryParams(url, queryParams, true, true);
         ResponseEntity<DisclosuerInfoResDTO> response = httpClientComponent.exchangeSync(
                 url,
                 HttpMethod.GET,

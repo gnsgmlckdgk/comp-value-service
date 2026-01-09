@@ -4,6 +4,9 @@ import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 
+import java.io.UnsupportedEncodingException;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
@@ -60,7 +63,20 @@ public class ClientUtil {
      */
     public static String addQueryParams(String url, Object paramDto, boolean emptyKeyDelete) {
         Map<String, String> paramMap = ConvertUtil.toStringMap(ConvertUtil.toMap(paramDto, false), false);
-        return addQueryParams(url, paramMap, emptyKeyDelete);
+        return addQueryParams(url, paramMap, emptyKeyDelete, true);
+    }
+
+    /**
+     * URL 쿼리파라미터 추가
+     * @param url
+     * @param paramDto
+     * @param emptyKeyDelete
+     * @param urlEncode URL 인코딩 여부
+     * @return
+     */
+    public static String addQueryParams(String url, Object paramDto, boolean emptyKeyDelete, boolean urlEncode) {
+        Map<String, String> paramMap = ConvertUtil.toStringMap(ConvertUtil.toMap(paramDto, false), false);
+        return addQueryParams(url, paramMap, emptyKeyDelete, urlEncode);
     }
 
     /**
@@ -68,9 +84,10 @@ public class ClientUtil {
      * @param url
      * @param paramData
      * @param emptyKeyDelete true: 빈 데이터 키 삭제
+     * @param urlEncode URL 인코딩 여부
      * @return
      */
-    public static String addQueryParams(String url, Map<String, String> paramData, boolean emptyKeyDelete) {
+    public static String addQueryParams(String url, Map<String, String> paramData, boolean emptyKeyDelete, boolean urlEncode) {
 
         Map<String, String> newParamData = new LinkedHashMap<>();
 
@@ -82,7 +99,7 @@ public class ClientUtil {
             newParamData.put(key, data);
         }
 
-        return addQueryParams(url, newParamData);
+        return addQueryParams(url, newParamData, urlEncode);
     }
 
     /**
@@ -92,6 +109,17 @@ public class ClientUtil {
      * @return
      */
     public static String addQueryParams(String url, Map<String, String> paramData) {
+        return addQueryParams(url, paramData, true);
+    }
+
+    /**
+     * URL 쿼리파라미터 추가
+     * @param url
+     * @param paramData
+     * @param urlEncode URL 인코딩 여부
+     * @return
+     */
+    public static String addQueryParams(String url, Map<String, String> paramData, boolean urlEncode) {
 
         final String FIRST_DIV = "?";
         final String DIV = "&";
@@ -104,13 +132,33 @@ public class ClientUtil {
         for(String key : workParamData.keySet()) {
             String data = workParamData.get(key);
 
+            // URL 인코딩 처리
+            String encodedData = urlEncode ? urlEncode(data) : (data != null ? data : "");
+
             if(first) {
-                url += FIRST_DIV + key + "=" + data;
+                url += FIRST_DIV + key + "=" + encodedData;
                 first = false;
-            } else url += DIV + key + "=" + data;
+            } else url += DIV + key + "=" + encodedData;
         }
 
         return url;
+    }
+
+    /**
+     * URL 인코딩
+     * @param value
+     * @return
+     */
+    private static String urlEncode(String value) {
+        if (value == null) {
+            return "";
+        }
+        try {
+            return URLEncoder.encode(value, StandardCharsets.UTF_8.toString());
+        } catch (UnsupportedEncodingException e) {
+            // UTF-8은 항상 지원되므로 이 예외는 발생하지 않음
+            return value;
+        }
     }
 
     /**

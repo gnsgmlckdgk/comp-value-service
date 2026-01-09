@@ -49,6 +49,9 @@ public class StockScreenerResDto {
     /** ETF 여부 */
     private Boolean isEtf;
 
+    /** 펀드 여부 */
+    private Boolean isFund;
+
     /** 활발히 거래되는 종목 여부 */
     private Boolean isActivelyTrading;
 }
