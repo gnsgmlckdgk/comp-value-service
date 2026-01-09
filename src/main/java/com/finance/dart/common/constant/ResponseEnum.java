@@ -14,6 +14,8 @@ public enum ResponseEnum {
     NOT_FOUND("40400", "정보가 존재하지 않습니다.", false, HttpStatus.BAD_REQUEST),
     DUPLICATE("40000", "이미 존재하는 정보입니다.", false, HttpStatus.BAD_REQUEST),
 
+    // 파라미터 오류
+    EMPTY_REQ_PARAM("50000", "요청 파라미터 데이터가 존재하지 않습니다.", false, HttpStatus.BAD_REQUEST),
 
     // 로그인 관련 오류
     LOGIN_NOTFOUND_USER("40400", "user가 존재하지 않습니다.", false, HttpStatus.BAD_REQUEST),

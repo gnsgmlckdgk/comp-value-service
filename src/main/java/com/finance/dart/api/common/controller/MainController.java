@@ -4,6 +4,7 @@ import com.finance.dart.api.abroad.service.US_StockCalFromFpmService;
 import com.finance.dart.api.abroad.service.US_StockCalFromSecService;
 import com.finance.dart.api.common.dto.CompanySharePriceCalculator;
 import com.finance.dart.api.common.dto.CompanySharePriceResult;
+import com.finance.dart.api.common.dto.RecommendedStocksReqDto;
 import com.finance.dart.api.common.dto.evaluation.StockEvaluationRequest;
 import com.finance.dart.api.common.dto.evaluation.StockEvaluationResponse;
 import com.finance.dart.api.common.service.PerShareValueCalculationService;
@@ -11,7 +12,9 @@ import com.finance.dart.api.common.service.RecommendedCompanyService;
 import com.finance.dart.api.common.service.StockEvaluationService;
 import com.finance.dart.api.common.service.schedule.RecommendedStocksProcessor;
 import com.finance.dart.api.domestic.service.DomesticStockCalculationService;
+import com.finance.dart.common.constant.ResponseEnum;
 import com.finance.dart.common.dto.CommonResponse;
+import com.finance.dart.common.exception.BizException;
 import jakarta.annotation.Nullable;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -206,14 +209,25 @@ public class MainController {
     }
 
     /**
-     * 추천 미국 거래소 기업 조회
+     * 추천 미국 거래소 기업 조회 (프로파일별)
+     * @param recommendedStocksReqDto 요청 DTO (profileName 필수)
      * @return
      */
-    @GetMapping("/rem/usstock")
-    public ResponseEntity<CommonResponse<List<RecommendedStocksProcessor.RecommendedStockData>>> findRecommenedCompany() {
+    @PostMapping("/rem/usstock")
+    public ResponseEntity<CommonResponse<List<RecommendedStocksProcessor.RecommendedStockData>>>
+    findRecommenedCompany(@RequestBody RecommendedStocksReqDto recommendedStocksReqDto) {
+
+        // profileName 필수 체크
+        if (recommendedStocksReqDto.getProfileName() == null ||
+            recommendedStocksReqDto.getProfileName().trim().isEmpty()) {
+            throw new BizException(ResponseEnum.EMPTY_REQ_PARAM);
+        }
+
+        List<RecommendedStocksProcessor.RecommendedStockData> data =
+                recommendedCompanyService.getAbroadCompanyByProfile(recommendedStocksReqDto.getProfileName());
 
         CommonResponse<List<RecommendedStocksProcessor.RecommendedStockData>> response =
-                new CommonResponse<>(recommendedCompanyService.getAbroadCompany());
+                new CommonResponse<>(data);
 
         return new ResponseEntity<>(response, HttpStatus.OK);
     }

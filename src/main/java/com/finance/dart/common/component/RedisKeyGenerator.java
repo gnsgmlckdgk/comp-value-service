@@ -13,9 +13,20 @@ public class RedisKeyGenerator {
     }
 
     /**
-     * 추천 종목 전체 목록
-     * @return compvalue:abroad:recommended:all
+     * 추천 종목 전체 목록 (프로파일별)
+     * @param profileName 프로파일명
+     * @return compvalue:abroad:recommended:{profileName}
      */
+    public static String genRecommendedStocksByProfile(String profileName) {
+        return "compvalue:abroad:recommended:" + profileName;
+    }
+
+    /**
+     * 추천 종목 전체 목록 (Deprecated - 프로파일별로 분리됨)
+     * @return compvalue:abroad:recommended:all
+     * @deprecated Use {@link #genRecommendedStocksByProfile(String)} instead
+     */
+    @Deprecated
     public static String genRecommendedStocksAll() {
         return "compvalue:abroad:recommended:all";
     }

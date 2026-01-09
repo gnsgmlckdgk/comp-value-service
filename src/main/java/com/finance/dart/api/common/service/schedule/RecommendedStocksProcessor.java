@@ -9,6 +9,9 @@ import com.finance.dart.api.abroad.dto.fmp.stockscreener.StockScreenerReqDto;
 import com.finance.dart.api.abroad.dto.fmp.stockscreener.StockScreenerResDto;
 import com.finance.dart.api.abroad.service.fmp.RatiosTtmService;
 import com.finance.dart.api.abroad.service.fmp.StockScreenerService;
+import com.finance.dart.api.common.entity.RecommendProfileConfigEntity;
+import com.finance.dart.api.common.entity.RecommendProfileEntity;
+import com.finance.dart.api.common.repository.RecommendProfileRepository;
 import com.finance.dart.common.component.RedisComponent;
 import com.finance.dart.common.component.RedisKeyGenerator;
 import com.finance.dart.common.util.DateUtil;
@@ -16,6 +19,7 @@ import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 
@@ -46,6 +50,7 @@ public class RecommendedStocksProcessor {
     private final RatiosTtmService ratiosTtmService;
     private final RedisComponent redisComponent;
     private final ObjectMapper objectMapper;
+    private final RecommendProfileRepository recommendProfileRepository;
 
     /**
      * 추천 종목 처리 실행
@@ -62,81 +67,184 @@ public class RecommendedStocksProcessor {
         log.info("[추천종목] 처리 시작");
 
         try {
-            // 1. Stock Screener로 후보군 조회
-            List<StockScreenerResDto> candidates = fetchCandidates();
-            if (candidates == null || candidates.isEmpty()) {
-                log.warn("[추천종목] 후보군이 없습니다.");
+            // 1. 활성화된 프로파일 조회
+            List<RecommendProfileEntity> activeProfiles = recommendProfileRepository
+                    .findByIsActiveAndUseYnOrderBySortOrder("Y", "Y");
+
+            if (activeProfiles == null || activeProfiles.isEmpty()) {
+                log.warn("[추천종목] 활성화된 프로파일이 없습니다.");
                 return;
             }
 
-            log.info("[추천종목] 후보군 조회 완료: {}건", candidates.size());
+            log.info("[추천종목] 활성화된 프로파일 수: {}개", activeProfiles.size());
 
-            // 최대 처리 건수 적용
-            if (maxCount > 0 && candidates.size() > maxCount) {
-                candidates = candidates.subList(0, maxCount);
-                log.info("[추천종목] 최대 처리 건수 적용: {}건", maxCount);
+            // 2. API 호출 결과 캐싱용 맵 (심볼별로 캐싱)
+            Map<String, StockScreenerResDto> screenerCache = new HashMap<>();
+            Map<String, List<RatiosTtmResDto>> ratiosCache = new HashMap<>();
+
+            // 3. 프로파일별로 독립적으로 처리
+            for (int profileIdx = 0; profileIdx < activeProfiles.size(); profileIdx++) {
+                RecommendProfileEntity profile = activeProfiles.get(profileIdx);
+                log.info("[추천종목] 프로파일 처리 시작 [{}/{}]: {}",
+                        profileIdx + 1, activeProfiles.size(), profile.getProfileName());
+
+                processProfile(profile, maxCount, screenerCache, ratiosCache);
+
+                log.info("[추천종목] 프로파일 처리 완료 [{}/{}]: {}",
+                        profileIdx + 1, activeProfiles.size(), profile.getProfileName());
             }
 
-            // 2. 배치 단위로 RatiosTTM 조회 및 필터링
-            Map<String, RecommendedStockData> undervaluedStocks = new LinkedHashMap<>();
+            log.info("[추천종목] 전체 처리 완료");
 
-            List<List<StockScreenerResDto>> batches = partitionList(candidates, API_CALLS_PER_MINUTE);
-            log.info("[추천종목] 배치 수: {} (배치당 {}건)", batches.size(), API_CALLS_PER_MINUTE);
-
-            for (int i = 0; i < batches.size(); i++) {
-                List<StockScreenerResDto> batch = batches.get(i);
-                log.info("[추천종목] 배치 {}/{} 처리 중 ({}건)", i + 1, batches.size(), batch.size());
-
-                // RatiosTTM 병렬 조회
-                Map<String, RecommendedStockData> batchResult = processBatch(batch);
-                undervaluedStocks.putAll(batchResult);
-
-                log.info("[추천종목] 배치 {}/{} 완료 - 저평가 종목: {}건", i + 1, batches.size(), batchResult.size());
-
-                // 마지막 배치가 아니면 1분 대기 (API 호출 제한)
-                if (i < batches.size() - 1) {
-                    log.info("[추천종목] API 호출 제한으로 {}초 대기", API_BATCH_INTERVAL_MS / 1000);
-                    Thread.sleep(API_BATCH_INTERVAL_MS);
-                }
-            }
-
-            log.info("[추천종목] 필터링 완료 - 총 저평가 종목: {}건", undervaluedStocks.size());
-
-            // 3. Redis에 저장
-            saveToRedis(undervaluedStocks);
-
-            log.info("[추천종목] 처리 완료");
-
-        } catch (InterruptedException e) {
-            log.error("[추천종목] 처리 중단됨", e);
-            Thread.currentThread().interrupt();
         } catch (Exception e) {
             log.error("[추천종목] 처리 중 오류 발생", e);
         }
     }
 
     /**
-     * Stock Screener로 후보군 조회
+     * 프로파일별 처리
      */
-    private List<StockScreenerResDto> fetchCandidates() {
-        StockScreenerReqDto reqDto = new StockScreenerReqDto();
-        reqDto.setMarketCapMoreThan(2_000_000_000L);
-        reqDto.setMarketCapLowerThan(500_000_000_000L);
-        reqDto.setBetaLowerThan(1.5);
-        reqDto.setVolumeMoreThan(100_000L);
-        reqDto.setIsEtf(false);
-        reqDto.setIsFund(false);
-        reqDto.setIsActivelyTrading(true);
-        reqDto.setExchange("NYSE,NASDAQ");
-        reqDto.setLimit(10000);
+    private void processProfile(
+            RecommendProfileEntity profile,
+            int maxCount,
+            Map<String, StockScreenerResDto> screenerCache,
+            Map<String, List<RatiosTtmResDto>> ratiosCache) {
 
-        return stockScreenerService.findStockScreener(reqDto);
+        try {
+            RecommendProfileConfigEntity config = profile.getConfig();
+            if (config == null) {
+                log.warn("[추천종목] 프로파일 '{}' 의 설정이 없습니다. 건너뜁니다.", profile.getProfileName());
+                return;
+            }
+
+            // 1. Stock Screener로 후보군 조회 (캐시 활용)
+            List<StockScreenerResDto> candidates = fetchCandidates(config, screenerCache);
+            if (candidates == null || candidates.isEmpty()) {
+                log.warn("[추천종목] 프로파일 '{}' 후보군이 없습니다.", profile.getProfileName());
+                return;
+            }
+
+            log.info("[추천종목] 프로파일 '{}' 후보군 조회 완료: {}건", profile.getProfileName(), candidates.size());
+
+            // 최대 처리 건수 적용
+            if (maxCount > 0 && candidates.size() > maxCount) {
+                candidates = candidates.subList(0, maxCount);
+                log.info("[추천종목] 프로파일 '{}' 최대 처리 건수 적용: {}건", profile.getProfileName(), maxCount);
+            }
+
+            // 2. 배치 단위로 RatiosTTM 조회 및 필터링
+            Map<String, RecommendedStockData> undervaluedStocks = new LinkedHashMap<>();
+
+            List<List<StockScreenerResDto>> batches = partitionList(candidates, API_CALLS_PER_MINUTE);
+            log.info("[추천종목] 프로파일 '{}' 배치 수: {} (배치당 {}건)",
+                    profile.getProfileName(), batches.size(), API_CALLS_PER_MINUTE);
+
+            for (int i = 0; i < batches.size(); i++) {
+                List<StockScreenerResDto> batch = batches.get(i);
+                log.info("[추천종목] 프로파일 '{}' 배치 {}/{} 처리 중 ({}건)",
+                        profile.getProfileName(), i + 1, batches.size(), batch.size());
+
+                // RatiosTTM 병렬 조회 (캐시 활용)
+                Map<String, RecommendedStockData> batchResult = processBatch(batch, config, ratiosCache);
+                undervaluedStocks.putAll(batchResult);
+
+                log.info("[추천종목] 프로파일 '{}' 배치 {}/{} 완료 - 저평가 종목: {}건",
+                        profile.getProfileName(), i + 1, batches.size(), batchResult.size());
+
+                // 마지막 배치가 아니면 대기 (API 호출 제한)
+                if (i < batches.size() - 1) {
+                    log.info("[추천종목] 프로파일 '{}' API 호출 제한으로 {}초 대기",
+                            profile.getProfileName(), API_BATCH_INTERVAL_MS / 1000);
+                    Thread.sleep(API_BATCH_INTERVAL_MS);
+                }
+            }
+
+            log.info("[추천종목] 프로파일 '{}' 필터링 완료 - 총 저평가 종목: {}건",
+                    profile.getProfileName(), undervaluedStocks.size());
+
+            // 3. Redis에 프로파일별로 저장
+            saveToRedis(profile.getProfileName(), undervaluedStocks);
+
+        } catch (InterruptedException e) {
+            log.error("[추천종목] 프로파일 '{}' 처리 중단됨", profile.getProfileName(), e);
+            Thread.currentThread().interrupt();
+        } catch (Exception e) {
+            log.error("[추천종목] 프로파일 '{}' 처리 중 오류 발생", profile.getProfileName(), e);
+        }
     }
 
     /**
-     * 배치 단위로 RatiosTTM 조회 및 필터링
+     * Stock Screener로 후보군 조회 (캐시 활용)
      */
-    private Map<String, RecommendedStockData> processBatch(List<StockScreenerResDto> batch) {
+    private List<StockScreenerResDto> fetchCandidates(
+            RecommendProfileConfigEntity config,
+            Map<String, StockScreenerResDto> screenerCache) {
+
+        // Config 기반으로 요청 DTO 생성
+        StockScreenerReqDto reqDto = buildStockScreenerRequest(config);
+
+        // API 호출
+        List<StockScreenerResDto> results = stockScreenerService.findStockScreener(reqDto);
+
+        // 캐시에 저장 (다음 프로파일에서 재사용)
+        if (results != null) {
+            for (StockScreenerResDto dto : results) {
+                screenerCache.putIfAbsent(dto.getSymbol(), dto);
+            }
+        }
+
+        return results;
+    }
+
+    /**
+     * Config 기반으로 StockScreenerReqDto 생성
+     */
+    private StockScreenerReqDto buildStockScreenerRequest(RecommendProfileConfigEntity config) {
+        StockScreenerReqDto reqDto = new StockScreenerReqDto();
+
+        // 시가총액
+        if (config.getMarketCapMin() != null) {
+            reqDto.setMarketCapMoreThan(config.getMarketCapMin());
+        }
+        if (config.getMarketCapMax() != null) {
+            reqDto.setMarketCapLowerThan(config.getMarketCapMax());
+        }
+
+        // 베타
+        if (config.getBetaMax() != null) {
+            reqDto.setBetaLowerThan(config.getBetaMax().doubleValue());
+        }
+
+        // 거래량
+        if (config.getVolumeMin() != null) {
+            reqDto.setVolumeMoreThan(config.getVolumeMin());
+        }
+
+        // ETF/펀드 포함 여부 (Y/N -> boolean)
+        reqDto.setIsEtf("Y".equals(config.getIsEtf()));
+        reqDto.setIsFund("Y".equals(config.getIsFund()));
+        reqDto.setIsActivelyTrading("Y".equals(config.getIsActivelyTrading()));
+
+        // 거래소
+        if (config.getExchange() != null) {
+            reqDto.setExchange(config.getExchange());
+        }
+
+        // 조회 제한
+        if (config.getScreenerLimit() != null) {
+            reqDto.setLimit(config.getScreenerLimit());
+        }
+
+        return reqDto;
+    }
+
+    /**
+     * 배치 단위로 RatiosTTM 조회 및 필터링 (캐시 활용)
+     */
+    private Map<String, RecommendedStockData> processBatch(
+            List<StockScreenerResDto> batch,
+            RecommendProfileConfigEntity config,
+            Map<String, List<RatiosTtmResDto>> ratiosCache) {
 
         Map<String, RecommendedStockData> result = new LinkedHashMap<>();
 
@@ -145,16 +253,26 @@ public class RecommendedStocksProcessor {
                 .map(StockScreenerResDto::getSymbol)
                 .toList();
 
-        // RatiosTTM 요청 DTO 생성
-        List<RatiosTtmReqDto> reqDtoList = symbols.stream()
-                .map(RatiosTtmReqDto::new)
-                .toList();
+        // 캐시에 없는 심볼만 조회
+        List<String> symbolsToFetch = new ArrayList<>();
+        for (String symbol : symbols) {
+            if (!ratiosCache.containsKey(symbol)) {
+                symbolsToFetch.add(symbol);
+            }
+        }
 
-        // 병렬 조회
-        RatiosTtmArrReqDto arrReqDto = new RatiosTtmArrReqDto();
-        arrReqDto.setSymbol(symbols);
+        // 캐시에 없는 것만 API 호출
+        if (!symbolsToFetch.isEmpty()) {
+            RatiosTtmArrReqDto arrReqDto = new RatiosTtmArrReqDto();
+            arrReqDto.setSymbol(symbolsToFetch);
 
-        Map<String, List<RatiosTtmResDto>> ratiosMap = ratiosTtmService.findRatiosTTM(arrReqDto);
+            Map<String, List<RatiosTtmResDto>> newRatiosMap = ratiosTtmService.findRatiosTTM(arrReqDto);
+
+            // 캐시에 저장
+            if (newRatiosMap != null) {
+                ratiosCache.putAll(newRatiosMap);
+            }
+        }
 
         // StockScreener 결과를 Map으로 변환 (빠른 조회용)
         Map<String, StockScreenerResDto> screenerMap = new HashMap<>();
@@ -162,10 +280,9 @@ public class RecommendedStocksProcessor {
             screenerMap.put(dto.getSymbol(), dto);
         }
 
-        // 필터링 및 결과 생성
-        for (Map.Entry<String, List<RatiosTtmResDto>> entry : ratiosMap.entrySet()) {
-            String symbol = entry.getKey();
-            List<RatiosTtmResDto> ratiosList = entry.getValue();
+        // 필터링 및 결과 생성 (캐시에서 조회)
+        for (String symbol : symbols) {
+            List<RatiosTtmResDto> ratiosList = ratiosCache.get(symbol);
 
             if (ratiosList == null || ratiosList.isEmpty()) {
                 continue;
@@ -173,8 +290,8 @@ public class RecommendedStocksProcessor {
 
             RatiosTtmResDto ratios = ratiosList.get(0);
 
-            // 저평가 필터링
-            if (isUndervalued(ratios)) {
+            // Config 기반 저평가 필터링
+            if (isUndervalued(ratios, config)) {
                 StockScreenerResDto screenerData = screenerMap.get(symbol);
                 RecommendedStockData stockData = new RecommendedStockData(screenerData, ratios);
                 result.put(symbol, stockData);
@@ -185,54 +302,70 @@ public class RecommendedStocksProcessor {
     }
 
     /**
-     * 저평가 종목 판단
+     * 저평가 종목 판단 (Config 기반)
      */
-    public boolean isUndervalued(RatiosTtmResDto ratios) {
+    public boolean isUndervalued(RatiosTtmResDto ratios, RecommendProfileConfigEntity config) {
         Double pe = ratios.getPeRatioTTM();
         Double pb = ratios.getPriceToBookRatioTTM();
         Double roe = ratios.getReturnOnEquityTTM();
         Double debtEquity = ratios.getDebtEquityRatioTTM();
 
-        // 1. PER 기준 (핵심): 0 < PE < 15
-        boolean validPE = pe != null && pe > 0 && pe < 15;
+        // 1. PER 기준
+        boolean validPE = true;
+        if (config.getPeRatioMin() != null || config.getPeRatioMax() != null) {
+            if (pe == null) {
+                validPE = false;
+            } else {
+                if (config.getPeRatioMin() != null && pe < config.getPeRatioMin().doubleValue()) {
+                    validPE = false;
+                }
+                if (config.getPeRatioMax() != null && pe > config.getPeRatioMax().doubleValue()) {
+                    validPE = false;
+                }
+            }
+        }
 
-        // 2. PBR 기준: PB < 2 (null이면 통과)
-        boolean validPB = pb == null || (pb > 0 && pb < 2);
+        // 2. PBR 기준
+        boolean validPB = true;
+        if (config.getPbRatioMax() != null) {
+            if (pb != null && pb > config.getPbRatioMax().doubleValue()) {
+                validPB = false;
+            }
+        }
 
-        // 3. ROE 기준: ROE > 10% (null이면 통과)
-        boolean validROE = roe == null || roe > 0.10;
+        // 3. ROE 기준
+        boolean validROE = true;
+        if (config.getRoeMin() != null) {
+            if (roe == null || roe < config.getRoeMin().doubleValue()) {
+                validROE = false;
+            }
+        }
 
-        // 4. 부채비율: D/E < 1.0 (null이면 통과)
-        boolean validDebt = debtEquity == null || debtEquity < 1.0;
+        // 4. 부채비율
+        boolean validDebt = true;
+        if (config.getDebtEquityMax() != null) {
+            if (debtEquity != null && debtEquity > config.getDebtEquityMax().doubleValue()) {
+                validDebt = false;
+            }
+        }
 
         return validPE && validPB && validROE && validDebt;
     }
 
     /**
-     * Redis에 저장
+     * Redis에 프로파일별로 저장
      */
-    private void saveToRedis(Map<String, RecommendedStockData> undervaluedStocks) {
+    private void saveToRedis(String profileName, Map<String, RecommendedStockData> undervaluedStocks) {
         try {
-            // 전체 데이터를 하나의 키에 저장
-            String allDataKey = RedisKeyGenerator.genRecommendedStocksAll();
-            String allDataJson = objectMapper.writeValueAsString(undervaluedStocks);
-            redisComponent.saveValueWithTtl(allDataKey, allDataJson, REDIS_TTL_HOURS, TimeUnit.HOURS);
-            log.info("[추천종목] Redis 저장 완료 - Key: {}, 종목 수: {}", allDataKey, undervaluedStocks.size());
-
-            // 개별 종목도 별도 저장 (선택적)
-//            for (Map.Entry<String, RecommendedStockData> entry : undervaluedStocks.entrySet()) {
-//                String symbol = entry.getKey();
-//                RecommendedStockData data = entry.getValue();
-//
-//                String key = RedisKeyGenerator.genRecommendedStock(symbol);
-//                String json = objectMapper.writeValueAsString(data);
-//                redisComponent.saveValueWithTtl(key, json, REDIS_TTL_HOURS, TimeUnit.HOURS);
-//            }
-
-            log.info("[추천종목] 개별 종목 Redis 저장 완료: {}건", undervaluedStocks.size());
+            // 프로파일별로 데이터를 저장
+            String profileDataKey = RedisKeyGenerator.genRecommendedStocksByProfile(profileName);
+            String profileDataJson = objectMapper.writeValueAsString(undervaluedStocks);
+            redisComponent.saveValueWithTtl(profileDataKey, profileDataJson, REDIS_TTL_HOURS, TimeUnit.HOURS);
+            log.info("[추천종목] 프로파일 '{}' Redis 저장 완료 - Key: {}, 종목 수: {}",
+                    profileName, profileDataKey, undervaluedStocks.size());
 
         } catch (JsonProcessingException e) {
-            log.error("[추천종목] Redis 저장 중 JSON 변환 오류", e);
+            log.error("[추천종목] 프로파일 '{}' Redis 저장 중 JSON 변환 오류", profileName, e);
         }
     }
 
