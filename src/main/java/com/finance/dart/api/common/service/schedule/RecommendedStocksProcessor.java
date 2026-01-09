@@ -69,7 +69,7 @@ public class RecommendedStocksProcessor {
         try {
             // 1. 활성화된 프로파일 조회
             List<RecommendProfileEntity> activeProfiles = recommendProfileRepository
-                    .findByIsActiveAndUseYnOrderBySortOrder("Y", "Y");
+                    .findByIsActiveOrderBySortOrder("Y");
 
             if (activeProfiles == null || activeProfiles.isEmpty()) {
                 log.warn("[추천종목] 활성화된 프로파일이 없습니다.");

@@ -17,7 +17,7 @@ public class RecommendProfileDto {
     private String profileDesc;             // 프로파일 설명
     private String isActive;                // 활성여부 (Y: 스케줄러에서 사용, N: 미사용)
     private Integer sortOrder;              // 정렬순서
-    private String useYn;                   // 사용여부 (Y: 사용, N: 삭제처리)
+    //private String useYn;                   // 사용여부 (Y: 사용, N: 삭제처리)
     private String createdAt;               // 등록일시
     private String updatedAt;               // 수정일시
 

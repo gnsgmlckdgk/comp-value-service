@@ -5,7 +5,6 @@ import com.finance.dart.api.common.entity.RecommendProfileConfigEntity;
 import com.finance.dart.api.common.entity.RecommendProfileEntity;
 import com.finance.dart.api.common.repository.RecommendProfileConfigRepository;
 import com.finance.dart.api.common.repository.RecommendProfileRepository;
-import com.finance.dart.common.util.ConvertUtil;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -45,7 +44,6 @@ public class RecommendProfileService {
         profileEntity.setProfileDesc(dto.getProfileDesc());
         profileEntity.setIsActive(dto.getIsActive() != null ? dto.getIsActive() : "N");
         profileEntity.setSortOrder(dto.getSortOrder() != null ? dto.getSortOrder() : 0);
-        profileEntity.setUseYn(dto.getUseYn() != null ? dto.getUseYn() : "Y");
 
         RecommendProfileEntity savedProfile = profileRepository.save(profileEntity);
 
@@ -90,7 +88,6 @@ public class RecommendProfileService {
         if (dto.getProfileDesc() != null) profileEntity.setProfileDesc(dto.getProfileDesc());
         if (dto.getIsActive() != null) profileEntity.setIsActive(dto.getIsActive());
         if (dto.getSortOrder() != null) profileEntity.setSortOrder(dto.getSortOrder());
-        if (dto.getUseYn() != null) profileEntity.setUseYn(dto.getUseYn());
         profileEntity.setUpdatedAt(LocalDateTime.now());
 
         RecommendProfileEntity savedProfile = profileRepository.save(profileEntity);
@@ -141,10 +138,10 @@ public class RecommendProfileService {
     }
 
     /**
-     * 프로파일 목록 조회 (사용중인 프로파일만)
+     * 프로파일 목록 조회 (전체)
      */
     public List<RecommendProfileDto> getProfileList() {
-        List<RecommendProfileEntity> profileList = profileRepository.findByUseYnOrderBySortOrder("Y");
+        List<RecommendProfileEntity> profileList = profileRepository.findAllByOrderBySortOrder();
 
         return profileList.stream()
                 .map(profile -> {
@@ -158,7 +155,7 @@ public class RecommendProfileService {
      * 활성화된 프로파일 목록 조회 (스케줄러에서 사용)
      */
     public List<RecommendProfileDto> getActiveProfileList() {
-        List<RecommendProfileEntity> profileList = profileRepository.findByIsActiveAndUseYnOrderBySortOrder("Y", "Y");
+        List<RecommendProfileEntity> profileList = profileRepository.findByIsActiveOrderBySortOrder("Y");
 
         return profileList.stream()
                 .map(profile -> {
@@ -223,7 +220,6 @@ public class RecommendProfileService {
         dto.setProfileDesc(profile.getProfileDesc());
         dto.setIsActive(profile.getIsActive());
         dto.setSortOrder(profile.getSortOrder());
-        dto.setUseYn(profile.getUseYn());
         dto.setCreatedAt(profile.getCreatedAt() != null ? profile.getCreatedAt().toString() : null);
         dto.setUpdatedAt(profile.getUpdatedAt() != null ? profile.getUpdatedAt().toString() : null);
 

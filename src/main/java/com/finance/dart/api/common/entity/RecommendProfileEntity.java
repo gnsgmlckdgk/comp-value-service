@@ -37,8 +37,8 @@ public class RecommendProfileEntity {
     @Column(name = "sort_order")
     private Integer sortOrder = 0;          // 정렬순서
 
-    @Column(name = "use_yn", nullable = false, length = 1)
-    private String useYn = "Y";             // 사용여부 (Y: 사용, N: 삭제처리)
+//    @Column(name = "use_yn", nullable = false, length = 1)
+//    private String useYn = "Y";             // 사용여부 (Y: 사용, N: 삭제처리)
 
     private LocalDateTime createdAt = LocalDateTime.now();  // 등록일시
     private LocalDateTime updatedAt = LocalDateTime.now();  // 수정일시
