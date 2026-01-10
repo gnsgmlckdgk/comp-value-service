@@ -142,7 +142,7 @@ public class SessionService {
      * @return
      */
     public ResponseCookie deleteSessionCookie(String sessionKey) {
-        return ResponseCookie.from("SESSIONID", "")
+        return ResponseCookie.from("SESSION_ID", "")
                 .path("/")
                 .maxAge(0)
                 .httpOnly(true)
@@ -171,11 +171,30 @@ public class SessionService {
     }
 
     /**
-     * 로그인 세션 확인 및 오류응답
+     * 로그인 세션 확인 및 오류응답 (TTL 갱신 포함)
+     * @param request
+     * @param response
+     * @deprecated sessionCheckOnly + Interceptor 후처리에서 TTL 갱신 방식으로 변경됨
+     */
+    @Deprecated
+    public void sessionCheckErrResponse(HttpServletRequest request, HttpServletResponse response) {
+        sessionCheckOnly(request, response);
+
+        // TTL 갱신 제외 URL 체크
+        String sessionId = getSessionId(request);
+        String requestUri = request.getRequestURI();
+        if (!isExcludedFromTtlRefresh(requestUri)) {
+            refreshSessionTtl(sessionId);
+        }
+    }
+
+    /**
+     * 로그인 세션 확인만 수행 (TTL 갱신 없음)
+     * - TTL 갱신은 Interceptor 후처리에서 쿠키와 함께 수행
      * @param request
      * @param response
      */
-    public void sessionCheckErrResponse(HttpServletRequest request, HttpServletResponse response) {
+    public void sessionCheckOnly(HttpServletRequest request, HttpServletResponse response) {
 
         // 쿠키에서 세션ID 추출
         String sessionId = getSessionId(request);
@@ -193,13 +212,6 @@ public class SessionService {
 
             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED); // 401
             throw new UnauthorizedException(ResponseEnum.LOGIN_SESSION_EXPIRED.getMessage());
-        } else {
-            // TTL 갱신 제외 URL 체크
-            String requestUri = request.getRequestURI();
-            if (!isExcludedFromTtlRefresh(requestUri)) {
-                // 세션 관련 모든 Redis 키 TTL 일괄 갱신
-                refreshSessionTtl(sessionId);
-            }
         }
     }
 
@@ -215,7 +227,7 @@ public class SessionService {
      * @param requestUri 요청 URI
      * @return true: 갱신 제외
      */
-    private boolean isExcludedFromTtlRefresh(String requestUri) {
+    public boolean isExcludedFromTtlRefresh(String requestUri) {
         return TTL_REFRESH_EXCLUDE_URLS.stream()
                 .anyMatch(requestUri::endsWith);
     }

@@ -8,6 +8,8 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.ResponseCookie;
 import org.springframework.stereotype.Component;
 import org.springframework.web.method.HandlerMethod;
 import org.springframework.web.servlet.HandlerInterceptor;
@@ -40,8 +42,8 @@ public class CommonInterceptor implements HandlerInterceptor {
             return true;
         }
 
-        //@2. 로그인 세션 확인
-        sessionService.sessionCheckErrResponse(request, response);
+        //@2. 로그인 세션 확인 (TTL 갱신은 후처리에서 수행)
+        sessionService.sessionCheckOnly(request, response);
 
         //@3. 권한 체크 (어노테이션)
         EndPointConfig.RequireRole requireRole =
@@ -77,5 +79,17 @@ public class CommonInterceptor implements HandlerInterceptor {
 
         if(log.isDebugEnabled()) log.debug("후처리");
 
+        // 세션 TTL 갱신 (Redis + 쿠키 동시 갱신)
+        String sessionId = sessionService.getSessionId(request);
+        if (sessionId != null && sessionService.sessionCheck(request)) {
+            String requestUri = request.getRequestURI();
+            if (!sessionService.isExcludedFromTtlRefresh(requestUri)) {
+                // Redis TTL 갱신
+                sessionService.refreshSessionTtl(sessionId);
+                // 쿠키 TTL 갱신
+                ResponseCookie cookie = sessionService.createSessionCookie(sessionId);
+                response.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());
+            }
+        }
     }
 }
