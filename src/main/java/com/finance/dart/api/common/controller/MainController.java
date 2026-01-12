@@ -81,111 +81,22 @@ public class MainController {
     }
 
     /**
-     * <pre>
-     * 해외기업
-     * 한 기업의 한주당 가치 계산 V1
-     * </pre>
-     * @param symbol
+     * 국내 기업의 한주당 가치 수동 계산
+     * @param companySharePriceCalculator
      * @return
      */
-    @GetMapping("/cal/per_value/abroad/v1")
-    public ResponseEntity<Object> calAbroadCompanyStockPerValueV1(@RequestParam("symbol") String symbol)
-            throws Exception {
+    @PostMapping("/cal/per_value/manual")
+    public ResponseEntity<Map> calCompanyStockPerValueManual(
+            @RequestBody CompanySharePriceCalculator companySharePriceCalculator
+    ) {
 
-//        CompanySharePriceResult responseBody =  US_StockCalFromSecService.calPerValue(symbol);  // SEC
-        CompanySharePriceResult responseBody = US_StockCalFromFmpService.calPerValueV1(symbol);   // FMP
+        String response = perShareValueCalculationService.calPerValue(companySharePriceCalculator);
+        if(log.isDebugEnabled()) log.debug("response = {}", response);
 
-        return new ResponseEntity<>(new CommonResponse<>(responseBody), HttpStatus.OK);
-    }
+        Map<String, Object> responseMap = new LinkedHashMap<>();
+        responseMap.put("result", response);
 
-    /**
-     * <pre>
-     * 해외기업
-     * 한 기업의 한주당 가치 계산 V2
-     * </pre>
-     * @param symbol
-     * @return
-     * @throws Exception
-     */
-    @GetMapping("/cal/per_value/abroad/v2")
-    public ResponseEntity<Object> calAbroadCompanyStockPerValueV2(@RequestParam("symbol") String symbol)
-            throws Exception {
-
-        CompanySharePriceResult responseBody = US_StockCalFromFmpService.calPerValueV2(symbol);   // FMP
-
-        return new ResponseEntity<>(new CommonResponse<>(responseBody), HttpStatus.OK);
-    }
-
-    /**
-     * <pre>
-     * 해외기업
-     * 한 기업의 한주당 가치 계산 V3
-     * </pre>
-     * @param symbol
-     * @return
-     * @throws Exception
-     */
-    @GetMapping("/cal/per_value/abroad/v3")
-    public ResponseEntity<Object> calAbroadCompanyStockPerValueV3(@RequestParam("symbol") String symbol)
-            throws Exception {
-
-        CompanySharePriceResult responseBody = US_StockCalFromFmpService.calPerValueV3(symbol);   // FMP
-
-        return new ResponseEntity<>(new CommonResponse<>(responseBody), HttpStatus.OK);
-    }
-
-    /**
-     * 해외기업
-     * 한 기업의 한주당 가치 계산(다건) V1
-     * @param symbolList ',' 로 구분
-     * @param detail false: 상세정보 생략
-     * @return
-     * @throws Exception
-     */
-    @GetMapping("/cal/per_value/abroad/arr/v1")
-    public ResponseEntity<Object> calAbroadCompanyStockPerValueArrV1(@RequestParam("symbol") String symbolList,
-                                                                   @Nullable @RequestParam("detail") String detail)
-            throws Exception {
-
-        List<CompanySharePriceResult> responseBody = US_StockCalFromFmpService.calPerValueListV1(symbolList, detail);   // FMP
-
-        return new ResponseEntity<>(new CommonResponse<>(responseBody), HttpStatus.OK);
-    }
-
-    /**
-     * 해외기업
-     * 한 기업의 한주당 가치 계산(다건) V2
-     * @param symbolList ',' 로 구분
-     * @param detail false: 상세정보 생략
-     * @return
-     * @throws Exception
-     */
-    @GetMapping("/cal/per_value/abroad/arr/v2")
-    public ResponseEntity<Object> calAbroadCompanyStockPerValueArrV2(@RequestParam("symbol") String symbolList,
-                                                                   @Nullable @RequestParam("detail") String detail)
-            throws Exception {
-
-        List<CompanySharePriceResult> responseBody = US_StockCalFromFmpService.calPerValueListV2(symbolList, detail);   // FMP
-
-        return new ResponseEntity<>(new CommonResponse<>(responseBody), HttpStatus.OK);
-    }
-
-    /**
-     * 해외기업
-     * 한 기업의 한주당 가치 계산(다건) V3
-     * @param symbolList ',' 로 구분
-     * @param detail false: 상세정보 생략
-     * @return
-     * @throws Exception
-     */
-    @GetMapping("/cal/per_value/abroad/arr/v3")
-    public ResponseEntity<Object> calAbroadCompanyStockPerValueArrV3(@RequestParam("symbol") String symbolList,
-                                                                     @Nullable @RequestParam("detail") String detail)
-            throws Exception {
-
-        List<CompanySharePriceResult> responseBody = US_StockCalFromFmpService.calPerValueListV3(symbolList, detail);   // FMP
-
-        return new ResponseEntity<>(new CommonResponse<>(responseBody), HttpStatus.OK);
+        return new ResponseEntity<>(responseMap, HttpStatus.OK);
     }
 
     /**
@@ -228,26 +139,6 @@ public class MainController {
         return new ResponseEntity<>(new CommonResponse<>(responseBody), HttpStatus.OK);
     }
 
-
-
-    /**
-     * 한 기업의 한주당 가치 수동 계산
-     * @param companySharePriceCalculator
-     * @return
-     */
-    @PostMapping("/cal/per_value/manual")
-    public ResponseEntity<Map> calCompanyStockPerValueManual(
-            @RequestBody CompanySharePriceCalculator companySharePriceCalculator
-            ) {
-
-        String response = perShareValueCalculationService.calPerValue(companySharePriceCalculator);
-        if(log.isDebugEnabled()) log.debug("response = {}", response);
-
-        Map<String, Object> responseMap = new LinkedHashMap<>();
-        responseMap.put("result", response);
-
-        return new ResponseEntity<>(responseMap, HttpStatus.OK);
-    }
 
     /**
      * 추천 미국 거래소 기업 조회 (프로파일별)
