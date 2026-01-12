@@ -18,10 +18,7 @@ import com.finance.dart.api.abroad.dto.fmp.incomestatgrowth.IncomeStatGrowthReqD
 import com.finance.dart.api.abroad.dto.fmp.incomestatgrowth.IncomeStatGrowthResDto;
 import com.finance.dart.api.abroad.dto.fmp.keymetrics.KeyMetricsReqDto;
 import com.finance.dart.api.abroad.dto.fmp.keymetrics.KeyMetricsResDto;
-import com.finance.dart.api.abroad.dto.fmp.quote.AfterTradeReqDto;
-import com.finance.dart.api.abroad.dto.fmp.quote.AfterTradeResDto;
-import com.finance.dart.api.abroad.dto.fmp.quote.StockQuoteReqDto;
-import com.finance.dart.api.abroad.dto.fmp.quote.StockQuoteResDto;
+import com.finance.dart.api.abroad.dto.fmp.quote.*;
 import com.finance.dart.api.abroad.dto.fmp.ratiosttm.RatiosTtmArrReqDto;
 import com.finance.dart.api.abroad.dto.fmp.ratiosttm.RatiosTtmReqDto;
 import com.finance.dart.api.abroad.dto.fmp.ratiosttm.RatiosTtmResDto;
@@ -182,7 +179,6 @@ public class FinStatFmpController {
      * <pre>
      * 주식시세 조회
      * 정규장
-     * forexQuote 간소화 버전
      * </pre>
      * @param requestDto
      * @return
@@ -191,6 +187,23 @@ public class FinStatFmpController {
     public ResponseEntity<CommonResponse<List<StockQuoteResDto>>> stockQuote(@RequestBody StockQuoteReqDto requestDto) {
 
         List<StockQuoteResDto> response = stockQuoteService.findStockQuote(requestDto);
+
+        return new ResponseEntity<>(new CommonResponse<>(response), HttpStatus.OK);
+    }
+
+    /**
+     * <pre>
+     * 주식시세 조회
+     * 정규장
+     * 간소화 버전
+     * </pre>
+     * @param requestDto
+     * @return
+     */
+    @PostMapping("/stockQuote/short")
+    public ResponseEntity<CommonResponse<List<StockQuoteShortResDto>>> stockQuoteShort(@RequestBody StockQuoteShortReqDto requestDto) {
+
+        List<StockQuoteShortResDto> response = stockQuoteService.findStockQuoteShort(requestDto);
 
         return new ResponseEntity<>(new CommonResponse<>(response), HttpStatus.OK);
     }

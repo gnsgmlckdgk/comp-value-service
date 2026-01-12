@@ -176,6 +176,15 @@ public enum FmpApiList {
             "외환 시세 조회 API"
     ),
 
+    /* 주식 시세 조회 */
+    StockQuote(
+            "Stock Quote API",
+            "https://financialmodelingprep.com/stable/quote",
+            HttpMethod.GET,
+            "https://site.financialmodelingprep.com/developer/docs/stable/quote",
+            "주식 시세 조회 API"
+    ),
+
     /** 주식 시세 조회(간소화) **/
     StockQuoteShort(
             "Stock Quote Short API",

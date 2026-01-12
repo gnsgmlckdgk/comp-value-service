@@ -4,9 +4,12 @@ import com.finance.dart.api.abroad.dto.fmp.forexquote.ForexQuoteReqDto;
 import com.finance.dart.api.abroad.dto.fmp.forexquote.ForexQuoteResDto;
 import com.finance.dart.api.abroad.dto.fmp.quote.AfterTradeReqDto;
 import com.finance.dart.api.abroad.dto.fmp.quote.AfterTradeResDto;
+import com.finance.dart.api.abroad.dto.fmp.quote.StockQuoteReqDto;
+import com.finance.dart.api.abroad.dto.fmp.quote.StockQuoteResDto;
 import com.finance.dart.api.abroad.service.fmp.AfterTradeService;
 import com.finance.dart.api.abroad.service.fmp.CompanyProfileSearchService;
 import com.finance.dart.api.abroad.service.fmp.ForexQuoteService;
+import com.finance.dart.api.abroad.service.fmp.StockQuoteService;
 import com.finance.dart.board.dto.TranRecordCurValueResDto;
 import com.finance.dart.board.dto.TranRecordDto;
 import com.finance.dart.board.dto.TranRecordFxRateResDto;
@@ -40,6 +43,7 @@ public class TranRecordService {
     private final MemberService memberService;
     private final CompanyProfileSearchService companyProfileSearchService;      // 기업 프로파일 검색 서비스
     private final ForexQuoteService forexQuoteService;                          // 외환시세 조회 서비스
+    private final StockQuoteService stockQuoteService;                          // 주식시세조회(간소화)
     private final AfterTradeService afterTradeService;                          // 애프터마켓 시세 조회 서비스
 
     // 병렬 처리용 스레드 풀 (최대 10개 동시 실행)
@@ -238,21 +242,21 @@ public class TranRecordService {
         tranRecordCurValueResDto.setSymbol(symbol);
 
         // 정규장과 애프터장 API 호출 (각 심볼에 대해 병렬로 실행됨)
-        List<ForexQuoteResDto> forexQuoteResDtoList = forexQuoteService.findForexQuote(new ForexQuoteReqDto(symbol));
+        List<StockQuoteResDto> stockQuoteResDtoList = stockQuoteService.findStockQuote(new StockQuoteReqDto(symbol));
         List<AfterTradeResDto> afterTradeResDtoList = afterTradeService.findAfterTrade(new AfterTradeReqDto(symbol));
 
         // 정규장 데이터 처리
-        if(forexQuoteResDtoList == null || forexQuoteResDtoList.isEmpty()) {
+        if(stockQuoteResDtoList == null || stockQuoteResDtoList.isEmpty()) {
             tranRecordCurValueResDto.setCurrentPrice(0.0);
         } else {
-            ForexQuoteResDto forexQuoteResDto = forexQuoteResDtoList.get(0);
-            tranRecordCurValueResDto.setCurrentPrice(forexQuoteResDto.getPrice());
+            StockQuoteResDto stockQuoteResDto = stockQuoteResDtoList.get(0);
+            tranRecordCurValueResDto.setCurrentPrice(stockQuoteResDto.getPrice());
 
             // 애프터장 데이터가 있고 더 최신이면 업데이트
             if(afterTradeResDtoList != null && !afterTradeResDtoList.isEmpty()) {
                 AfterTradeResDto afterTradeResDto = afterTradeResDtoList.get(0);
 
-                long quoteTimestamp = forexQuoteResDto.getTimestamp();      // 정규장
+                long quoteTimestamp = stockQuoteResDto.getTimestamp();      // 정규장
                 long afterTradeTimestamp = afterTradeResDto.getTimestamp(); // 애프터마켓
 
                 if(afterTradeTimestamp > quoteTimestamp) {  // 애프터마켓이 더 최신
