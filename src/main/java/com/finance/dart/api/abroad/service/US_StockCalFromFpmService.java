@@ -76,13 +76,13 @@ public class US_StockCalFromFpmService {
 
 
     /**
-     * 주당 가치 계산(다건)
+     * 주당 가치 계산(다건) V1
      * @param symbols
      * @param detail
      * @return
      * @throws Exception
      */
-    public List<CompanySharePriceResult> calPerValueList(String symbols, String detail) throws Exception {
+    public List<CompanySharePriceResult> calPerValueListV1(String symbols, String detail) throws Exception {
 
         List<CompanySharePriceResult> resultList = new LinkedList<>();
 
@@ -93,7 +93,7 @@ public class US_StockCalFromFpmService {
                 .toList();
 
         for(String symbol : symbolList) {
-            CompanySharePriceResult result = calPerValue(symbol);
+            CompanySharePriceResult result = calPerValueV1(symbol);
             if("F".equals(StringUtil.defaultString(detail))) result.set상세정보(null);
             resultList.add(result);
             Thread.sleep(TRSC_DELAY);   // 너무 빠르게 연속호출하면 타겟에서 거부할 수 있음
@@ -164,11 +164,11 @@ public class US_StockCalFromFpmService {
 
 
     /**
-     * 주당 가치 계산
+     * 주당 가치 계산 V1
      * @param symbol
      * @return
      */
-    public CompanySharePriceResult calPerValue(String symbol)
+    public CompanySharePriceResult calPerValueV1(String symbol)
             throws Exception {
 
         final String UNIT = "1";  // 1달러
@@ -317,6 +317,7 @@ public class US_StockCalFromFpmService {
         }
 
         //@3. 결과 조립 ---------------------------------
+        result.set버전("V3");
         if(StringUtil.isStringEmpty(result.get결과메시지())) result.set결과메시지("정상 처리되었습니다.");
         result.set주당가치(조정된주당가치);              // 조정된 적정가
         result.set계산된주당가치(계산된주당가치);        // 원본 계산값
