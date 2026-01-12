@@ -97,8 +97,8 @@ public class StockEvaluationService {
             result = new Gson().fromJson(cachedData, CompanySharePriceResult.class);
             log.debug("Loaded from Redis: {}", symbol);
         } else {
-            // Redis에 데이터 없음 -> calPerValueV3 실행
-            result = stockCalFromFpmService.calPerValueV3(symbol);
+            // Redis에 데이터 없음 -> calPerValue 최신버전 실행
+            result = stockCalFromFpmService.calPerValue(symbol);
             log.debug("Calculated new value: {}", symbol);
         }
 
@@ -155,6 +155,7 @@ public class StockEvaluationService {
                 .step4Score(step4Score)
                 .stepDetails(stepDetails)
                 .resultDetail(detail)
+                .calVersion(result.get버전())
                 .build();
     }
 

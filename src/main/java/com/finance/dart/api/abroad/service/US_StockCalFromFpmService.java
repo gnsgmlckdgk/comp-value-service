@@ -74,6 +74,29 @@ public class US_StockCalFromFpmService {
     private final PerShareValueCalculationService sharePriceCalculatorService;  // 가치 계산 서비스
 
 
+    /**
+     * 주당 가치 계산
+     * @param symbol
+     * @return
+     * @throws Exception
+     */
+    public CompanySharePriceResult calPerValue(String symbol) throws Exception {
+        return calPerValueV4(symbol);
+    }
+
+    /**
+     * 주당 가치 계산(다건)
+     * @param symbols
+     * @param detail
+     * @return
+     * @throws Exception
+     */
+    public List<CompanySharePriceResult> calPerValueList(String symbols, String detail) throws Exception {
+        return calPerValueListV4(symbols, detail);
+    }
+
+
+    // ==============================================================
 
     /**
      * 주당 가치 계산(다건) V1
@@ -154,6 +177,39 @@ public class US_StockCalFromFpmService {
 
         for(String symbol : symbolList) {
             CompanySharePriceResult result = calPerValueV3(symbol);
+            if("F".equals(StringUtil.defaultString(detail))) result.set상세정보(null);
+            resultList.add(result);
+            Thread.sleep(TRSC_DELAY);   // 너무 빠르게 연속호출하면 타겟에서 거부할 수 있음
+        }
+
+        return resultList;
+    }
+
+    /**
+     * 주당 가치 계산(다건) V4 - 섹터별 차별화
+     * @param symbols
+     * @param detail
+     * @return
+     * @throws Exception
+     */
+    public List<CompanySharePriceResult> calPerValueListV4(String symbols, String detail) throws Exception {
+
+        final int MAX_CAL_SYMBOL_SIZE = 30; // 한번에 조회 가능 건수
+
+        List<CompanySharePriceResult> resultList = new LinkedList<>();
+
+        if(symbols == null) return null;
+        List<String> symbolList = Arrays.stream(symbols.split(","))
+                .map(String::trim)
+                .filter(s -> !s.isEmpty())
+                .toList();
+
+        if(symbolList.size() > MAX_CAL_SYMBOL_SIZE) {
+            throw new BizException("동시 조회는 " + MAX_CAL_SYMBOL_SIZE + "건 까지만 가능합니다.");
+        }
+
+        for(String symbol : symbolList) {
+            CompanySharePriceResult result = calPerValueV4(symbol);
             if("F".equals(StringUtil.defaultString(detail))) result.set상세정보(null);
             resultList.add(result);
             Thread.sleep(TRSC_DELAY);   // 너무 빠르게 연속호출하면 타겟에서 거부할 수 있음
@@ -299,11 +355,11 @@ public class US_StockCalFromFpmService {
             if (계산값.compareTo(최고가) > 0) {
                 // 계산된 적정가가 3년내 최고가보다 높으면 최고가의 80%로 조정
                 조정된주당가치 = 최고가.multiply(new BigDecimal("0.8"))
-                                  .setScale(2, RoundingMode.HALF_UP)
-                                  .toPlainString();
+                        .setScale(2, RoundingMode.HALF_UP)
+                        .toPlainString();
                 if(log.isDebugEnabled()) {
                     log.debug("[적정가 조정] {} - 계산값({}) > 3년내최고가({}) → 조정값({})",
-                             symbol, 계산값, 최고가, 조정된주당가치);
+                            symbol, 계산값, 최고가, 조정된주당가치);
                 }
             } else {
                 조정된주당가치 = 계산된주당가치;
@@ -333,7 +389,91 @@ public class US_StockCalFromFpmService {
         return result;
     }
 
+    /**
+     * 섹터별 차별화 주당가치 계산 V4
+     * @param symbol
+     * @return
+     * @throws Exception
+     */
+    public CompanySharePriceResult calPerValueV4(String symbol)
+            throws Exception {
 
+        final String UNIT = "1";  // 1달러
+        final String resultDataRedisKey = RedisKeyGenerator.genAbroadCompValueRstData(symbol, "v4");
+
+        //@ Redis 저장값 확인(캐시 역할)
+        String saveData = redisComponent.getValue(resultDataRedisKey);
+        if(!StringUtil.isStringEmpty(saveData)) {
+            return new Gson().fromJson(saveData, CompanySharePriceResult.class);
+        }
+
+        CompanySharePriceResult result = new CompanySharePriceResult(); // 결과
+        result.set기업심볼(symbol);
+        CompanySharePriceResultDetail resultDetail = new CompanySharePriceResultDetail(UNIT);
+
+        //@1. 정보 조회 ---------------------------------
+        CompanyProfileDataResDto companyProfile = getCompanyProfile(symbol, result);
+        if(log.isDebugEnabled()) log.debug("기업 정보 = {}", companyProfile);
+        if(companyProfile == null) errorProcess(result, "기업 정보 조회에 실패했습니다.");
+
+        // 섹터 정보 추출
+        String sector = companyProfile.getSector();
+        if(log.isDebugEnabled()) log.debug("[V4] 섹터 정보: {}", sector);
+
+        CompanySharePriceCalculator calParam = getCalParamDataV3(symbol, result, resultDetail); // 계산 정보 (V3와 동일)
+        calParam.setUnit(UNIT);
+        if(log.isDebugEnabled()) log.debug("계산 정보 = {}", calParam);
+        if(calParam == null) errorProcess(result, "재무정보 조회에 실패했습니다.");
+
+
+        //@2. 계산 (섹터 정보 전달) ---------------------------------
+        String 계산된주당가치 = sharePriceCalculatorService.calPerValueV4(calParam, resultDetail, sector);
+
+        //@2-1. 3년내 최고가 조회 및 적정가 조정 ---------------------------------
+        String 조정된주당가치;
+        Double historicalHigh3Y = get3YearsHistoricalHighPrice(symbol);
+
+        if (historicalHigh3Y != null) {
+            BigDecimal 계산값 = new BigDecimal(계산된주당가치);
+            BigDecimal 최고가 = BigDecimal.valueOf(historicalHigh3Y);
+
+            if (계산값.compareTo(최고가) > 0) {
+                // 계산된 적정가가 3년내 최고가보다 높으면 최고가의 80%로 조정
+                조정된주당가치 = 최고가.multiply(new BigDecimal("0.8"))
+                                  .setScale(2, RoundingMode.HALF_UP)
+                                  .toPlainString();
+                if(log.isDebugEnabled()) {
+                    log.debug("[적정가 조정] {} - 계산값({}) > 3년내최고가({}) → 조정값({})",
+                             symbol, 계산값, 최고가, 조정된주당가치);
+                }
+            } else {
+                조정된주당가치 = 계산된주당가치;
+            }
+        } else {
+            // 3년내 최고가 조회 실패시 원본값 사용 (신생기업 등)
+            조정된주당가치 = 계산된주당가치;
+            if(log.isDebugEnabled()) {
+                log.debug("[적정가 조정] {} - 3년내 최고가 데이터 없음, 원본값 사용", symbol);
+            }
+        }
+
+        //@3. 결과 조립 ---------------------------------
+        result.set버전("V4");
+        result.set섹터(sector);  // 섹터 정보 추가
+        if(StringUtil.isStringEmpty(result.get결과메시지())) result.set결과메시지("정상 처리되었습니다.");
+        result.set주당가치(조정된주당가치);              // 조정된 적정가
+        result.set계산된주당가치(계산된주당가치);        // 원본 계산값
+        result.set현재가격(StringUtil.defaultString(companyProfile.getPrice()));
+        result.set확인시간(DateUtil.getToday("yyyy-MM-dd HH:mm:ss"));
+        setRstDetailContextData(resultDetail);
+
+        result.set상세정보(resultDetail);
+
+        //@ Redis에 결과값 저장(캐시 역할)
+        redisComponent.saveValueWithTtl(resultDataRedisKey, new Gson().toJson(result), 6, TimeUnit.HOURS);
+
+        return result;
+    }
 
     /**
      * 기업정보 조회

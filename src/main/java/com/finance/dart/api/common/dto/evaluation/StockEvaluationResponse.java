@@ -148,4 +148,9 @@ public class StockEvaluationResponse {
      */
     private CompanySharePriceResultDetail resultDetail;
 
+    /**
+     * 계산 버전
+     */
+    private String calVersion = "";
+
 }

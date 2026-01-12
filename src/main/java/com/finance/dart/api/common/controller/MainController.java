@@ -202,7 +202,7 @@ public class MainController {
             throws Exception {
 
         // 버전 변경시 EvaluationConst.java 상수 수정 필요
-        CompanySharePriceResult responseBody = US_StockCalFromFmpService.calPerValueV3(symbol);   // FMP
+        CompanySharePriceResult responseBody = US_StockCalFromFmpService.calPerValue(symbol);   // FMP
 
         return new ResponseEntity<>(new CommonResponse<>(responseBody), HttpStatus.OK);
     }
@@ -223,7 +223,7 @@ public class MainController {
             throws Exception {
 
         // 버전 변경시 EvaluationConst.java 상수 수정 필요
-        List<CompanySharePriceResult> responseBody = US_StockCalFromFmpService.calPerValueListV3(symbolList, detail);   // FMP
+        List<CompanySharePriceResult> responseBody = US_StockCalFromFmpService.calPerValueList(symbolList, detail);   // FMP
 
         return new ResponseEntity<>(new CommonResponse<>(responseBody), HttpStatus.OK);
     }

@@ -26,6 +26,7 @@ public class CompanySharePriceResult {
     private String 확인시간 = "";         // yyyyMMdd HH:mm:
 
     private String 버전 = "";
+    private String 섹터 = "";             // 섹터명 (V4)
 
     @JsonInclude(JsonInclude.Include.NON_NULL)
     private CompanySharePriceResultDetail 상세정보;

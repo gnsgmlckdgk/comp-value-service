@@ -6,9 +6,9 @@ package com.finance.dart.api.common.constants;
 public class EvaluationConst {
 
     /**
-     * Redis 키 버전 (calPerValueV3 기준)
+     * Redis 키 버전
      */
-    public static final String CAL_VALUE_VERSION = "v3";
+    public static final String CAL_VALUE_VERSION = "v4";
 
     /**
      * 각 Step별 가중치 (총 100점)
