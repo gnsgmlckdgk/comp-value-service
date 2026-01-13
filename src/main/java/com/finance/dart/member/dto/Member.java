@@ -17,5 +17,4 @@ public class Member {
     private List<String> roles;
 
     private Long sessionTTL;    // 로그인세션남은시간
-    private Long rolesTTL;      // 권한세션남은시간
 }

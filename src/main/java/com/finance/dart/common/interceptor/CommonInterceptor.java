@@ -3,6 +3,7 @@ package com.finance.dart.common.interceptor;
 import com.finance.dart.common.config.EndPointConfig;
 import com.finance.dart.common.constant.ResponseEnum;
 import com.finance.dart.common.exception.BizException;
+import com.finance.dart.member.dto.LoginDTO;
 import com.finance.dart.member.service.SessionService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -45,12 +46,20 @@ public class CommonInterceptor implements HandlerInterceptor {
         //@2. 로그인 세션 확인 (TTL 갱신은 후처리에서 수행)
         sessionService.sessionCheckOnly(request, response);
 
-        //@3. 권한 체크 (어노테이션)
+        //@3. 로그인 회원정보
+        LoginDTO loginDTO = sessionService.getLoginInfo(request);
+
+        if (loginDTO == null || loginDTO.getRoles() == null) {
+            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+            throw new BizException(ResponseEnum.LOGIN_SESSION_EXPIRED);
+        }
+
+        //@4. 권한 체크 (어노테이션)
         EndPointConfig.RequireRole requireRole =
                 handlerMethod.getMethodAnnotation(EndPointConfig.RequireRole.class);
 
         // 사용자의 현재 권한 목록
-        List<String> userRoles = sessionService.getRolesFromSession(request);
+        List<String> userRoles = loginDTO.getRoles();
 
         if (requireRole != null) {
             // 필요한 권한 목록

@@ -4,12 +4,13 @@ import com.finance.dart.common.component.RedisComponent;
 import com.finance.dart.common.config.AppProperties;
 import com.finance.dart.common.constant.ResponseEnum;
 import com.finance.dart.common.dto.CommonResponse;
-import com.finance.dart.common.exception.BizException;
 import com.finance.dart.common.exception.UnauthorizedException;
+import com.finance.dart.common.util.ConvertUtil;
 import com.finance.dart.common.util.StringUtil;
 import com.finance.dart.member.dto.LoginDTO;
 import com.finance.dart.member.entity.MemberEntity;
 import com.finance.dart.member.repository.MemberRepository;
+import com.google.gson.Gson;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -66,31 +67,25 @@ public class SessionService {
             return response;
         }
 
-        //@ 세션정보 저장
-        String sessionKey = UUID.randomUUID().toString();
-        String redisKey = LoginDTO.redisSessionPrefix + sessionKey;
-        if(log.isDebugEnabled()) log.debug("redisKey = {}", redisKey);
+        //@ 세션키 세팅
+        String sessionId = UUID.randomUUID().toString();
+        String redisKey = LoginDTO.getSessionRedisKey(sessionId);
 
-        redisComponent.saveValueWithTtl(redisKey, StringUtil.defaultString(memberEntity.getId()), TIMEOUT_MINUTES, TimeUnit.MINUTES);
-        loginDTO.setSessionKey(sessionKey);
-        loginDTO.setPassword(null);   // 비밀번호 입력값은 삭제
-        loginDTO.setNickName(memberEntity.getNickname());
-
-        // 권한 정보 조회 및 Redis 저장
+        //@ 권한 정보 조회
         CommonResponse<List<String>> memRoleListRes = roleService.getMemberRoles(memberEntity.getId());
         List<String> memRoleList = memRoleListRes.getResponse();
+
+        loginDTO.setId(memberEntity.getId());
+        loginDTO.setEmail(memberEntity.getEmail());
         loginDTO.setRoles(memRoleList);
+        loginDTO.setSessionKey(sessionId);
+        loginDTO.setPassword(null);   // 비밀번호 입력값은 삭제
+        loginDTO.setNickname(memberEntity.getNickname());
 
-        // 권한 정보 Redis 저장 (memberId 기준)
-        String rolesRedisKey = LoginDTO.redisRolesPrefix + memberEntity.getId();
-        String rolesValue = String.join(",", memRoleList != null ? memRoleList : List.of());
-        redisComponent.saveValueWithTtl(rolesRedisKey, rolesValue, TIMEOUT_MINUTES, TimeUnit.MINUTES);
-
-        //@ 응답 조립
         // 세션 TTL 정보
-        loginDTO.setSessionTTL(getLoginSessionTTL(sessionKey));
-        loginDTO.setRolesTTL(getAuthSessionTTL(memberEntity.getId()));
+        redisComponent.saveValueWithTtl(redisKey, new Gson().toJson(loginDTO), TIMEOUT_MINUTES, TimeUnit.MINUTES);
 
+        loginDTO.setSessionTTL(getLoginSessionTTL(sessionId));
         response.setResponse(loginDTO);
 
         return response;
@@ -122,16 +117,7 @@ public class SessionService {
     public String logout(HttpServletRequest request) {
 
         String sessionId = getSessionId(request);
-
-        // 세션에서 memberId 조회 후 권한 정보도 삭제
-        String sessionRedisKey = LoginDTO.redisSessionPrefix + sessionId;
-        String memberId = redisComponent.getValue(sessionRedisKey);
-        if (memberId != null) {
-            String rolesRedisKey = LoginDTO.redisRolesPrefix + memberId;
-            redisComponent.deleteKey(rolesRedisKey);
-        }
-
-        redisComponent.deleteKey(sessionRedisKey);
+        redisComponent.deleteKey(LoginDTO.getSessionRedisKey(sessionId));
 
         return sessionId;
     }
@@ -171,21 +157,21 @@ public class SessionService {
     }
 
     /**
-     * 로그인 세션 확인 및 오류응답 (TTL 갱신 포함)
+     * 로그인 정보 조회
      * @param request
-     * @param response
-     * @deprecated sessionCheckOnly + Interceptor 후처리에서 TTL 갱신 방식으로 변경됨
+     * @return
      */
-    @Deprecated
-    public void sessionCheckErrResponse(HttpServletRequest request, HttpServletResponse response) {
-        sessionCheckOnly(request, response);
+    public LoginDTO getLoginInfo(HttpServletRequest request) {
 
-        // TTL 갱신 제외 URL 체크
         String sessionId = getSessionId(request);
-        String requestUri = request.getRequestURI();
-        if (!isExcludedFromTtlRefresh(requestUri)) {
-            refreshSessionTtl(sessionId);
-        }
+        if(StringUtil.isStringEmpty(sessionId)) return null;
+
+        String loginDtoStr = redisComponent.getValue(LoginDTO.getSessionRedisKey(sessionId));
+        if(StringUtil.isStringEmpty(loginDtoStr)) return null;
+
+        LoginDTO loginDTO = ConvertUtil.parseObject(loginDtoStr, LoginDTO.class);
+
+        return loginDTO;
     }
 
     /**
@@ -247,7 +233,7 @@ public class SessionService {
 
     private boolean isValidSession(String sessionId) {
 
-        String redisKey = LoginDTO.redisSessionPrefix + sessionId;
+        String redisKey = LoginDTO.getSessionRedisKey(sessionId);
         String value = redisComponent.getValue(redisKey);
 
         if(StringUtil.isStringEmpty(value)) return false;
@@ -257,97 +243,32 @@ public class SessionService {
 
     /**
      * 로그인 세션 TTL 확인
-     * @param sessionKey
+     * @param sessionId
      * @return -1 : TTL 설정안되어있는 키
      *         -2 : 키가 없음
      */
-    public long getLoginSessionTTL(String sessionKey) {
+    public long getLoginSessionTTL(String sessionId) {
 
-        String redisKey = LoginDTO.redisSessionPrefix + sessionKey;
+        String redisKey = LoginDTO.getSessionRedisKey(sessionId);
         Long ttl = redisComponent.getTTL(redisKey);
 
         return ttl.longValue();
     }
 
     /**
-     * 권한 세션 TTL 확인
-     * @param memberId
-     * @return -1 : TTL 설정안되어있는 키
-     *         -2 : 키가 없음
-     */
-    public long getAuthSessionTTL(long memberId) {
-
-        String authRedisKey = LoginDTO.redisRolesPrefix + memberId;
-        Long ttl = redisComponent.getTTL(authRedisKey);
-
-        return ttl.longValue();
-    }
-
-
-    /**
      * 세션 관련 모든 Redis 키의 TTL을 일괄 갱신
      * - 로그인 세션 정보 (session:{sessionId})
-     * - 권한 정보 (roles:{memberId})
      * @param sessionId 세션 ID
      */
     public void refreshSessionTtl(String sessionId) {
         if (sessionId == null) return;
 
         // 세션 키에서 memberId 조회
-        String memberId = redisComponent.getValue(LoginDTO.redisSessionPrefix + sessionId);
-        if (memberId == null) return;
+        String loginDtoStr = redisComponent.getValue(LoginDTO.getSessionRedisKey(sessionId));
+        if (loginDtoStr == null) return;
 
         // 세션 TTL 갱신
-        redisComponent.updateTtl(LoginDTO.redisSessionPrefix + sessionId, TIMEOUT_MINUTES, TimeUnit.MINUTES);
-
-        // 권한 정보 TTL 갱신
-        redisComponent.updateTtl(LoginDTO.redisRolesPrefix + memberId, TIMEOUT_MINUTES, TimeUnit.MINUTES);
-    }
-
-    /**
-     * Redis에서 현재 로그인한 사용자의 권한 목록 조회
-     * @param request
-     * @return 권한 목록 (없으면 빈 리스트)
-     */
-    public List<String> getRolesFromSession(HttpServletRequest request) {
-        String sessionId = getSessionId(request);
-        if (sessionId == null) {
-            return List.of();
-        }
-
-        String memberId = redisComponent.getValue(LoginDTO.redisSessionPrefix + sessionId);
-        if (memberId == null) {
-            return List.of();
-        }
-
-        String rolesValue = redisComponent.getValue(LoginDTO.redisRolesPrefix + memberId);
-        if (StringUtil.isStringEmpty(rolesValue)) {
-            return List.of();
-        }
-
-        return List.of(rolesValue.split(","));
-    }
-
-    /**
-     * 사용자 권한 갱신
-     * @param request
-     * @param userRoles
-     */
-    public void updateLoginRolesTTL(HttpServletRequest request, List<String> userRoles) {
-
-        String sessionId = getSessionId(request);
-        if (sessionId == null) {
-            throw new BizException(ResponseEnum.LOGIN_SESSION_EXPIRED.getMessage());
-        }
-
-        String memberId = redisComponent.getValue(LoginDTO.redisSessionPrefix + sessionId);
-        if (memberId == null) {
-            throw new BizException(ResponseEnum.LOGIN_SESSION_EXPIRED.getMessage());
-        }
-
-        // 권한정보 갱신
-        String userRolesData = String.join(",", userRoles != null ? userRoles : List.of());
-        redisComponent.saveValueWithTtl(LoginDTO.redisRolesPrefix + memberId, userRolesData, TIMEOUT_MINUTES, TimeUnit.MINUTES);
+        redisComponent.updateTtl(LoginDTO.getSessionRedisKey(sessionId), TIMEOUT_MINUTES, TimeUnit.MINUTES);
     }
 
     /**
@@ -357,7 +278,15 @@ public class SessionService {
      * @return
      */
     public boolean hasRole(HttpServletRequest request, String roleName) {
-        List<String> roles = getRolesFromSession(request);
+
+        LoginDTO loginDTO = getLoginInfo(request);
+
+        if (loginDTO == null || loginDTO.getRoles() == null) {
+            return false;
+        }
+
+        List<String> roles = loginDTO.getRoles();
+
         return roles.contains(roleName);
     }
 

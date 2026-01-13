@@ -10,6 +10,8 @@ import java.util.List;
 @Data
 public class LoginDTO {
 
+    private Long id;
+
     @NotBlank
     private String username;
 
@@ -18,26 +20,21 @@ public class LoginDTO {
     private String password;
 
     private String sessionKey;
-
-    private String nickName = "";
-
+    private String nickname = "";
+    private String email = "";
     private List<String> roles;
-
     private Long sessionTTL;    // 로그인세션남은시간
-    private Long rolesTTL;      // 권한세션남은시간
 
     @JsonIgnore
     public static final String redisSessionPrefix = "session:";
 
-    @JsonIgnore
-    public static final String redisRolesPrefix = "roles:";
 
     /**
-     * 세션 갱신 시 TTL 갱신이 필요한 Redis 키 prefix 목록
+     * 세션 Redis Key GET
+     * @param sessionId
+     * @return
      */
-    @JsonIgnore
-    public static final String[] SESSION_TTL_REFRESH_PREFIXES = {
-            redisSessionPrefix,  // 로그인 세션 정보
-            redisRolesPrefix     // 권한 정보
-    };
+    public static String getSessionRedisKey(String sessionId) {
+        return LoginDTO.redisSessionPrefix + sessionId;
+    }
 }

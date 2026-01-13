@@ -64,14 +64,16 @@ public class MemberService {
      */
     public Member getLoginMember(HttpServletRequest request) {
 
-        String sessionId = sessionService.getSessionId(request);
+        LoginDTO loginDto = sessionService.getLoginInfo(request);
+        if(loginDto == null) return null;
 
-        String memberIdStr = redisComponent.getValue(LoginDTO.redisSessionPrefix + sessionId);
-        Long memberId = Long.parseLong(memberIdStr);
-
-        Member member = getMember(memberId);
-        member.setSessionTTL(sessionService.getLoginSessionTTL(sessionId));
-        member.setRolesTTL(sessionService.getAuthSessionTTL(memberId));
+        Member member = new Member();
+        member.setId(loginDto.getId());
+        member.setUsername(loginDto.getUsername());
+        member.setEmail(loginDto.getEmail());
+        member.setNickname(loginDto.getNickname());
+        member.setRoles(loginDto.getRoles());
+        member.setSessionTTL(sessionService.getLoginSessionTTL(sessionService.getSessionId(request)));
 
         return member;
     }
@@ -120,7 +122,6 @@ public class MemberService {
      * @param memberEntity
      * @return
      */
-//    public CommonResponse<Member> join(MemberEntity memberEntity) {
     public CommonResponse<Member> join(MemberJoinReqDto memberJoinReqDto) {
 
         CommonResponse<Member> commonResponse = new CommonResponse<>();
@@ -332,7 +333,7 @@ public class MemberService {
 
         // 세션 삭제
         String sessionId = sessionService.getSessionId(request);
-        redisComponent.deleteKey(LoginDTO.redisSessionPrefix + sessionId);
+        redisComponent.deleteKey(LoginDTO.getSessionRedisKey(sessionId));
 
         return commonResponse;
     }
