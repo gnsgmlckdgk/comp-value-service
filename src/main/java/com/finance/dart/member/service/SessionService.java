@@ -106,8 +106,8 @@ public class SessionService {
                 .path("/")
                 .httpOnly(true)                     // 브라우저에서 쿠키 조회 X
                 .secure(!appProperties.isLocal())   // https 에서만 전송 (local은 false)
-                // Lax 는 쿠키 갱신이 안되서 토큰 방식으로 변경예정
-                // None 으로 바꾸면 되나 secure(true) 설정 필수 : https 만 생성 및 갱신 가능
+                // 로컬: SameSite=Lax (같은 도메인 내에서만 쿠키 전송, 도메인 다르면 쿠키 전송 안됨)
+                // 운영: SameSite=None + Secure=true (Cross-origin 요청에도 쿠키 전송)
                 .sameSite(appProperties.isLocal() ? "Lax" : "None")
                 .maxAge(Duration.ofMinutes(TIMEOUT_MINUTES))
                 .build();

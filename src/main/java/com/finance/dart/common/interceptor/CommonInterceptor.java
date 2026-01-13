@@ -9,12 +9,9 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.ResponseCookie;
 import org.springframework.stereotype.Component;
 import org.springframework.web.method.HandlerMethod;
 import org.springframework.web.servlet.HandlerInterceptor;
-import org.springframework.web.servlet.ModelAndView;
 
 import java.util.Arrays;
 import java.util.List;
@@ -43,7 +40,7 @@ public class CommonInterceptor implements HandlerInterceptor {
             return true;
         }
 
-        //@2. 로그인 세션 확인 (TTL 갱신은 후처리에서 수행)
+        //@2. 로그인 세션 확인 (TTL 갱신은 ResponseBodyAdvice에서 수행)
         sessionService.sessionCheckOnly(request, response);
 
         //@3. 로그인 회원정보
@@ -82,23 +79,7 @@ public class CommonInterceptor implements HandlerInterceptor {
         return true;
     }
 
-    @Override
-    public void postHandle(HttpServletRequest request, HttpServletResponse response, Object handler, ModelAndView modelAndView) throws Exception {
-        HandlerInterceptor.super.postHandle(request, response, handler, modelAndView);
-
-        if(log.isDebugEnabled()) log.debug("후처리");
-
-        // 세션 TTL 갱신 (Redis + 쿠키 동시 갱신)
-        String sessionId = sessionService.getSessionId(request);
-        if (sessionId != null && sessionService.sessionCheck(request)) {
-            String requestUri = request.getRequestURI();
-            if (!sessionService.isExcludedFromTtlRefresh(requestUri)) {
-                // Redis TTL 갱신
-                sessionService.refreshSessionTtl(sessionId);
-                // 쿠키 TTL 갱신
-                ResponseCookie cookie = sessionService.createSessionCookie(sessionId);
-                response.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());
-            }
-        }
-    }
+    // postHandle()에서 쿠키 TTL 갱신 로직 제거
+    // @RestController 환경에서는 postHandle() 시점에 이미 response가 커밋되어 쿠키 헤더 추가가 불가능
+    // 대신 SessionCookieRefreshAdvice (ResponseBodyAdvice)에서 처리
 }
