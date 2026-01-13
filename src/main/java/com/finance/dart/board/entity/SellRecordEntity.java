@@ -40,6 +40,9 @@ public class SellRecordEntity {
 
     private Double realizedPnl;     // 실현손익
 
+    private Double buyExchangeRateAtTrade;  // 매수체결당시 환율
+    private Double sellExchangeRateAtTrade; // 매도체결당시 환율
+
     @Column(length = 500)
     private String rmk;             // 비고
 

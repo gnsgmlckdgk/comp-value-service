@@ -96,6 +96,7 @@ public class TranRecordService {
         if(updateDto.getBuyPrice() != null) data.setBuyPrice(updateDto.getBuyPrice());
         if(updateDto.getTotalBuyAmount() != null) data.setTotalBuyAmount(updateDto.getTotalBuyAmount());
         if(updateDto.getTargetPrice() != null) data.setTargetPrice(updateDto.getTargetPrice());
+        if(updateDto.getBuyExchangeRateAtTrade() != null) data.setBuyExchangeRateAtTrade(updateDto.getBuyExchangeRateAtTrade());
         if(updateDto.getRmk() != null) data.setRmk(updateDto.getRmk());
         data.setUpdatedAt(LocalDateTime.now());
 
@@ -158,20 +159,6 @@ public class TranRecordService {
             tranRecordDto.setCurrentPrice(tickerValueMap.getOrDefault(tranRecordDto.getSymbol(), 0.0));
             tranRecordDtoList.add(tranRecordDto);
         }
-
-
-        // OLD
-//        for(TranRecordEntity tranRecordEntity : tranRecordEntityList) {
-//
-//            TranRecordDto tranRecordDto = ConvertUtil.parseObject(tranRecordEntity, TranRecordDto.class);
-//
-//            // 현재가 갱신
-//            TranRecordCurValueResDto curValue = getCurValue(tranRecordDto.getSymbol());
-//            tranRecordDto.setCurrentPrice((curValue == null || curValue.getCurrentPrice() == null) ?
-//                    0 : curValue.getCurrentPrice());
-//
-//            tranRecordDtoList.add(tranRecordDto);
-//        }
 
         return tranRecordDtoList;
     }

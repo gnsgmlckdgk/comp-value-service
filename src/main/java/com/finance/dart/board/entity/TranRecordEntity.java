@@ -41,6 +41,8 @@ public class TranRecordEntity {
 
     private Double targetPrice;    // 매도목표가
 
+    private Double buyExchangeRateAtTrade;  // 매수체결당시 환율
+
     @Column(length = 500)
     private String rmk;             // 비고
 

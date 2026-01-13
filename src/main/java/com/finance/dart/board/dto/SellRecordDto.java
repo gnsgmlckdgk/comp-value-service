@@ -19,6 +19,9 @@ public class SellRecordDto {
     private Integer sellQty;            // 매도수량
     private Double realizedPnl;         // 실현손익
 
+    private Double buyExchangeRateAtTrade;  // 매수체결당시 환율
+    private Double sellExchangeRateAtTrade; // 매도체결당시 환율
+
     private String rmk;                 // 비고
 
     private String createdAt;           // 등록일자

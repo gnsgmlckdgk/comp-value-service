@@ -74,6 +74,8 @@ public class SellRecordService {
         if (updateDto.getSellPrice() != null) data.setSellPrice(updateDto.getSellPrice());
         if (updateDto.getSellQty() != null) data.setSellQty(updateDto.getSellQty());
         if (updateDto.getRealizedPnl() != null) data.setRealizedPnl(updateDto.getRealizedPnl());
+        if (updateDto.getBuyExchangeRateAtTrade() != null) data.setBuyExchangeRateAtTrade(updateDto.getBuyExchangeRateAtTrade());
+        if (updateDto.getSellExchangeRateAtTrade() != null) data.setSellExchangeRateAtTrade(updateDto.getSellExchangeRateAtTrade());
         if (updateDto.getRmk() != null) data.setRmk(updateDto.getRmk());
         data.setUpdatedAt(LocalDateTime.now());
 
