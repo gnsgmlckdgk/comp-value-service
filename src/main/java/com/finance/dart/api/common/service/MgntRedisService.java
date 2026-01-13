@@ -45,6 +45,7 @@ public class MgntRedisService {
                 redisComponent.deleteKeys(key);
                 yield "[" + key + "] 삭제완료";
             }
+            case "TTL" -> StringUtil.defaultString(redisComponent.getTTL(key));
             default -> {
                 isSuccess = false;
                 yield "타입값이 올바르지 않습니다.";
@@ -53,5 +54,4 @@ public class MgntRedisService {
 
         return new MgntRedisResDto(isSuccess, result);
     }
-
 }
