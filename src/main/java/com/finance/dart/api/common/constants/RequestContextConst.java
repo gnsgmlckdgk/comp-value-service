@@ -9,6 +9,11 @@ import lombok.Data;
 @Data
 public class RequestContextConst {
 
+    // 시작 : 세션 --------------------------
+    public static final String SESSION_ID_UUID = "SESSION_ID_UUID";
+
+    // 끝 : 세션 --------------------------
+
     // 시작: CompanySharePriceResultDetail --------------------------
     public static final String 영업이익_합계 = "영업이익_합계";
     public static final String 영업이익_평균 = "영업이익_평균";

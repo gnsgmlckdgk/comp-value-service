@@ -1,5 +1,7 @@
 package com.finance.dart.member.service;
 
+import com.finance.dart.api.common.constants.RequestContextConst;
+import com.finance.dart.api.common.context.RequestContext;
 import com.finance.dart.common.component.RedisComponent;
 import com.finance.dart.common.config.AppProperties;
 import com.finance.dart.common.constant.ResponseEnum;
@@ -31,6 +33,7 @@ import java.util.concurrent.TimeUnit;
 @Service
 public class SessionService {
 
+    private final RequestContext requestContext;
     private final MemberRepository memberRepository;
     private final RedisComponent redisComponent;
     private final PasswordEncoder passwordEncoder;
@@ -69,6 +72,7 @@ public class SessionService {
 
         //@ 세션키 세팅
         String sessionId = UUID.randomUUID().toString();
+        requestContext.setAttribute(RequestContextConst.SESSION_ID_UUID, sessionId);
         String redisKey = LoginDTO.getSessionRedisKey(sessionId);
 
         //@ 권한 정보 조회
@@ -78,7 +82,7 @@ public class SessionService {
         loginDTO.setId(memberEntity.getId());
         loginDTO.setEmail(memberEntity.getEmail());
         loginDTO.setRoles(memRoleList);
-        loginDTO.setSessionKey(sessionId);
+        //loginDTO.setSessionKey(sessionId);
         loginDTO.setPassword(null);   // 비밀번호 입력값은 삭제
         loginDTO.setNickname(memberEntity.getNickname());
 

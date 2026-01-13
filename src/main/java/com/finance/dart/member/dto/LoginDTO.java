@@ -19,7 +19,7 @@ public class LoginDTO {
     @JsonInclude(JsonInclude.Include.NON_NULL)
     private String password;
 
-    private String sessionKey;
+    //private String sessionKey;
     private String nickname = "";
     private String email = "";
     private List<String> roles;

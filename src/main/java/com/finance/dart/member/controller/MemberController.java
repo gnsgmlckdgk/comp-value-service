@@ -1,6 +1,8 @@
 package com.finance.dart.member.controller;
 
 
+import com.finance.dart.api.common.constants.RequestContextConst;
+import com.finance.dart.api.common.context.RequestContext;
 import com.finance.dart.common.config.EndPointConfig;
 import com.finance.dart.common.constant.ResponseEnum;
 import com.finance.dart.common.dto.CommonResponse;
@@ -29,6 +31,7 @@ import java.util.List;
 @RestController
 public class MemberController {
 
+    private final RequestContext requestContext;
     private final SessionService sessionService;
     private final MemberService memberService;
 
@@ -45,7 +48,8 @@ public class MemberController {
 
         if(response != null && response.getResponse() != null) {
             // 쿠키 설정
-            ResponseCookie cookie = sessionService.createSessionCookie(response.getResponse().getSessionKey());
+            ResponseCookie cookie = sessionService.createSessionCookie(
+                    requestContext.getAttributeAsString(RequestContextConst.SESSION_ID_UUID));
             return ResponseEntity.ok()
                     .header(HttpHeaders.SET_COOKIE, cookie.toString())
                     .body(response);
