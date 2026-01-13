@@ -102,7 +102,9 @@ public class SessionService {
                 .path("/")
                 .httpOnly(true)                     // 브라우저에서 쿠키 조회 X
                 .secure(!appProperties.isLocal())   // https 에서만 전송 (local은 false)
-                .sameSite("Lax")                    // GET/링크/리디렉션 허용, POST는 안함
+                // Lax 는 쿠키 갱신이 안되서 토큰 방식으로 변경예정
+                // None 으로 바꾸면 되나 secure(true) 설정 필수 : https 만 생성 및 갱신 가능
+                .sameSite(appProperties.isLocal() ? "Lax" : "None")
                 .maxAge(Duration.ofMinutes(TIMEOUT_MINUTES))
                 .build();
 
