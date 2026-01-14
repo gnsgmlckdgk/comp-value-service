@@ -49,7 +49,7 @@ spring:
       password: ${SPRING_REDIS_PASSWORD:1234}
       port: ${SPRING_REDIS_PORT:6380}  # 로컬에선 6380, 운영에선 6379(k8s에서 설정)
       timeout: 2s
-      database: 9 # 디폴트 0인데 개발 환경에선 9로 분리(k8s 올릴때 환경변수는 0으로 설정)
+      database: ${SPRING_REDIS_DATABASE:9} # 디폴트 0인데 개발 환경에선 9로 분리(k8s 올릴때 환경변수는 0으로 설정)
       client-name: finreport-k8s-pf
   cache:
     type: caffeine
