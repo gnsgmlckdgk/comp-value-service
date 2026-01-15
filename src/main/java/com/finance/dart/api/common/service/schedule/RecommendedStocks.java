@@ -24,7 +24,7 @@ public class RecommendedStocks {
 
     private final RecommendedStocksProcessor recommendedStocksProcessor;
 
-    @Scheduled(cron = "0 0 1 * * *") // 24시간 형식, 초 분 시 일 월 요일
+    @Scheduled(cron = "0 0 0 * * *") // 24시간 형식, 초 분 시 일 월 요일, 00시(오전12시) 시작
     public void startScheduledTask() {
         executorService.submit(this::processDataInBackground);
     }
