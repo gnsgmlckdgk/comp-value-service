@@ -1,0 +1,205 @@
+package com.finance.dart.api.abroad.service;
+
+import com.finance.dart.api.abroad.dto.ml.ExternalPredictionResDto;
+import com.finance.dart.api.abroad.dto.ml.PredictionResponseDto;
+import com.finance.dart.api.common.entity.StockPredictionEntity;
+import com.finance.dart.api.common.repository.StockPredictionRepository;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.ParameterizedTypeReference;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.ResponseEntity;
+import org.springframework.http.client.SimpleClientHttpRequestFactory;
+import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
+import org.springframework.web.client.RestTemplate;
+
+import java.math.BigDecimal;
+import java.net.URI;
+import java.time.LocalDate;
+import java.util.Optional;
+
+/**
+ * 머신러닝 예측 서비스
+ */
+@Slf4j
+@RequiredArgsConstructor
+@Service
+public class MlService {
+
+    private final StockPredictionRepository stockPredictionRepository;
+
+    @Value("${app.local}")
+    private boolean isLocal;
+
+    /**
+     * ML 예측 API 전용 RestTemplate (ReadTimeout 60초)
+     */
+    private RestTemplate createMlRestTemplate() {
+        SimpleClientHttpRequestFactory factory = new SimpleClientHttpRequestFactory();
+        factory.setConnectTimeout(5000);  // 5초
+        factory.setReadTimeout(60000);     // 60초 (학습 후 응답하는 경우 시간이 걸림)
+        return new RestTemplate(factory);
+    }
+
+    /**
+     * 1주일 내 최고가 AI 예측 조회
+     *
+     * @param symbol 티커 심볼
+     * @return 예측 결과
+     */
+    public PredictionResponseDto getPrediction(String symbol) {
+
+        if (log.isDebugEnabled()) {
+            log.debug("AI 예측 조회 시작 - symbol: {}, isLocal: {}", symbol, isLocal);
+        }
+
+        // 1. DB에서 오늘 날짜 데이터 조회
+        LocalDate today = LocalDate.now();
+        Optional<StockPredictionEntity> existingPrediction =
+                stockPredictionRepository.findByTickerAndPredictionDate(symbol, today);
+
+        // 2. DB에 데이터가 있으면 해당 데이터 반환
+        if (existingPrediction.isPresent()) {
+            if (log.isDebugEnabled()) {
+                log.debug("DB에서 예측 데이터 조회 완료 - symbol: {}", symbol);
+            }
+            return convertEntityToDto(existingPrediction.get(), "database");
+        }
+
+        // 3. DB에 데이터가 없으면 외부 파드 호출
+        if (log.isDebugEnabled()) {
+            log.debug("DB에 데이터 없음. 외부 API 호출 - symbol: {}", symbol);
+        }
+
+        ExternalPredictionResDto externalResponse = callExternalPredictionApi(symbol);
+
+        // 4. 에러 응답 처리
+        if (externalResponse.getError() != null) {
+            throw new RuntimeException("Prediction error: " + externalResponse.getError());
+        }
+
+        // 5. 외부 API 응답을 DTO로 변환하여 반환
+        return convertExternalResponseToDto(externalResponse);
+    }
+
+    /**
+     * 외부 예측 API 호출 (ReadTimeout 60초)
+     *
+     * @param symbol 티커 심볼
+     * @return 외부 API 응답
+     */
+    private ExternalPredictionResDto callExternalPredictionApi(String symbol) {
+
+        // 환경에 따라 URL 결정
+        String baseUrl = isLocal
+                ? "http://localhost:18081"
+                : "http://stock-predictor-service";
+
+        String url = String.format("%s/predict/%s", baseUrl, symbol);
+
+        if (log.isDebugEnabled()) {
+            log.debug("외부 예측 API 호출 - URL: {}, ReadTimeout: 60초", url);
+        }
+
+        try {
+            // ML 예측 전용 RestTemplate 사용 (ReadTimeout 60초)
+            RestTemplate mlRestTemplate = createMlRestTemplate();
+
+            URI uri = URI.create(url);
+            ResponseEntity<ExternalPredictionResDto> response = mlRestTemplate.exchange(
+                    uri,
+                    HttpMethod.GET,
+                    null,
+                    new ParameterizedTypeReference<ExternalPredictionResDto>() {
+                    }
+            );
+
+            ExternalPredictionResDto body = response.getBody();
+
+            if (log.isDebugEnabled()) {
+                log.debug("외부 예측 API 응답 - response: {}", body);
+            }
+
+            return body;
+
+        } catch (Exception e) {
+            log.error("외부 예측 API 호출 실패 - symbol: {}, error: {}", symbol, e.getMessage(), e);
+            throw new RuntimeException("Failed to call external prediction API", e);
+        }
+    }
+
+    /**
+     * 엔티티를 응답 DTO로 변환
+     *
+     * @param entity 엔티티
+     * @param source 데이터 소스
+     * @return 응답 DTO
+     */
+    private PredictionResponseDto convertEntityToDto(StockPredictionEntity entity, String source) {
+
+        // upside_percent 계산
+        String upsidePercent = calculateUpsidePercent(entity.getCurrentPrice(), entity.getPredictedHigh());
+
+        return PredictionResponseDto.builder()
+                .ticker(entity.getTicker())
+                .companyName(entity.getCompanyName())
+                .exchange(entity.getExchange())
+                .predictedHigh(entity.getPredictedHigh())
+                .currentPrice(entity.getCurrentPrice())
+                .upsidePercent(upsidePercent)
+                .predictionDate(entity.getPredictionDate())
+                .targetStartDate(entity.getTargetStartDate())
+                .targetEndDate(entity.getTargetEndDate())
+                .source(source)
+                .modelVersion(entity.getModelVersion())
+                .build();
+    }
+
+    /**
+     * 외부 API 응답을 응답 DTO로 변환
+     *
+     * @param externalResponse 외부 API 응답
+     * @return 응답 DTO
+     */
+    private PredictionResponseDto convertExternalResponseToDto(ExternalPredictionResDto externalResponse) {
+
+        BigDecimal currentPrice = StringUtils.hasText(externalResponse.getCurrentPrice())
+                ? new BigDecimal(externalResponse.getCurrentPrice())
+                : null;
+
+        BigDecimal predictedHigh = StringUtils.hasText(externalResponse.getPredictedHigh1w())
+                ? new BigDecimal(externalResponse.getPredictedHigh1w())
+                : null;
+
+        return PredictionResponseDto.builder()
+                .ticker(externalResponse.getTicker())
+                .predictedHigh(predictedHigh)
+                .currentPrice(currentPrice)
+                .upsidePercent(externalResponse.getUpsidePercent())
+                .source(externalResponse.getSource())
+                .build();
+    }
+
+    /**
+     * 상승 여력(%) 계산
+     *
+     * @param currentPrice  현재가
+     * @param predictedHigh 예측 최고가
+     * @return 상승 여력 (%)
+     */
+    private String calculateUpsidePercent(BigDecimal currentPrice, BigDecimal predictedHigh) {
+
+        if (currentPrice == null || predictedHigh == null ||
+                currentPrice.compareTo(BigDecimal.ZERO) == 0) {
+            return "0.00%";
+        }
+
+        BigDecimal upside = predictedHigh.subtract(currentPrice)
+                .divide(currentPrice, 4, BigDecimal.ROUND_HALF_UP)
+                .multiply(new BigDecimal("100"));
+
+        return String.format("%.2f%%", upside);
+    }
+}
