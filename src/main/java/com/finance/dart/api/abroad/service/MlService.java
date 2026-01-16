@@ -45,8 +45,8 @@ public class MlService {
      */
     private RestTemplate createMlRestTemplate() {
         SimpleClientHttpRequestFactory factory = new SimpleClientHttpRequestFactory();
-        factory.setConnectTimeout(5000);  // 5초
-        factory.setReadTimeout(60000);     // 60초 (학습 후 응답하는 경우 시간이 걸림)
+        factory.setConnectTimeout(5000);    // 5초
+        factory.setReadTimeout(100000);     // 100초 (학습 후 응답하는 경우 시간이 걸림)
         return new RestTemplate(factory);
     }
 
