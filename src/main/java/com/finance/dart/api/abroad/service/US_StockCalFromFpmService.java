@@ -4,6 +4,8 @@ import com.finance.dart.api.abroad.consts.CurrencyConst;
 import com.finance.dart.api.abroad.consts.FmpPeriod;
 import com.finance.dart.api.abroad.dto.fmp.balancesheet.BalanceSheetReqDto;
 import com.finance.dart.api.abroad.dto.fmp.balancesheet.BalanceSheetResDto;
+import com.finance.dart.api.abroad.dto.fmp.chart.StockPriceVolumeReqDto;
+import com.finance.dart.api.abroad.dto.fmp.chart.StockPriceVolumeResDto;
 import com.finance.dart.api.abroad.dto.fmp.company.CompanyProfileDataResDto;
 import com.finance.dart.api.abroad.dto.fmp.enterprisevalues.EnterpriseValuesReqDto;
 import com.finance.dart.api.abroad.dto.fmp.enterprisevalues.EnterpriseValuesResDto;
@@ -19,9 +21,9 @@ import com.finance.dart.api.abroad.dto.fmp.incomestatement.IncomeStatReqDto;
 import com.finance.dart.api.abroad.dto.fmp.incomestatement.IncomeStatResDto;
 import com.finance.dart.api.abroad.dto.fmp.incomestatgrowth.IncomeStatGrowthReqDto;
 import com.finance.dart.api.abroad.dto.fmp.incomestatgrowth.IncomeStatGrowthResDto;
-import com.finance.dart.api.abroad.dto.fmp.chart.StockPriceVolumeReqDto;
-import com.finance.dart.api.abroad.dto.fmp.chart.StockPriceVolumeResDto;
+import com.finance.dart.api.abroad.dto.ml.PredictionResponseDto;
 import com.finance.dart.api.abroad.service.fmp.*;
+import com.finance.dart.api.common.constants.EvaluationConst;
 import com.finance.dart.api.common.constants.RequestContextConst;
 import com.finance.dart.api.common.context.RequestContext;
 import com.finance.dart.api.common.dto.CompanySharePriceCalculator;
@@ -72,6 +74,7 @@ public class US_StockCalFromFpmService {
     private final StockPriceVolumeService stockPriceVolumeService;              // 주가 차트 조회 서비스
 
     private final PerShareValueCalculationService sharePriceCalculatorService;  // 가치 계산 서비스
+    private final MlService mlService;                                          // 머신러닝 서비스
 
 
     /**
@@ -81,7 +84,7 @@ public class US_StockCalFromFpmService {
      * @throws Exception
      */
     public CompanySharePriceResult calPerValue(String symbol) throws Exception {
-        return calPerValueV4(symbol);
+        return calPerValueV5(symbol);
     }
 
     /**
@@ -92,7 +95,7 @@ public class US_StockCalFromFpmService {
      * @throws Exception
      */
     public List<CompanySharePriceResult> calPerValueList(String symbols, String detail) throws Exception {
-        return calPerValueListV4(symbols, detail);
+        return calPerValueListV5(symbols, detail);
     }
 
 
@@ -218,6 +221,39 @@ public class US_StockCalFromFpmService {
         return resultList;
     }
 
+    /**
+     * 주당 가치 계산(다건) V5 - AI 예측 추가
+     * @param symbols
+     * @param detail
+     * @return
+     * @throws Exception
+     */
+    public List<CompanySharePriceResult> calPerValueListV5(String symbols, String detail) throws Exception {
+
+        final int MAX_CAL_SYMBOL_SIZE = 30; // 한번에 조회 가능 건수
+
+        List<CompanySharePriceResult> resultList = new LinkedList<>();
+
+        if(symbols == null) return null;
+        List<String> symbolList = Arrays.stream(symbols.split(","))
+                .map(String::trim)
+                .filter(s -> !s.isEmpty())
+                .toList();
+
+        if(symbolList.size() > MAX_CAL_SYMBOL_SIZE) {
+            throw new BizException("동시 조회는 " + MAX_CAL_SYMBOL_SIZE + "건 까지만 가능합니다.");
+        }
+
+        for(String symbol : symbolList) {
+            CompanySharePriceResult result = calPerValueV5(symbol);
+            if("F".equals(StringUtil.defaultString(detail))) result.set상세정보(null);
+            resultList.add(result);
+            Thread.sleep(TRSC_DELAY);   // 너무 빠르게 연속호출하면 타겟에서 거부할 수 있음
+        }
+
+        return resultList;
+    }
+
 
     /**
      * 주당 가치 계산 V1
@@ -335,7 +371,7 @@ public class US_StockCalFromFpmService {
         if(log.isDebugEnabled()) log.debug("기업 정보 = {}", companyProfile);
         if(companyProfile == null) errorProcess(result, "기업 정보 조회에 실패했습니다.");
 
-        CompanySharePriceCalculator calParam = getCalParamDataV3(symbol, result, resultDetail); // 계산 정보
+        CompanySharePriceCalculator calParam = getCalParamDataV5(symbol, result, resultDetail); // 계산 정보
         calParam.setUnit(UNIT);
         if(log.isDebugEnabled()) log.debug("계산 정보 = {}", calParam);
         if(calParam == null) errorProcess(result, "재무정보 조회에 실패했습니다.");
@@ -420,7 +456,7 @@ public class US_StockCalFromFpmService {
         String sector = companyProfile.getSector();
         if(log.isDebugEnabled()) log.debug("[V4] 섹터 정보: {}", sector);
 
-        CompanySharePriceCalculator calParam = getCalParamDataV3(symbol, result, resultDetail); // 계산 정보 (V3와 동일)
+        CompanySharePriceCalculator calParam = getCalParamDataV5(symbol, result, resultDetail); // 계산 정보 (V3와 동일)
         calParam.setUnit(UNIT);
         if(log.isDebugEnabled()) log.debug("계산 정보 = {}", calParam);
         if(calParam == null) errorProcess(result, "재무정보 조회에 실패했습니다.");
@@ -474,6 +510,99 @@ public class US_StockCalFromFpmService {
 
         return result;
     }
+
+    /**
+     * AI 예측 추가 (1주내 최고가 예측)
+     * @param symbol
+     * @return
+     * @throws Exception
+     */
+    public CompanySharePriceResult calPerValueV5(String symbol)
+            throws Exception {
+
+        final String VERSION = "v5";    // EvaluationConst.java 도 수정 필요
+        final String UNIT = "1";        // 1달러
+        final String resultDataRedisKey = RedisKeyGenerator.genAbroadCompValueRstData(symbol, VERSION);
+
+        //@ Redis 저장값 확인(캐시 역할)
+        String saveData = redisComponent.getValue(resultDataRedisKey);
+        if(!StringUtil.isStringEmpty(saveData)) {
+            return new Gson().fromJson(saveData, CompanySharePriceResult.class);
+        }
+
+        CompanySharePriceResult result = new CompanySharePriceResult(); // 결과
+        result.set기업심볼(symbol);
+        CompanySharePriceResultDetail resultDetail = new CompanySharePriceResultDetail(UNIT);
+
+        //@1. 정보 조회 ---------------------------------
+        CompanyProfileDataResDto companyProfile = getCompanyProfile(symbol, result);
+        if(log.isDebugEnabled()) log.debug("기업 정보 = {}", companyProfile);
+        if(companyProfile == null) errorProcess(result, "기업 정보 조회에 실패했습니다.");
+
+        // 섹터 정보 추출
+        String sector = companyProfile.getSector();
+        if(log.isDebugEnabled()) log.debug("섹터 정보: {}", sector);
+
+        CompanySharePriceCalculator calParam = getCalParamDataV5(symbol, result, resultDetail); // 계산 정보
+        calParam.setUnit(UNIT);
+        if(log.isDebugEnabled()) log.debug("계산 정보 = {}", calParam);
+        if(calParam == null) errorProcess(result, "재무정보 조회에 실패했습니다.");
+
+
+        //@2. 계산 (섹터 정보 전달) ---------------------------------
+        String 계산된주당가치 = sharePriceCalculatorService.calPerValueV5(calParam, resultDetail, sector);
+
+        //@2-1. 3년내 최고가 조회 및 적정가 조정 ---------------------------------
+        String 조정된주당가치;
+        Double historicalHigh3Y = get3YearsHistoricalHighPrice(symbol);
+
+        if (historicalHigh3Y != null) {
+            BigDecimal 계산값 = new BigDecimal(계산된주당가치);
+            BigDecimal 최고가 = BigDecimal.valueOf(historicalHigh3Y);
+
+            if (계산값.compareTo(최고가) > 0) {
+                // 계산된 적정가가 3년내 최고가보다 높으면 최고가의 80%로 조정
+                조정된주당가치 = 최고가.multiply(new BigDecimal("0.8"))
+                        .setScale(2, RoundingMode.HALF_UP)
+                        .toPlainString();
+                if(log.isDebugEnabled()) {
+                    log.debug("[적정가 조정] {} - 계산값({}) > 3년내최고가({}) → 조정값({})",
+                            symbol, 계산값, 최고가, 조정된주당가치);
+                }
+            } else {
+                조정된주당가치 = 계산된주당가치;
+            }
+        } else {
+            // 3년내 최고가 조회 실패시 원본값 사용 (신생기업 등)
+            조정된주당가치 = 계산된주당가치;
+            if(log.isDebugEnabled()) {
+                log.debug("[적정가 조정] {} - 3년내 최고가 데이터 없음, 원본값 사용", symbol);
+            }
+        }
+
+        //@3. AI 예측값 조회 ---------------------------------
+        // 데이터 못가져오면 null
+        PredictionResponseDto predictionResponseDto = predictWeeklyHigh(symbol);
+
+        //@4. 결과 조립 ---------------------------------
+        result.set버전(VERSION.toUpperCase());
+        result.set섹터(sector);  // 섹터 정보 추가
+        if(StringUtil.isStringEmpty(result.get결과메시지())) result.set결과메시지("정상 처리되었습니다.");
+        result.set주당가치(조정된주당가치);              // 조정된 적정가
+        result.set계산된주당가치(계산된주당가치);        // 원본 계산값
+        result.set현재가격(StringUtil.defaultString(companyProfile.getPrice()));
+        result.set확인시간(DateUtil.getToday("yyyy-MM-dd HH:mm:ss"));
+        result.set예측데이터(predictionResponseDto);
+        setRstDetailContextData(resultDetail);
+
+        result.set상세정보(resultDetail);
+
+        //@ Redis에 결과값 저장(캐시 역할)
+        redisComponent.saveValueWithTtl(resultDataRedisKey, new Gson().toJson(result), 6, TimeUnit.HOURS);
+
+        return result;
+    }
+
 
     /**
      * 기업정보 조회
@@ -728,13 +857,13 @@ public class US_StockCalFromFpmService {
     }
 
     /**
-     * 계산정보 조회(V3)
+     * 계산정보 조회(V3, V4, V5)
      * @param symbol
      * @param result
      * @param resultDetail
      * @return
      */
-    private CompanySharePriceCalculator getCalParamDataV3(String symbol, CompanySharePriceResult result, CompanySharePriceResultDetail resultDetail)
+    private CompanySharePriceCalculator getCalParamDataV5(String symbol, CompanySharePriceResult result, CompanySharePriceResultDetail resultDetail)
             throws InterruptedException {
 
         if(log.isDebugEnabled()) log.debug("[계산 로그] [{}] {} 계산 시작", symbol, result.get기업명());
@@ -1068,6 +1197,23 @@ public class US_StockCalFromFpmService {
             log.warn("[3년내 최고가] {} - 조회 실패: {}", symbol, e.getMessage());
             return null;
         }
+    }
+
+    /**
+     * 1주내 최고가 예측값 조회
+     * @param symbol
+     * @return
+     */
+    private PredictionResponseDto predictWeeklyHigh(String symbol) {
+
+        try {
+            PredictionResponseDto predictionResponseDto = mlService.getPrediction(symbol, false);
+            return predictionResponseDto;
+        } catch (Exception e) {
+            if(log.isDebugEnabled()) log.debug("[predictWeeklyHigh] 예측 실패, message = {}", e.getMessage());
+        }
+
+        return null;
     }
 
 }

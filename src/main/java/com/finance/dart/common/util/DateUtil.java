@@ -79,4 +79,15 @@ public class DateUtil {
         }
     }
 
+    /**
+     * LocalDate to String
+     * @param localDate
+     * @param pattern null(defalut: yyyy-MM-dd)
+     * @return
+     */
+    public static String convertLocaleDateToString(LocalDate localDate, String pattern) {
+        if(localDate == null) return "";
+        if(StringUtil.isStringEmpty(pattern)) pattern = "yyyy-MM-dd";
+        return StringUtil.defaultString(localDate.format(DateTimeFormatter.ofPattern(pattern)));
+    }
 }

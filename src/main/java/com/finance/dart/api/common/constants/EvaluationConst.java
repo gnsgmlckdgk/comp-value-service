@@ -8,7 +8,7 @@ public class EvaluationConst {
     /**
      * Redis 키 버전
      */
-    public static final String CAL_VALUE_VERSION = "v4";
+    public static final String CAL_VALUE_VERSION = "v5";
 
     /**
      * 각 Step별 가중치 (총 100점)

@@ -1,10 +1,12 @@
 package com.finance.dart.common.util;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.finance.dart.common.util.support.LocalDateAdapter;
 import com.finance.dart.common.util.support.LocalDateTimeAdapter;
 import com.google.gson.*;
 
 import java.lang.reflect.Field;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
@@ -15,6 +17,7 @@ public class ConvertUtil {
     private static final Gson gson = new GsonBuilder()
             .setObjectToNumberStrategy(ToNumberPolicy.LONG_OR_DOUBLE)   // 타입을 알수없을때 정수는 Long, 실수는 Double 로 파싱
             .registerTypeAdapter(LocalDateTime.class, new LocalDateTimeAdapter())   // gson은 LocalDateTime 타입 지원을 안해서 옵션 추가
+            .registerTypeAdapter(LocalDate.class, new LocalDateAdapter())
             .setExclusionStrategies(new ExclusionStrategy() {
                 @Override
                 public boolean shouldSkipField(FieldAttributes f) {

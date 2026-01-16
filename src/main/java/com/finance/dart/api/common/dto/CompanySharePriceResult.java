@@ -1,6 +1,7 @@
 package com.finance.dart.api.common.dto;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.finance.dart.api.abroad.dto.ml.PredictionResponseDto;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
@@ -21,12 +22,14 @@ public class CompanySharePriceResult {
     private String 주식코드 = "";
 
     private String 주당가치 = "";         // 1주당 가치 (조정된 적정가)
-    private String 계산된주당가치 = "";   // 계산된 원본 적정가
+    private String 계산된주당가치 = "";    // 계산된 원본 적정가
     private String 현재가격 = "";         // 현재주식가격
     private String 확인시간 = "";         // yyyyMMdd HH:mm:
 
     private String 버전 = "";
-    private String 섹터 = "";             // 섹터명 (V4)
+    private String 섹터 = "";             // 섹터명 (V4 이후 추가됨)
+
+    private PredictionResponseDto 예측데이터;    // 예측데이터 (V5 이후 추가됨)
 
     @JsonInclude(JsonInclude.Include.NON_NULL)
     private CompanySharePriceResultDetail 상세정보;

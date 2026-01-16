@@ -2,8 +2,13 @@ package com.finance.dart.api.abroad.service;
 
 import com.finance.dart.api.abroad.dto.ml.ExternalPredictionResDto;
 import com.finance.dart.api.abroad.dto.ml.PredictionResponseDto;
+import com.finance.dart.api.common.constants.EvaluationConst;
 import com.finance.dart.api.common.entity.StockPredictionEntity;
 import com.finance.dart.api.common.repository.StockPredictionRepository;
+import com.finance.dart.common.component.RedisComponent;
+import com.finance.dart.common.component.RedisKeyGenerator;
+import com.finance.dart.common.util.DateUtil;
+import com.google.gson.Gson;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -19,6 +24,7 @@ import java.math.BigDecimal;
 import java.net.URI;
 import java.time.LocalDate;
 import java.util.Optional;
+import java.util.concurrent.TimeUnit;
 
 /**
  * 머신러닝 예측 서비스
@@ -29,6 +35,7 @@ import java.util.Optional;
 public class MlService {
 
     private final StockPredictionRepository stockPredictionRepository;
+    private final RedisComponent redisComponent;
 
     @Value("${app.local}")
     private boolean isLocal;
@@ -44,12 +51,47 @@ public class MlService {
     }
 
     /**
+     * <pre>
+     * 1주일 내 최고가 AI 예측 조회
+     * 화면 출력용 - DB 데이터가 더 필요해서 DB 한번 더 조회
+     * 머신러닝에서 학습 후 DB에 데이터 등록함
+     * </pre>
+     * @param symbol
+     * @param isLearning
+     * @return
+     */
+    public PredictionResponseDto getPredictionForWeb(String symbol, boolean isLearning) {
+
+        PredictionResponseDto predictionResponseDto = getPrediction(symbol, isLearning);
+
+        if(predictionResponseDto != null) {
+            LocalDate today = LocalDate.now();
+            Optional<StockPredictionEntity> existingPrediction =
+                    stockPredictionRepository.findByTickerAndPredictionDate(symbol, today);
+
+            if (existingPrediction.isPresent()) {
+                if (log.isDebugEnabled()) {
+                    log.debug("DB에서 예측 데이터 조회 완료 - symbol: {}", symbol);
+                }
+
+                // 다음 조회때 캐싱되지 않게 하기위해(예측데이터 없는 데이터로 등록되어있어서) 캐싱데이터 삭제
+                redisComponent.deleteKey(RedisKeyGenerator.genAbroadCompValueRstData(symbol, EvaluationConst.CAL_VALUE_VERSION));
+
+                return convertEntityToDto(existingPrediction.get(), predictionResponseDto.getSource());
+            }
+        }
+
+        return null;
+    }
+
+    /**
      * 1주일 내 최고가 AI 예측 조회
      *
      * @param symbol 티커 심볼
+     * @param isLearning 학습 여부(테이블 데이터 없을시)
      * @return 예측 결과
      */
-    public PredictionResponseDto getPrediction(String symbol) {
+    public PredictionResponseDto getPrediction(String symbol, boolean isLearning) {
 
         if (log.isDebugEnabled()) {
             log.debug("AI 예측 조회 시작 - symbol: {}, isLocal: {}", symbol, isLocal);
@@ -70,8 +112,10 @@ public class MlService {
 
         // 3. DB에 데이터가 없으면 외부 파드 호출
         if (log.isDebugEnabled()) {
-            log.debug("DB에 데이터 없음. 외부 API 호출 - symbol: {}", symbol);
+            log.debug("DB에 데이터 없음. 외부 API 호출 여부 [{}] - symbol: {}", isLearning, symbol);
         }
+
+        if(!isLearning) return null;
 
         ExternalPredictionResDto externalResponse = callExternalPredictionApi(symbol);
 
@@ -149,9 +193,9 @@ public class MlService {
                 .predictedHigh(entity.getPredictedHigh())
                 .currentPrice(entity.getCurrentPrice())
                 .upsidePercent(upsidePercent)
-                .predictionDate(entity.getPredictionDate())
-                .targetStartDate(entity.getTargetStartDate())
-                .targetEndDate(entity.getTargetEndDate())
+                .predictionDate(DateUtil.convertLocaleDateToString(entity.getPredictionDate(), "yyyy-MM-dd"))
+                .targetStartDate(DateUtil.convertLocaleDateToString(entity.getTargetStartDate(), "yyyy-MM-dd"))
+                .targetEndDate(DateUtil.convertLocaleDateToString(entity.getTargetEndDate(), "yyyy-MM-dd"))
                 .source(source)
                 .modelVersion(entity.getModelVersion())
                 .build();

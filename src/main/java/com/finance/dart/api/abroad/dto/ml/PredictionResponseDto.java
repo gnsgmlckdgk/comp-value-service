@@ -1,10 +1,7 @@
 package com.finance.dart.api.abroad.dto.ml;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -12,11 +9,10 @@ import java.time.LocalDate;
 /**
  * AI 예측 조회 응답 DTO
  */
-@Data
+@Getter
+@Setter
+@ToString
 @Builder
-@NoArgsConstructor
-@AllArgsConstructor
-@JsonInclude(JsonInclude.Include.NON_NULL)
 public class PredictionResponseDto {
 
     /** 티커 심볼 */
@@ -38,13 +34,13 @@ public class PredictionResponseDto {
     private String upsidePercent;
 
     /** 예측 날짜 */
-    private LocalDate predictionDate;
+    private String predictionDate;
 
     /** 예측 대상 기간 시작일 */
-    private LocalDate targetStartDate;
+    private String targetStartDate;
 
     /** 예측 대상 기간 종료일 (1주 후) */
-    private LocalDate targetEndDate;
+    private String targetEndDate;
 
     /** 데이터 소스 (database: DB 저장된 데이터, realtime: 실시간 예측 데이터) */
     private String source;

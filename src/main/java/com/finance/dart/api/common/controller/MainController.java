@@ -139,7 +139,6 @@ public class MainController {
         return new ResponseEntity<>(new CommonResponse<>(responseBody), HttpStatus.OK);
     }
 
-
     /**
      * 추천 미국 거래소 기업 조회 (프로파일별)
      * @param recommendedStocksReqDto 요청 DTO (profileName 필수)
