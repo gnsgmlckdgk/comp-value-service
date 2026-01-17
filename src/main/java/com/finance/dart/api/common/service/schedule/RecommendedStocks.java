@@ -38,20 +38,21 @@ public class RecommendedStocks {
     }
 
     private void processDataInBackground() {
+        log.info("[추천 종목] 처리 시작");
         recommendedStocksProcessor.process();
     }
 
     @PreDestroy
     public void shutdownExecutor() {
         executorService.shutdown();
-        if(log.isDebugEnabled()) log.debug("[가치계산 스케줄러(미국)] ExecutorService 종료");
+        if(log.isDebugEnabled()) log.info("[추천 종목] ExecutorService 종료");
         try {
             if (!executorService.awaitTermination(10, TimeUnit.SECONDS)) {
-                log.error("[가치계산 스케줄러(미국)] ExecutorService 강제 종료");
+                log.error("[추천 종목] ExecutorService 강제 종료");
                 executorService.shutdownNow();
             }
         } catch (InterruptedException e) {
-            log.error("[가치계산 스케줄러(미국)] ExecutorService 종료 오류");
+            log.error("[추천 종목] ExecutorService 종료 오류");
             executorService.shutdownNow();
             Thread.currentThread().interrupt();
         }

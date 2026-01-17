@@ -32,13 +32,14 @@ public class CalCompanyStockPerValueTotalService {
     }
 
     private void processDataInBackground() {
+        if(log.isDebugEnabled()) log.info("[가치계산 스케줄러] ExecutorService 시작");
         calCompanyStockPerValueTotalWorker.process();
     }
 
     @PreDestroy
     public void shutdownExecutor() {
         executorService.shutdown();
-        if(log.isDebugEnabled()) log.debug("[가치계산 스케줄러] ExecutorService 종료");
+        if(log.isDebugEnabled()) log.info("[가치계산 스케줄러] ExecutorService 종료");
         try {
             if (!executorService.awaitTermination(10, TimeUnit.SECONDS)) {
                 log.error("[가치계산 스케줄러] ExecutorService 강제 종료");

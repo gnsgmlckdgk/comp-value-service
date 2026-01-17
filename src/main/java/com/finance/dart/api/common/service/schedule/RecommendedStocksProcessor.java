@@ -64,7 +64,6 @@ public class RecommendedStocksProcessor {
      * @param maxCount 최대 처리 건수 (0이면 전체)
      */
     public void process(int maxCount) {
-        log.info("[추천종목] 처리 시작");
 
         try {
             // 1. 활성화된 프로파일 조회
@@ -72,11 +71,11 @@ public class RecommendedStocksProcessor {
                     .findByIsActiveOrderBySortOrder("Y");
 
             if (activeProfiles == null || activeProfiles.isEmpty()) {
-                log.warn("[추천종목] 활성화된 프로파일이 없습니다.");
+                log.warn("[추천 종목] 활성화된 프로파일이 없습니다.");
                 return;
             }
 
-            log.info("[추천종목] 활성화된 프로파일 수: {}개", activeProfiles.size());
+            log.info("[추천 종목] 활성화된 프로파일 수: {}개", activeProfiles.size());
 
             // 2. API 호출 결과 캐싱용 맵 (심볼별로 캐싱)
             Map<String, StockScreenerResDto> screenerCache = new HashMap<>();
@@ -85,19 +84,19 @@ public class RecommendedStocksProcessor {
             // 3. 프로파일별로 독립적으로 처리
             for (int profileIdx = 0; profileIdx < activeProfiles.size(); profileIdx++) {
                 RecommendProfileEntity profile = activeProfiles.get(profileIdx);
-                log.info("[추천종목] 프로파일 처리 시작 [{}/{}]: {}",
+                log.info("[추천 종목] 프로파일 처리 시작 [{}/{}]: {}",
                         profileIdx + 1, activeProfiles.size(), profile.getProfileName());
 
                 processProfile(profile, maxCount, screenerCache, ratiosCache);
 
-                log.info("[추천종목] 프로파일 처리 완료 [{}/{}]: {}",
+                log.info("[추천 종목] 프로파일 처리 완료 [{}/{}]: {}",
                         profileIdx + 1, activeProfiles.size(), profile.getProfileName());
             }
 
-            log.info("[추천종목] 전체 처리 완료");
+            log.info("[추천 종목] 전체 처리 완료");
 
         } catch (Exception e) {
-            log.error("[추천종목] 처리 중 오류 발생", e);
+            log.error("[추천 종목] 처리 중 오류 발생", e);
         }
     }
 
@@ -113,63 +112,63 @@ public class RecommendedStocksProcessor {
         try {
             RecommendProfileConfigEntity config = profile.getConfig();
             if (config == null) {
-                log.warn("[추천종목] 프로파일 '{}' 의 설정이 없습니다. 건너뜁니다.", profile.getProfileName());
+                log.warn("[추천 종목] 프로파일 '{}' 의 설정이 없습니다. 건너뜁니다.", profile.getProfileName());
                 return;
             }
 
             // 1. Stock Screener로 후보군 조회 (캐시 활용)
             List<StockScreenerResDto> candidates = fetchCandidates(config, screenerCache);
             if (candidates == null || candidates.isEmpty()) {
-                log.warn("[추천종목] 프로파일 '{}' 후보군이 없습니다.", profile.getProfileName());
+                log.warn("[추천 종목] 프로파일 '{}' 후보군이 없습니다.", profile.getProfileName());
                 return;
             }
 
-            log.info("[추천종목] 프로파일 '{}' 후보군 조회 완료: {}건", profile.getProfileName(), candidates.size());
+            log.info("[추천 종목] 프로파일 '{}' 후보군 조회 완료: {}건", profile.getProfileName(), candidates.size());
 
             // 최대 처리 건수 적용
             if (maxCount > 0 && candidates.size() > maxCount) {
                 candidates = candidates.subList(0, maxCount);
-                log.info("[추천종목] 프로파일 '{}' 최대 처리 건수 적용: {}건", profile.getProfileName(), maxCount);
+                log.info("[추천 종목] 프로파일 '{}' 최대 처리 건수 적용: {}건", profile.getProfileName(), maxCount);
             }
 
             // 2. 배치 단위로 RatiosTTM 조회 및 필터링
             Map<String, RecommendedStockData> undervaluedStocks = new LinkedHashMap<>();
 
             List<List<StockScreenerResDto>> batches = partitionList(candidates, API_CALLS_PER_MINUTE);
-            log.info("[추천종목] 프로파일 '{}' 배치 수: {} (배치당 {}건)",
+            log.info("[추천 종목] 프로파일 '{}' 배치 수: {} (배치당 {}건)",
                     profile.getProfileName(), batches.size(), API_CALLS_PER_MINUTE);
 
             for (int i = 0; i < batches.size(); i++) {
                 List<StockScreenerResDto> batch = batches.get(i);
-                log.info("[추천종목] 프로파일 '{}' 배치 {}/{} 처리 중 ({}건)",
+                log.info("[추천 종목] 프로파일 '{}' 배치 {}/{} 처리 중 ({}건)",
                         profile.getProfileName(), i + 1, batches.size(), batch.size());
 
                 // RatiosTTM 병렬 조회 (캐시 활용)
                 Map<String, RecommendedStockData> batchResult = processBatch(batch, config, ratiosCache);
                 undervaluedStocks.putAll(batchResult);
 
-                log.info("[추천종목] 프로파일 '{}' 배치 {}/{} 완료 - 저평가 종목: {}건",
+                log.info("[추천 종목] 프로파일 '{}' 배치 {}/{} 완료 - 저평가 종목: {}건",
                         profile.getProfileName(), i + 1, batches.size(), batchResult.size());
 
                 // 마지막 배치가 아니면 대기 (API 호출 제한)
                 if (i < batches.size() - 1) {
-                    log.info("[추천종목] 프로파일 '{}' API 호출 제한으로 {}초 대기",
+                    log.info("[추천 종목] 프로파일 '{}' API 호출 제한으로 {}초 대기",
                             profile.getProfileName(), API_BATCH_INTERVAL_MS / 1000);
                     Thread.sleep(API_BATCH_INTERVAL_MS);
                 }
             }
 
-            log.info("[추천종목] 프로파일 '{}' 필터링 완료 - 총 저평가 종목: {}건",
+            log.info("[추천 종목] 프로파일 '{}' 필터링 완료 - 총 저평가 종목: {}건",
                     profile.getProfileName(), undervaluedStocks.size());
 
             // 3. Redis에 프로파일별로 저장
             saveToRedis(profile.getProfileName(), undervaluedStocks);
 
         } catch (InterruptedException e) {
-            log.error("[추천종목] 프로파일 '{}' 처리 중단됨", profile.getProfileName(), e);
+            log.error("[추천 종목] 프로파일 '{}' 처리 중단됨", profile.getProfileName(), e);
             Thread.currentThread().interrupt();
         } catch (Exception e) {
-            log.error("[추천종목] 프로파일 '{}' 처리 중 오류 발생", profile.getProfileName(), e);
+            log.error("[추천 종목] 프로파일 '{}' 처리 중 오류 발생", profile.getProfileName(), e);
         }
     }
 
@@ -361,11 +360,11 @@ public class RecommendedStocksProcessor {
             String profileDataKey = RedisKeyGenerator.genRecommendedStocksByProfile(profileName);
             String profileDataJson = objectMapper.writeValueAsString(undervaluedStocks);
             redisComponent.saveValueWithTtl(profileDataKey, profileDataJson, REDIS_TTL_HOURS, TimeUnit.HOURS);
-            log.info("[추천종목] 프로파일 '{}' Redis 저장 완료 - Key: {}, 종목 수: {}",
+            log.info("[추천 종목] 프로파일 '{}' Redis 저장 완료 - Key: {}, 종목 수: {}",
                     profileName, profileDataKey, undervaluedStocks.size());
 
         } catch (JsonProcessingException e) {
-            log.error("[추천종목] 프로파일 '{}' Redis 저장 중 JSON 변환 오류", profileName, e);
+            log.error("[추천 종목] 프로파일 '{}' Redis 저장 중 JSON 변환 오류", profileName, e);
         }
     }
 
