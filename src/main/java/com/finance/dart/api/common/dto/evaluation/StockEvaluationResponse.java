@@ -2,17 +2,16 @@ package com.finance.dart.api.common.dto.evaluation;
 
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.finance.dart.api.common.dto.CompanySharePriceResultDetail;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 import java.util.List;
 
 /**
  * 종목 평가 응답 DTO
  */
-@Data
+@Getter
+@Setter
+@ToString
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor

@@ -2,6 +2,9 @@ package com.finance.dart.api.abroad.service;
 
 import com.finance.dart.api.abroad.consts.PredictionProgramConfig;
 import com.finance.dart.api.abroad.dto.ml.ExternalPredictionResDto;
+import com.finance.dart.api.abroad.dto.ml.LogContentDto;
+import com.finance.dart.api.abroad.dto.ml.LogFileInfoDto;
+import com.finance.dart.api.abroad.dto.ml.LogFileListDto;
 import com.finance.dart.api.abroad.dto.ml.PredictionResponseDto;
 import com.finance.dart.api.common.constants.EvaluationConst;
 import com.finance.dart.api.common.entity.StockPredictionEntity;
@@ -248,5 +251,176 @@ public class MlService {
                 .multiply(new BigDecimal("100"));
 
         return String.format("%.2f%%", upside);
+    }
+
+    /**
+     * 로그 파일 목록 조회
+     *
+     * @return 로그 파일 목록
+     */
+    public LogFileListDto getLogFileList() {
+
+        String baseUrl = isLocal
+                ? PredictionProgramConfig.localHost
+                : PredictionProgramConfig.prodHost;
+
+        String url = String.format("%s/%s", baseUrl, PredictionProgramConfig.API_URI_logs);
+
+        if (log.isDebugEnabled()) {
+            log.debug("로그 파일 목록 조회 API 호출 - URL: {}", url);
+        }
+
+        try {
+            RestTemplate restTemplate = createMlRestTemplate();
+            URI uri = URI.create(url);
+            ResponseEntity<LogFileListDto> response = restTemplate.exchange(
+                    uri,
+                    HttpMethod.GET,
+                    null,
+                    new ParameterizedTypeReference<LogFileListDto>() {}
+            );
+
+            LogFileListDto body = response.getBody();
+
+            if (log.isDebugEnabled()) {
+                log.debug("로그 파일 목록 조회 완료 - response: {}", body);
+            }
+
+            return body;
+
+        } catch (Exception e) {
+            log.error("로그 파일 목록 조회 실패 - error: {}", e.getMessage(), e);
+            throw new RuntimeException("Failed to get log file list", e);
+        }
+    }
+
+    /**
+     * 최신 로그 파일 정보 조회
+     *
+     * @return 최신 로그 파일 정보
+     */
+    public LogFileInfoDto getLatestLogFileInfo() {
+
+        String baseUrl = isLocal
+                ? PredictionProgramConfig.localHost
+                : PredictionProgramConfig.prodHost;
+
+        String url = String.format("%s/%s", baseUrl, PredictionProgramConfig.API_URI_logs_latest);
+
+        if (log.isDebugEnabled()) {
+            log.debug("최신 로그 파일 정보 조회 API 호출 - URL: {}", url);
+        }
+
+        try {
+            RestTemplate restTemplate = createMlRestTemplate();
+            URI uri = URI.create(url);
+            ResponseEntity<LogFileInfoDto> response = restTemplate.exchange(
+                    uri,
+                    HttpMethod.GET,
+                    null,
+                    new ParameterizedTypeReference<LogFileInfoDto>() {}
+            );
+
+            LogFileInfoDto body = response.getBody();
+
+            if (log.isDebugEnabled()) {
+                log.debug("최신 로그 파일 정보 조회 완료 - response: {}", body);
+            }
+
+            return body;
+
+        } catch (Exception e) {
+            log.error("최신 로그 파일 정보 조회 실패 - error: {}", e.getMessage(), e);
+            throw new RuntimeException("Failed to get latest log file info", e);
+        }
+    }
+
+    /**
+     * 로그 파일 내용 조회
+     *
+     * @param filename 로그 파일명
+     * @return 로그 내용
+     */
+    public LogContentDto getLogContent(String filename) {
+
+        String baseUrl = isLocal
+                ? PredictionProgramConfig.localHost
+                : PredictionProgramConfig.prodHost;
+
+        String url = String.format("%s/%s/%s", baseUrl, PredictionProgramConfig.API_URI_logs, filename);
+
+        if (log.isDebugEnabled()) {
+            log.debug("로그 내용 조회 API 호출 - URL: {}, filename: {}", url, filename);
+        }
+
+        try {
+            RestTemplate restTemplate = createMlRestTemplate();
+            URI uri = URI.create(url);
+            ResponseEntity<LogContentDto> response = restTemplate.exchange(
+                    uri,
+                    HttpMethod.GET,
+                    null,
+                    new ParameterizedTypeReference<LogContentDto>() {}
+            );
+
+            LogContentDto body = response.getBody();
+
+            if (log.isDebugEnabled()) {
+                log.debug("로그 내용 조회 완료 - filename: {}", filename);
+            }
+
+            return body;
+
+        } catch (Exception e) {
+            log.error("로그 내용 조회 실패 - filename: {}, error: {}", filename, e.getMessage(), e);
+            throw new RuntimeException("Failed to get log content", e);
+        }
+    }
+
+    /**
+     * 최신 로그 증분 조회 (폴링용)
+     *
+     * @param lastLine 마지막으로 읽은 줄 번호 (0이면 초기 로드)
+     * @return 최신 로그 내용
+     */
+    public LogContentDto getLatestLogStream(Integer lastLine) {
+
+        String baseUrl = isLocal
+                ? PredictionProgramConfig.localHost
+                : PredictionProgramConfig.prodHost;
+
+        String url = String.format("%s/%s?lastLine=%d",
+                baseUrl,
+                PredictionProgramConfig.API_URI_logs_stream_latest,
+                lastLine != null ? lastLine : 0);
+
+        if (log.isDebugEnabled()) {
+            log.debug("최신 로그 조회 API 호출 - URL: {}, lastLine: {}", url, lastLine);
+        }
+
+        try {
+            RestTemplate restTemplate = createMlRestTemplate();
+            URI uri = URI.create(url);
+            ResponseEntity<LogContentDto> response = restTemplate.exchange(
+                    uri,
+                    HttpMethod.GET,
+                    null,
+                    new ParameterizedTypeReference<LogContentDto>() {}
+            );
+
+            LogContentDto body = response.getBody();
+
+            if (log.isDebugEnabled()) {
+                log.debug("최신 로그 조회 완료 - endLine: {}, totalLines: {}",
+                        body != null ? body.getEndLine() : null,
+                        body != null ? body.getTotalLines() : null);
+            }
+
+            return body;
+
+        } catch (Exception e) {
+            log.error("최신 로그 조회 실패 - lastLine: {}, error: {}", lastLine, e.getMessage(), e);
+            throw new RuntimeException("Failed to get latest log stream", e);
+        }
     }
 }

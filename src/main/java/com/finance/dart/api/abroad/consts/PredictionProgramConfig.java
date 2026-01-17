@@ -18,4 +18,9 @@ public class PredictionProgramConfig {
     /** 예측 API URI **/
     public static final String API_URI_predict = "predict";
 
+    /** 로그 API URI **/
+    public static final String API_URI_logs = "logs";
+    public static final String API_URI_logs_latest = "logs/latest";
+    public static final String API_URI_logs_stream_latest = "logs/stream/latest";
+
 }
