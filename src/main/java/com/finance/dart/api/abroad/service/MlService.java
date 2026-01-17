@@ -1,5 +1,6 @@
 package com.finance.dart.api.abroad.service;
 
+import com.finance.dart.api.abroad.consts.PredictionProgramConfig;
 import com.finance.dart.api.abroad.dto.ml.ExternalPredictionResDto;
 import com.finance.dart.api.abroad.dto.ml.PredictionResponseDto;
 import com.finance.dart.api.common.constants.EvaluationConst;
@@ -138,10 +139,12 @@ public class MlService {
 
         // 환경에 따라 URL 결정
         String baseUrl = isLocal
-                ? "http://localhost:18081"
-                : "http://stock-predictor-service";
+                ? PredictionProgramConfig.localHost
+                : PredictionProgramConfig.prodHost;
 
-        String url = String.format("%s/predict/%s", baseUrl, symbol);
+        String predictAPI = PredictionProgramConfig.API_URI_predict;
+
+        String url = String.format("%s/%s/%s", baseUrl, predictAPI, symbol);
 
         if (log.isDebugEnabled()) {
             log.debug("외부 예측 API 호출 - URL: {}, ReadTimeout: 60초", url);
