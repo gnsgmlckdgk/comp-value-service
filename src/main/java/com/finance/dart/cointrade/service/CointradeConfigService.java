@@ -3,6 +3,8 @@ package com.finance.dart.cointrade.service;
 import com.finance.dart.cointrade.dto.*;
 import com.finance.dart.cointrade.entity.*;
 import com.finance.dart.cointrade.repository.*;
+import com.finance.dart.common.constant.ResponseEnum;
+import com.finance.dart.common.exception.BizException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -90,6 +92,19 @@ public class CointradeConfigService {
             return;
         }
 
+        // 1. Upbit에 없는 마켓은 DB에서 삭제
+        List<String> upbitMarketCodes = upbitMarkets.stream()
+                .map(TradingParisDto::getMarket)
+                .collect(Collectors.toList());
+
+        List<CointradeTargetCoinEntity> existingCoins = targetCoinRepository.findAll();
+        for (CointradeTargetCoinEntity entity : existingCoins) {
+            if (!upbitMarketCodes.contains(entity.getCoinCode())) {
+                targetCoinRepository.delete(entity);
+            }
+        }
+
+        // 2. Upbit 마켓 정보로 DB 업데이트 (신규 추가 및 정보 갱신)
         for (TradingParisDto market : upbitMarkets) {
             String marketCode = market.getMarket();
             

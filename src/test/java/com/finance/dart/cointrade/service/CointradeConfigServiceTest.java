@@ -65,6 +65,13 @@ class CointradeConfigServiceTest {
         existingBtc.setCoinCode("KRW-BTC");
         existingBtc.setIsActive(false);
 
+        // Assume there is an old coin in DB that is not in Upbit anymore
+        CointradeTargetCoinEntity oldCoin = new CointradeTargetCoinEntity();
+        oldCoin.setCoinCode("KRW-OLD");
+        oldCoin.setIsActive(true);
+
+        when(targetCoinRepository.findAll()).thenReturn(Arrays.asList(existingBtc, oldCoin));
+
         when(targetCoinRepository.findByCoinCode("KRW-BTC")).thenReturn(Optional.of(existingBtc));
         when(targetCoinRepository.findByCoinCode("KRW-ETH")).thenReturn(Optional.empty());
         when(targetCoinRepository.findByCoinCode("KRW-XRP")).thenReturn(Optional.empty());
@@ -76,7 +83,10 @@ class CointradeConfigServiceTest {
         cointradeConfigService.updateTargetCoins(activeCoins);
 
         // Assert
-        // Verify 3 saves (one for each market)
+        // Verify deletion of the old coin
+        verify(targetCoinRepository, times(1)).delete(oldCoin);
+
+        // Verify 3 saves (one for each market in Upbit)
         verify(targetCoinRepository, times(3)).save(any(CointradeTargetCoinEntity.class));
     }
 }
