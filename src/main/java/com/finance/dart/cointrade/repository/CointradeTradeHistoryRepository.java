@@ -29,6 +29,15 @@ public interface CointradeTradeHistoryRepository extends JpaRepository<Cointrade
     List<CointradeTradeHistoryEntity> findByCreatedAtBetween(LocalDateTime start, LocalDateTime end);
 
     /**
+     * 날짜 범위로 거래 기록 조회 (페이징)
+     * @param start 시작 일시
+     * @param end 종료 일시
+     * @param pageable 페이징 정보
+     * @return 거래 기록 Entity 페이지
+     */
+    Page<CointradeTradeHistoryEntity> findByCreatedAtBetween(LocalDateTime start, LocalDateTime end, Pageable pageable);
+
+    /**
      * 종목별 + 날짜 범위 거래 기록 조회
      * @param coinCode 코인 코드
      * @param start 시작 일시
@@ -37,6 +46,17 @@ public interface CointradeTradeHistoryRepository extends JpaRepository<Cointrade
      */
     List<CointradeTradeHistoryEntity> findByCoinCodeAndCreatedAtBetween(
             String coinCode, LocalDateTime start, LocalDateTime end);
+
+    /**
+     * 종목별 + 날짜 범위 거래 기록 조회 (페이징)
+     * @param coinCode 코인 코드
+     * @param start 시작 일시
+     * @param end 종료 일시
+     * @param pageable 페이징 정보
+     * @return 거래 기록 Entity 페이지
+     */
+    Page<CointradeTradeHistoryEntity> findByCoinCodeAndCreatedAtBetween(
+            String coinCode, LocalDateTime start, LocalDateTime end, Pageable pageable);
 
     /**
      * 거래 타입별 거래 기록 조회

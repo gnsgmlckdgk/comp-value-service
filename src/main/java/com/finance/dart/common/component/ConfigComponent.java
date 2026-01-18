@@ -36,4 +36,16 @@ public class ConfigComponent {
     public String getOpenAiApiKey() {
         return env.getProperty("OPEN_AI_API_KEY");
     }
+
+    /**
+     * 업비트 ACCECC KEY
+     * @return
+     */
+    public String getUpbitAccessKey() { return env.getProperty("UPBIT_OPEN_API_ACCESS_KEY"); }
+
+    /**
+     * 업비트 SECRET KEY
+     * @return
+     */
+    public String getUpbitSecretKey() { return env.getProperty("UPBIT_OPEN_API_ACCESS_KEY"); }
 }
