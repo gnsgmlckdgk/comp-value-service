@@ -10,6 +10,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.finance.dart.cointrade.dto.upbit.TradingParisDto;
+
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDateTime;
@@ -28,6 +30,7 @@ public class CointradeConfigService {
     private final CointradeTargetCoinRepository targetCoinRepository;
     private final CointradeHoldingRepository holdingRepository;
     private final CointradeTradeHistoryRepository tradeHistoryRepository;
+    private final UpbitService upbitService;
 
     /**
      * 전체 설정값 조회
@@ -75,17 +78,35 @@ public class CointradeConfigService {
 
     /**
      * 대상 종목 설정 (선택한 종목들 is_active = true, 나머지 false)
+     * Upbit 전체 마켓 조회 후 DB 동기화
      */
     @Transactional
     public void updateTargetCoins(List<String> coinCodes) {
-        List<CointradeTargetCoinEntity> allCoins = targetCoinRepository.findAll();
 
-        for (CointradeTargetCoinEntity entity : allCoins) {
-            entity.setIsActive(coinCodes.contains(entity.getCoinCode()));
+        List<TradingParisDto> upbitMarkets = upbitService.getTradingPairs();
+
+        if (upbitMarkets == null) {
+            log.error("Upbit 거래 목록 조회 실패");
+            return;
+        }
+
+        for (TradingParisDto market : upbitMarkets) {
+            String marketCode = market.getMarket();
+            
+            CointradeTargetCoinEntity entity = targetCoinRepository.findByCoinCode(marketCode)
+                    .orElseGet(() -> {
+                        CointradeTargetCoinEntity newEntity = new CointradeTargetCoinEntity();
+                        newEntity.setCoinCode(marketCode);
+                        return newEntity;
+                    });
+
+            entity.setCoinName(market.getKoreanName());
+            entity.setIsActive(coinCodes.contains(marketCode));
+            
             targetCoinRepository.save(entity);
         }
 
-        log.info("대상 종목 설정 완료: 활성화 {}개, 전체 {}개", coinCodes.size(), allCoins.size());
+        log.info("대상 종목 설정 완료: 활성화 {}개, 전체 {}개", coinCodes.size(), upbitMarkets.size());
     }
 
     /**
