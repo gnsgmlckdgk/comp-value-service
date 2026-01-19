@@ -37,11 +37,17 @@ public class CointradeMlModelEntity {
     @Column(name = "train_data_end")
     private LocalDate trainDataEnd;
 
-    @Column(name = "mse", precision = 20, scale = 10)
-    private BigDecimal mse;
+    @Column(name = "mse_high", precision = 20, scale = 10)
+    private BigDecimal mseHigh; // 고가 예측 MSE
 
-    @Column(name = "mae", precision = 20, scale = 10)
-    private BigDecimal mae;
+    @Column(name = "mse_low", precision = 20, scale = 10)
+    private BigDecimal mseLow; // 저가 예측 MSE
+
+    @Column(name = "mse_surge_prob", precision = 20, scale = 10)
+    private BigDecimal mseSurgeProb; // 급등 확률 예측 MSE
+
+    @Column(name = "accuracy_surge_day", precision = 5, scale = 4)
+    private BigDecimal accuracySurgeDay; // 급등일 예측 정확도
 
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)

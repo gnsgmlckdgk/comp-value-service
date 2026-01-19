@@ -138,6 +138,10 @@ public class CointradeConfigService {
                         .predictedHigh(entity.getPredictedHigh())
                         .predictedLow(entity.getPredictedLow())
                         .buyDate(entity.getBuyDate())
+                        .surgeProbability(entity.getSurgeProbability())
+                        .surgeDay(entity.getSurgeDay())
+                        .expireDate(entity.getExpireDate())
+                        .buyScore(entity.getBuyScore())
                         .build())
                 .collect(Collectors.toList());
     }
@@ -183,6 +187,8 @@ public class CointradeConfigService {
                 .reason(entity.getReason())
                 .profitLoss(entity.getProfitLoss())
                 .profitLossRate(entity.getProfitLossRate())
+                .buyScore(entity.getBuyScore())
+                .surgeProbability(entity.getSurgeProbability())
                 .createdAt(entity.getCreatedAt())
                 .build());
     }

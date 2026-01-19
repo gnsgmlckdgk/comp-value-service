@@ -5,6 +5,7 @@ import lombok.Data;
 import org.hibernate.annotations.CreationTimestamp;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 /**
@@ -40,6 +41,19 @@ public class CointradeHoldingEntity {
 
     @Column(name = "buy_date")
     private LocalDateTime buyDate;
+
+    @Column(name = "surge_probability", nullable = false, precision = 5, scale = 2)
+    private BigDecimal surgeProbability; // 급등 확률
+
+    @Column(name = "surge_day")
+    private LocalDate surgeDay; // 급등 예상일
+
+    @Column(name = "expire_date")
+    private LocalDate expireDate; // 만료일
+
+    @Column(name = "buy_score", nullable = false, precision = 5, scale = 2)
+    private BigDecimal buyScore; // 매수 점수
+
 
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)

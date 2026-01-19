@@ -23,8 +23,10 @@ public class CointradeTradeHistoryDto {
     private BigDecimal price;
     private BigDecimal quantity;
     private BigDecimal totalAmount;
-    private String reason;
+    private String reason;  // SIGNAL/TAKE_PROFIT/STOP_LOSS/EXPIRED
     private BigDecimal profitLoss;
     private BigDecimal profitLossRate;
+    private BigDecimal buyScore;
+    private BigDecimal surgeProbability;
     private LocalDateTime createdAt;
 }
