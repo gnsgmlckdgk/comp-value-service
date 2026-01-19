@@ -1,18 +1,19 @@
 package com.finance.dart.cointrade.service;
 
 import com.finance.dart.cointrade.dto.*;
-import com.finance.dart.cointrade.entity.*;
-import com.finance.dart.cointrade.repository.*;
-import com.finance.dart.common.constant.ResponseEnum;
-import com.finance.dart.common.exception.BizException;
+import com.finance.dart.cointrade.dto.upbit.TradingParisDto;
+import com.finance.dart.cointrade.entity.CointradeTargetCoinEntity;
+import com.finance.dart.cointrade.entity.CointradeTradeHistoryEntity;
+import com.finance.dart.cointrade.repository.CointradeConfigRepository;
+import com.finance.dart.cointrade.repository.CointradeHoldingRepository;
+import com.finance.dart.cointrade.repository.CointradeTargetCoinRepository;
+import com.finance.dart.cointrade.repository.CointradeTradeHistoryRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import com.finance.dart.cointrade.dto.upbit.TradingParisDto;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -233,6 +234,19 @@ public class CointradeConfigService {
                 .map(entity -> Boolean.parseBoolean(entity.getParamValue()))
                 .orElse(false);
 
+        String buyCheckHours = configRepository.findByParamName("BUY_CHECK_HOURS")
+                .map(entity -> String.valueOf(entity.getParamValue()))
+                .orElse(null);
+
+        String sellCheckSeconds = configRepository.findByParamName("SELL_CHECK_SECONDS")
+                .map(entity -> String.valueOf(entity.getParamValue()))
+                .orElse(null);
+
+        String priceMonitorSeconds = configRepository.findByParamName("PRICE_MONITOR_SECONDS")
+                .map(entity -> String.valueOf(entity.getParamValue()))
+                .orElse(null);
+
+
         // 보유 종목 수
         Integer holdingCount = (int) holdingRepository.count();
 
@@ -270,6 +284,9 @@ public class CointradeConfigService {
         return CointradeStatusDto.builder()
                 .buySchedulerEnabled(buySchedulerEnabled)
                 .sellSchedulerEnabled(sellSchedulerEnabled)
+                .buyCheckHours(buyCheckHours)
+                .sellCheckSeconds(sellCheckSeconds)
+                .priceMonitorSeconds(priceMonitorSeconds)
                 .holdingCount(holdingCount)
                 .totalBuyCount((int) buyCount)
                 .totalSellCount((int) sellCount)
