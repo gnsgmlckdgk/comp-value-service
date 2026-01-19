@@ -349,6 +349,9 @@ public class MlService {
 
         String url = String.format("%s/%s/%s", baseUrl, PredictionProgramConfig.API_URI_logs, filename);
 
+        //2 파라미터 정의
+        url = url + "?all=true";    // all : 로그 전체 조회
+
         if (log.isDebugEnabled()) {
             log.debug("로그 내용 조회 API 호출 - URL: {}, filename: {}", url, filename);
         }
