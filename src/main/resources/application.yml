@@ -79,6 +79,14 @@ logging:
     org.testcontainers: DEBUG
     org.springframework.test: DEBUG
 
+  file:
+    name: ./logs/app.log
+
+  logback:
+    rollingpolicy:
+      file-name-pattern: ./logs/app.%d{yyyy-MM-dd}.log
+      max-history: 7
+
 app:
   local: true
 

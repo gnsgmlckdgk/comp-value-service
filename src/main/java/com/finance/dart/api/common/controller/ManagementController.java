@@ -3,7 +3,9 @@ package com.finance.dart.api.common.controller;
 
 import com.finance.dart.api.common.dto.MgntRedisReqDto;
 import com.finance.dart.api.common.dto.MgntRedisResDto;
+import com.finance.dart.api.common.dto.log.LogFileListDto;
 import com.finance.dart.api.common.service.MgntRedisService;
+import com.finance.dart.api.common.service.MgntLogService;
 import com.finance.dart.common.config.EndPointConfig;
 import com.finance.dart.common.dto.CommonResponse;
 import com.finance.dart.common.logging.CircularLogBuffer;
@@ -27,6 +29,7 @@ import java.util.function.Consumer;
 public class ManagementController {
 
     private final MgntRedisService mgntRedisService;
+    private final MgntLogService mgntLogService;
 
 
     @EndPointConfig.RequireRole({RoleConstants.ROLE_ADMIN, RoleConstants.ROLE_SUPER_ADMIN})
@@ -111,6 +114,18 @@ public class ManagementController {
     @GetMapping("/buffer")
     public List<String> getBufferedLogs() {
         return logBuffer.getAllLogs();
+    }
+
+
+    /**
+     * 로그파일 목록 조회
+     * @return
+     */
+    @EndPointConfig.RequireRole({RoleConstants.ROLE_ADMIN, RoleConstants.ROLE_SUPER_ADMIN})
+    @GetMapping("/logs")
+    public ResponseEntity<CommonResponse<LogFileListDto>> getLogFileList() {
+        LogFileListDto logFileList = mgntLogService.getLogFileList();
+        return new ResponseEntity<>(new CommonResponse<>(logFileList), HttpStatus.OK);
     }
 
 }

@@ -11,10 +11,28 @@
     <appender name="MEMORY_BUFFER" class="com.finance.dart.common.logging.LogBufferAppender">
     </appender>
 
+    <!-- application.yml 설정 가져오기 -->
+    <springProperty scope="context" name="LOG_FILE" source="logging.file.name" defaultValue="./logs/app.log"/>
+    <springProperty scope="context" name="LOG_PATTERN" source="logging.logback.rollingpolicy.file-name-pattern" defaultValue="./logs/app.%d{yyyy-MM-dd}.log"/>
+    <springProperty scope="context" name="MAX_HISTORY" source="logging.logback.rollingpolicy.max-history" defaultValue="7"/>
+
+    <!-- 파일 출력 Appender -->
+    <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>${LOG_FILE}</file>
+        <encoder>
+            <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} %-5level [%thread] %-40logger{40} : %msg%n</pattern>
+        </encoder>
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <fileNamePattern>${LOG_PATTERN}</fileNamePattern>
+            <maxHistory>${MAX_HISTORY}</maxHistory>
+        </rollingPolicy>
+    </appender>
+
     <!-- Root Logger -->
     <root level="DEBUG">
         <appender-ref ref="CONSOLE" />
         <appender-ref ref="MEMORY_BUFFER" />
+        <appender-ref ref="FILE" />
     </root>
 
     <!-- 특정 패키지 로그 레벨 설정 -->
