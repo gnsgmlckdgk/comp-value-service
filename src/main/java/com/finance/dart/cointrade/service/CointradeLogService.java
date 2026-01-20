@@ -79,6 +79,8 @@ public class CointradeLogService {
             log.debug("코인 로그 내용 조회 API 호출 - URL: {}, filename: {}", url, filename);
         }
 
+        url += "?all=true";
+
         try {
             return httpClientComponent.exchangeSync(
                     url,
