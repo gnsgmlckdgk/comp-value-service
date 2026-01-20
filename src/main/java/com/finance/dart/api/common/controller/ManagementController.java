@@ -3,9 +3,10 @@ package com.finance.dart.api.common.controller;
 
 import com.finance.dart.api.common.dto.MgntRedisReqDto;
 import com.finance.dart.api.common.dto.MgntRedisResDto;
+import com.finance.dart.api.common.dto.log.LogContentDto;
 import com.finance.dart.api.common.dto.log.LogFileListDto;
-import com.finance.dart.api.common.service.MgntRedisService;
 import com.finance.dart.api.common.service.MgntLogService;
+import com.finance.dart.api.common.service.MgntRedisService;
 import com.finance.dart.common.config.EndPointConfig;
 import com.finance.dart.common.dto.CommonResponse;
 import com.finance.dart.common.logging.CircularLogBuffer;
@@ -127,5 +128,36 @@ public class ManagementController {
         LogFileListDto logFileList = mgntLogService.getLogFileList();
         return new ResponseEntity<>(new CommonResponse<>(logFileList), HttpStatus.OK);
     }
+
+    /**
+     * 로그 파일 내용 조회
+     * @param filename
+     * @return
+     */
+    @EndPointConfig.RequireRole({RoleConstants.ROLE_ADMIN, RoleConstants.ROLE_SUPER_ADMIN})
+    @GetMapping("/logs/{filename}")
+    public ResponseEntity<CommonResponse<LogContentDto>> getLogContent(@PathVariable(name = "filename") String filename) {
+
+        if(log.isDebugEnabled()) log.debug("/mgnt/logs/{} 거래 요청 - filename: {}", filename, filename);
+
+        try {
+            LogContentDto logContent = mgntLogService.getLogContent(filename);
+
+            CommonResponse<LogContentDto> response = new CommonResponse<>(logContent);
+            response.setMessage("로그 내용 조회 성공");
+
+            return new ResponseEntity<>(response, HttpStatus.OK);
+
+        } catch (Exception e) {
+            log.error("로그 내용 조회 실패 - filename: {}, error: {}", filename, e.getMessage(), e);
+
+            CommonResponse<LogContentDto> errorResponse = new CommonResponse<>();
+            errorResponse.setMessage("로그 내용 조회 실패: " + e.getMessage());
+
+            return new ResponseEntity<>(errorResponse, HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+
+    }
+
 
 }
