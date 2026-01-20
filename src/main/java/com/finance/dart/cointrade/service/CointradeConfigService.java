@@ -1,6 +1,5 @@
 package com.finance.dart.cointrade.service;
 
-import com.finance.dart.api.abroad.consts.PredictionProgramConfig;
 import com.finance.dart.cointrade.consts.CoinTraderProgramConfig;
 import com.finance.dart.cointrade.dto.*;
 import com.finance.dart.cointrade.dto.upbit.TradingParisDto;
@@ -329,8 +328,8 @@ public class CointradeConfigService {
 
     private String buildNextRunUrl(String uri) {
         String baseUrl = isLocal
-                ? PredictionProgramConfig.localHost
-                : PredictionProgramConfig.prodHost;
+                ? CoinTraderProgramConfig.localHost
+                : CoinTraderProgramConfig.prodHost;
 
         return baseUrl + "/" + uri;
     }
