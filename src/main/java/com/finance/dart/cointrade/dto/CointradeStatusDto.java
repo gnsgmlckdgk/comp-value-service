@@ -19,7 +19,7 @@ public class CointradeStatusDto {
     private Boolean buySchedulerEnabled;
     private Boolean sellSchedulerEnabled;
     private String buyCheckHours;
-    private String buyNextRun;
+    private CointradeNextRunDto buyNextRun;
     private String sellCheckSeconds;
     private String priceMonitorSeconds;
     private Integer holdingCount;

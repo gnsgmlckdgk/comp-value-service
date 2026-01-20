@@ -1,5 +1,7 @@
 package com.finance.dart.cointrade.service;
 
+import com.finance.dart.api.abroad.consts.PredictionProgramConfig;
+import com.finance.dart.cointrade.consts.CoinTraderProgramConfig;
 import com.finance.dart.cointrade.dto.*;
 import com.finance.dart.cointrade.dto.upbit.TradingParisDto;
 import com.finance.dart.cointrade.entity.CointradeTargetCoinEntity;
@@ -8,18 +10,20 @@ import com.finance.dart.cointrade.repository.CointradeConfigRepository;
 import com.finance.dart.cointrade.repository.CointradeHoldingRepository;
 import com.finance.dart.cointrade.repository.CointradeTargetCoinRepository;
 import com.finance.dart.cointrade.repository.CointradeTradeHistoryRepository;
+import com.finance.dart.common.component.HttpClientComponent;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpMethod;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
-import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -36,6 +40,12 @@ public class CointradeConfigService {
     private final CointradeHoldingRepository holdingRepository;
     private final CointradeTradeHistoryRepository tradeHistoryRepository;
     private final UpbitService upbitService;
+
+    private final HttpClientComponent httpClientComponent;
+
+    @Value("${app.local}")
+    private boolean isLocal;
+
 
     /**
      * 전체 설정값 조회
@@ -288,7 +298,7 @@ public class CointradeConfigService {
                 .buySchedulerEnabled(buySchedulerEnabled)
                 .sellSchedulerEnabled(sellSchedulerEnabled)
                 .buyCheckHours(buyCheckHours)
-                .buyNextRun(calculateNextRunTime(buyCheckHours))
+                .buyNextRun(calculateNextRunTime())
                 .sellCheckSeconds(sellCheckSeconds)
                 .priceMonitorSeconds(priceMonitorSeconds)
                 .holdingCount(holdingCount)
@@ -301,43 +311,27 @@ public class CointradeConfigService {
 
     /**
      * 다음 실행 시간 계산
-     * @param checkHours 실행 시간대 (comma separated hours, e.g., "9,12,18")
-     * @return 다음 실행 시간 문자열 (yyyy-MM-dd HH:mm:ss)
      */
-    private String calculateNextRunTime(String checkHours) {
-        if (checkHours == null || checkHours.trim().isEmpty()) {
-            return null;
-        }
+    private CointradeNextRunDto calculateNextRunTime() {
 
-        try {
-            List<Integer> hours = Arrays.stream(checkHours.split(","))
-                    .map(String::trim)
-                    .map(Integer::parseInt)
-                    .sorted()
-                    .collect(Collectors.toList());
+        String url = buildNextRunUrl(CoinTraderProgramConfig.API_URI_BUY_NEXT_RUN);
 
-            if (hours.isEmpty()) {
-                return null;
-            }
+        log.debug("다음 실행 시간 조회 API 호출 - URL: {}", url);
 
-            LocalDateTime now = LocalDateTime.now();
-            int currentHour = now.getHour();
+        return httpClientComponent
+                .exchangeSync(
+                        url,
+                        HttpMethod.GET,
+                        new ParameterizedTypeReference<CointradeNextRunDto>() {}
+                )
+                .getBody();
+    }
 
-            // 오늘 남은 시간 중 가장 빠른 시간 찾기
-            for (int h : hours) {
-                if (h > currentHour) {
-                    return now.withHour(h).withMinute(0).withSecond(0).withNano(0)
-                            .format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
-                }
-            }
+    private String buildNextRunUrl(String uri) {
+        String baseUrl = isLocal
+                ? PredictionProgramConfig.localHost
+                : PredictionProgramConfig.prodHost;
 
-            // 오늘 실행 시간이 모두 지났으면 내일 첫 번째 시간
-            return now.plusDays(1).withHour(hours.get(0)).withMinute(0).withSecond(0).withNano(0)
-                    .format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
-
-        } catch (Exception e) {
-            log.error("Failed to calculate next run time from checkHours: {}", checkHours, e);
-            return null;
-        }
+        return baseUrl + "/" + uri;
     }
 }
