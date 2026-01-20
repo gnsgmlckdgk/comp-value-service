@@ -1,4 +1,4 @@
-package com.finance.dart.api.abroad.dto.ml;
+package com.finance.dart.stockpredictor.dto;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Getter;

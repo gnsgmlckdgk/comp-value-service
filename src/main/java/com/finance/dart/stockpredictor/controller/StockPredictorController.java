@@ -1,11 +1,11 @@
-package com.finance.dart.api.abroad.controller;
+package com.finance.dart.stockpredictor.controller;
 
 
-import com.finance.dart.api.abroad.dto.ml.LogContentDto;
-import com.finance.dart.api.abroad.dto.ml.LogFileInfoDto;
-import com.finance.dart.api.abroad.dto.ml.LogFileListDto;
-import com.finance.dart.api.abroad.dto.ml.PredictionResponseDto;
-import com.finance.dart.api.abroad.service.MlService;
+import com.finance.dart.stockpredictor.dto.LogContentDto;
+import com.finance.dart.stockpredictor.dto.LogFileInfoDto;
+import com.finance.dart.stockpredictor.dto.LogFileListDto;
+import com.finance.dart.stockpredictor.dto.PredictionResponseDto;
+import com.finance.dart.stockpredictor.service.MlService;
 import com.finance.dart.common.dto.CommonResponse;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -25,7 +25,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @AllArgsConstructor
 @RequestMapping("ml")
-public class MlController {
+public class StockPredictorController {
 
     private final MlService mlService;
 

@@ -1,18 +1,17 @@
-package com.finance.dart.api.abroad.service;
+package com.finance.dart.stockpredictor.service;
 
-import com.finance.dart.api.abroad.consts.PredictionProgramConfig;
-import com.finance.dart.api.abroad.dto.ml.ExternalPredictionResDto;
-import com.finance.dart.api.abroad.dto.ml.LogContentDto;
-import com.finance.dart.api.abroad.dto.ml.LogFileInfoDto;
-import com.finance.dart.api.abroad.dto.ml.LogFileListDto;
-import com.finance.dart.api.abroad.dto.ml.PredictionResponseDto;
+import com.finance.dart.stockpredictor.consts.PredictionProgramConfig;
+import com.finance.dart.stockpredictor.dto.ExternalPredictionResDto;
+import com.finance.dart.stockpredictor.dto.LogContentDto;
+import com.finance.dart.stockpredictor.dto.LogFileInfoDto;
+import com.finance.dart.stockpredictor.dto.LogFileListDto;
+import com.finance.dart.stockpredictor.dto.PredictionResponseDto;
 import com.finance.dart.api.common.constants.EvaluationConst;
 import com.finance.dart.api.common.entity.StockPredictionEntity;
 import com.finance.dart.api.common.repository.StockPredictionRepository;
 import com.finance.dart.common.component.RedisComponent;
 import com.finance.dart.common.component.RedisKeyGenerator;
 import com.finance.dart.common.util.DateUtil;
-import com.google.gson.Gson;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -28,7 +27,6 @@ import java.math.BigDecimal;
 import java.net.URI;
 import java.time.LocalDate;
 import java.util.Optional;
-import java.util.concurrent.TimeUnit;
 
 /**
  * 머신러닝 예측 서비스

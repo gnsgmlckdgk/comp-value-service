@@ -1,7 +1,7 @@
 package com.finance.dart.api.common.dto;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
-import com.finance.dart.api.abroad.dto.ml.PredictionResponseDto;
+import com.finance.dart.stockpredictor.dto.PredictionResponseDto;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 

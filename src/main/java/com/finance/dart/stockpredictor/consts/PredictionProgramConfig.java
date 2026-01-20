@@ -1,4 +1,4 @@
-package com.finance.dart.api.abroad.consts;
+package com.finance.dart.stockpredictor.consts;
 
 /**
  * <pre>
