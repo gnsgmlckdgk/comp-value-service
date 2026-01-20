@@ -18,6 +18,8 @@ import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -272,6 +274,7 @@ public class CointradeConfigService {
         BigDecimal totalInvestment = allTrades.stream()
                 .filter(trade -> "BUY".equals(trade.getTradeType()))
                 .map(CointradeTradeHistoryEntity::getTotalAmount)
+
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
 
         BigDecimal totalProfitLossRate = BigDecimal.ZERO;
@@ -285,6 +288,7 @@ public class CointradeConfigService {
                 .buySchedulerEnabled(buySchedulerEnabled)
                 .sellSchedulerEnabled(sellSchedulerEnabled)
                 .buyCheckHours(buyCheckHours)
+                .buyNextRun(calculateNextRunTime(buyCheckHours))
                 .sellCheckSeconds(sellCheckSeconds)
                 .priceMonitorSeconds(priceMonitorSeconds)
                 .holdingCount(holdingCount)
@@ -293,5 +297,47 @@ public class CointradeConfigService {
                 .totalProfitLoss(totalProfitLoss)
                 .totalProfitLossRate(totalProfitLossRate)
                 .build();
+    }
+
+    /**
+     * 다음 실행 시간 계산
+     * @param checkHours 실행 시간대 (comma separated hours, e.g., "9,12,18")
+     * @return 다음 실행 시간 문자열 (yyyy-MM-dd HH:mm:ss)
+     */
+    private String calculateNextRunTime(String checkHours) {
+        if (checkHours == null || checkHours.trim().isEmpty()) {
+            return null;
+        }
+
+        try {
+            List<Integer> hours = Arrays.stream(checkHours.split(","))
+                    .map(String::trim)
+                    .map(Integer::parseInt)
+                    .sorted()
+                    .collect(Collectors.toList());
+
+            if (hours.isEmpty()) {
+                return null;
+            }
+
+            LocalDateTime now = LocalDateTime.now();
+            int currentHour = now.getHour();
+
+            // 오늘 남은 시간 중 가장 빠른 시간 찾기
+            for (int h : hours) {
+                if (h > currentHour) {
+                    return now.withHour(h).withMinute(0).withSecond(0).withNano(0)
+                            .format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
+                }
+            }
+
+            // 오늘 실행 시간이 모두 지났으면 내일 첫 번째 시간
+            return now.plusDays(1).withHour(hours.get(0)).withMinute(0).withSecond(0).withNano(0)
+                    .format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
+
+        } catch (Exception e) {
+            log.error("Failed to calculate next run time from checkHours: {}", checkHours, e);
+            return null;
+        }
     }
 }
