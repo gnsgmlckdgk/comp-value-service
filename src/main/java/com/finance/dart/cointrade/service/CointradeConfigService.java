@@ -26,6 +26,8 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import java.util.Map;
+
 /**
  * 코인 자동매매 설정 관리 서비스
  */
@@ -313,7 +315,7 @@ public class CointradeConfigService {
      */
     private CointradeNextRunDto calculateNextRunTime() {
 
-        String url = buildNextRunUrl(CoinTraderProgramConfig.API_URI_BUY_NEXT_RUN);
+        String url = buildUrl(CoinTraderProgramConfig.API_URI_BUY_NEXT_RUN);
 
         log.debug("다음 실행 시간 조회 API 호출 - URL: {}", url);
 
@@ -326,7 +328,34 @@ public class CointradeConfigService {
                 .getBody();
     }
 
-    private String buildNextRunUrl(String uri) {
+    /**
+     * 매수 프로세스 수동 실행
+     */
+    public Map<String, Object> startBuyProcess() {
+        String url = buildUrl(CoinTraderProgramConfig.API_URI_TRADE_BUY_START);
+        log.info("매수 프로세스 수동 실행 요청 - URL: {}", url);
+        return httpClientComponent.exchangeSync(url, HttpMethod.POST, new ParameterizedTypeReference<Map<String, Object>>() {}).getBody();
+    }
+
+    /**
+     * 매도 프로세스 수동 실행
+     */
+    public Map<String, Object> startSellProcess() {
+        String url = buildUrl(CoinTraderProgramConfig.API_URI_TRADE_SELL_START);
+        log.info("매도 프로세스 수동 실행 요청 - URL: {}", url);
+        return httpClientComponent.exchangeSync(url, HttpMethod.POST, new ParameterizedTypeReference<Map<String, Object>>() {}).getBody();
+    }
+
+    /**
+     * 매수/매도 프로세스 수동 중지
+     */
+    public Map<String, Object> stopProcess() {
+        String url = buildUrl(CoinTraderProgramConfig.API_URI_TRADE_STOP);
+        log.info("매수/매도 프로세스 수동 중지 요청 - URL: {}", url);
+        return httpClientComponent.exchangeSync(url, HttpMethod.POST, new ParameterizedTypeReference<Map<String, Object>>() {}).getBody();
+    }
+
+    private String buildUrl(String uri) {
         String baseUrl = isLocal
                 ? CoinTraderProgramConfig.localHost
                 : CoinTraderProgramConfig.prodHost;

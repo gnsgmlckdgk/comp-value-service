@@ -18,6 +18,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 
 /**
  * 코인 자동매매 설정 관리 컨트롤러
@@ -155,4 +156,41 @@ public class CointradeConfigController {
         CointradeStatusDto status = cointradeConfigService.getStatus();
         return new ResponseEntity<>(new CommonResponse<>(status), HttpStatus.OK);
     }
+
+    /**
+     * 10. 매수 프로세스 수동 실행
+     * GET /api/cointrade/trade/buy/start
+     */
+    @EndPointConfig.RequireRole({RoleConstants.ROLE_SUPER_ADMIN})
+    @GetMapping("/trade/buy/start")
+    public ResponseEntity<CommonResponse<Map<String, Object>>> startBuyProcess() {
+        log.info("매수 프로세스 수동 실행 요청");
+        Map<String, Object> result = cointradeConfigService.startBuyProcess();
+        return new ResponseEntity<>(new CommonResponse<>(result), HttpStatus.OK);
+    }
+
+    /**
+     * 11. 매도 프로세스 수동 실행
+     * GET /api/cointrade/trade/sell/start
+     */
+    @EndPointConfig.RequireRole({RoleConstants.ROLE_SUPER_ADMIN})
+    @GetMapping("/trade/sell/start")
+    public ResponseEntity<CommonResponse<Map<String, Object>>> startSellProcess() {
+        log.info("매도 프로세스 수동 실행 요청");
+        Map<String, Object> result = cointradeConfigService.startSellProcess();
+        return new ResponseEntity<>(new CommonResponse<>(result), HttpStatus.OK);
+    }
+
+    /**
+     * 매수/매도 프로세스 수동 중지
+     * @return
+     */
+    @EndPointConfig.RequireRole({RoleConstants.ROLE_SUPER_ADMIN})
+    @GetMapping("/trade/stop")
+    public ResponseEntity<CommonResponse<Map<String, Object>>> stopProcess() {
+        log.info("매수/매도 프로세스 수동 중지 요청");
+        Map<String, Object> result = cointradeConfigService.stopProcess();
+        return new ResponseEntity<>(new CommonResponse<>(result), HttpStatus.OK);
+    }
+
 }

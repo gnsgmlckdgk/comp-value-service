@@ -46,7 +46,7 @@ public class CointradeHoldingEntity {
     private BigDecimal surgeProbability; // 급등 확률
 
     @Column(name = "surge_day")
-    private LocalDate surgeDay; // 급등 예상일
+    private Integer surgeDay; // 급등 예상일
 
     @Column(name = "expire_date")
     private LocalDate expireDate; // 만료일

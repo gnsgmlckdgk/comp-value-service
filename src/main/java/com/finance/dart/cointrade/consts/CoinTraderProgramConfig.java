@@ -27,11 +27,16 @@ public class CoinTraderProgramConfig {
     /** 특정 로그 파일 읽기 API URI (파일명을 뒤에 붙여서 사용) **/
     public static final String API_URI_LOG_READ = "api/logs/read";
 
-    /** 실시간 SSE 스트리밍 API URI (파일명을 뒤에 붙여서 사용) **/
-    public static final String API_URI_LOG_STREAM = "api/logs/stream";
-
     /** 증분 로그 조회 API URI (파일명을 뒤에 붙여서 사용) **/
     public static final String API_URI_LOG_INCREMENTAL = "api/logs/incremental";
 
+    /** 매수 프로세스 수동 실행 **/
+    public static final String API_URI_TRADE_BUY_START = "api/trade/buy/start";
+
+    /** 매도 프로세스 수동 실행 **/
+    public static final String API_URI_TRADE_SELL_START = "api/trade/sell/start";
+
+    /** 매수/매도 프로세스 수동 중지 **/
+    public static final String API_URI_TRADE_STOP = "api/trade/stop";
 
 }
