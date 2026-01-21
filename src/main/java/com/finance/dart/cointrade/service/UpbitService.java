@@ -1,5 +1,6 @@
 package com.finance.dart.cointrade.service;
 
+import com.finance.dart.cointrade.dto.upbit.TickerDto;
 import com.finance.dart.cointrade.dto.upbit.TradingParisDto;
 import com.finance.dart.common.component.ConfigComponent;
 import com.finance.dart.common.component.HttpClientComponent;
@@ -26,6 +27,10 @@ public class UpbitService {
     private final HttpClientComponent httpClientComponent;
 
 
+    /**
+     * 마켓 페어 정보 조회
+     * @return
+     */
     @Transactional
     public List<TradingParisDto> getTradingPairs() {
 
@@ -41,6 +46,30 @@ public class UpbitService {
 
         return response;
     }
+
+    /**
+     * 티커 정보 조회(페어 단위 현재가 조회)
+     * @param markets KRW-BTC,KRW-ETH,BTC-ETH,BTC-XRP
+     * @return
+     */
+    @Transactional
+    public List<TickerDto> getTicker(String markets) {
+
+        List<TickerDto> response = null;
+
+        String url = "https://api.upbit.com/v1/ticker";
+        HttpMethod method = HttpMethod.GET;
+
+        url += "?markets="+markets;
+
+        Object sendResponse = upbitSendSimple(url, method, null, null);
+        if(sendResponse != null) {
+            response = ConvertUtil.parseObject(sendResponse, new TypeToken<List<TickerDto>>() {});
+        }
+
+        return response;
+    }
+
 
 
     /**
