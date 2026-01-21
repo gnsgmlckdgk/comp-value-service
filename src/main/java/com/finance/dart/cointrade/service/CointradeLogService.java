@@ -5,6 +5,7 @@ import com.finance.dart.cointrade.dto.CointradeLogContentDto;
 import com.finance.dart.cointrade.dto.CointradeLogFileInfoDto;
 import com.finance.dart.cointrade.dto.CointradeLogFileListDto;
 import com.finance.dart.common.component.HttpClientComponent;
+import com.finance.dart.common.logging.TransactionLogging;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -28,6 +29,7 @@ public class CointradeLogService {
     /**
      * 로그 파일 목록 조회
      */
+    @TransactionLogging
     public CointradeLogFileListDto getLogFileList() {
         String url = buildUrl(CoinTraderProgramConfig.API_URI_LOG_FILES);
 
