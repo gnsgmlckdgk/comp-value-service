@@ -98,7 +98,7 @@ public class CointradeLogService {
     /**
      * 최신 로그 증분 조회 (폴링용)
      */
-    public CointradeLogContentDto getLatestLogStream(Integer lastLine) {
+    public CointradeLogContentDto getLatestLogStream(Integer lastLine, Integer initialLines) {
         // 1. 최신 로그 파일 정보 먼저 조회
         CointradeLogFileInfoDto latestInfo = getLatestLogFileInfo();
         if (latestInfo == null || latestInfo.getFilename() == null) {
@@ -106,7 +106,8 @@ public class CointradeLogService {
         }
 
         String filename = latestInfo.getFilename();
-        String url = buildUrl(CoinTraderProgramConfig.API_URI_LOG_INCREMENTAL + "/" + filename + "?last_line=" + (lastLine != null ? lastLine : 0));
+        String url = buildUrl(CoinTraderProgramConfig.API_URI_LOG_INCREMENTAL + "/" +
+                filename + "?last_line=" + (lastLine != null ? lastLine : 0) + "&initialLines=" + initialLines);
 
         if (log.isDebugEnabled()) {
             log.debug("코인 최신 로그 증분 조회 API 호출 - URL: {}, filename: {}, lastLine: {}", url, filename, lastLine);

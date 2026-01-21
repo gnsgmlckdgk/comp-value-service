@@ -88,21 +88,23 @@ public class CointradeLogController {
         }
     }
 
-    /**
+    /** initialLines
      * 최신 로그 증분 조회 (폴링용)
      */
     @GetMapping("/logs/stream/latest")
     public ResponseEntity<CommonResponse<CointradeLogContentDto>> getLatestLogStream(
-            @RequestParam(name = "lastLine", required = false, defaultValue = "0") Integer lastLine) {
+            @RequestParam(name = "lastLine", required = false, defaultValue = "0") Integer lastLine,
+            @RequestParam(name = "initialLines", required = false, defaultValue = "2000") Integer initialLines
+    ) {
         if(log.isDebugEnabled()) log.debug("/api/cointrade/logs/stream/latest 거래 요청 - lastLine: {}", lastLine);
 
         try {
-            CointradeLogContentDto logContent = logService.getLatestLogStream(lastLine);
+            CointradeLogContentDto logContent = logService.getLatestLogStream(lastLine, initialLines);
             CommonResponse<CointradeLogContentDto> response = new CommonResponse<>(logContent);
             response.setMessage("최신 로그 조회 성공");
             return new ResponseEntity<>(response, HttpStatus.OK);
         } catch (Exception e) {
-            log.error("최신 로그 조회 실패 - lastLine: {}, error: {}", lastLine, e.getMessage(), e);
+            log.error("최신 로그 조회 실패 - lastLine: {}, initialLines, error: {}", lastLine, initialLines, e.getMessage(), e);
             CommonResponse<CointradeLogContentDto> errorResponse = new CommonResponse<>();
             errorResponse.setMessage("최신 로그 조회 실패: " + e.getMessage());
             return new ResponseEntity<>(errorResponse, HttpStatus.INTERNAL_SERVER_ERROR);
