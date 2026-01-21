@@ -4153,7 +4153,7 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "http://localhost:18080/dart/api/cointrade/trade/model/train?coin_code=KRW-BTC",
+              "raw": "http://localhost:18080/dart/api/cointrade/trade/model/train",
               "protocol": "http",
               "host": [
                 "localhost"
@@ -4170,7 +4170,15 @@
               "query": [
                 {
                   "key": "coin_code",
-                  "value": "KRW-BTC"
+                  "value": "KRW-BTC",
+                  "description": "값 없으면 활성화된 코인 전체학습 ",
+                  "disabled": true
+                },
+                {
+                  "key": "",
+                  "value": null,
+                  "type": "text",
+                  "disabled": true
                 }
               ]
             }

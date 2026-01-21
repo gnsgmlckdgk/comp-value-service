@@ -5,6 +5,7 @@ import com.finance.dart.cointrade.service.CointradeConfigService;
 import com.finance.dart.common.config.EndPointConfig;
 import com.finance.dart.common.dto.CommonResponse;
 import com.finance.dart.member.enums.RoleConstants;
+import jakarta.annotation.Nullable;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -199,7 +200,8 @@ public class CointradeConfigController {
      */
     @EndPointConfig.RequireRole({RoleConstants.ROLE_SUPER_ADMIN})
     @GetMapping("/trade/model/train")
-    public ResponseEntity<CommonResponse<Map<String, Object>>> modelTrain(@RequestParam(name = "coin_code") String coinCode) {
+    public ResponseEntity<CommonResponse<Map<String, Object>>> modelTrain(
+            @RequestParam(name = "coin_code") @Nullable String coinCode) {
         log.info("모델 학습 수동 실행 요청");
         Map<String, Object> result = cointradeConfigService.modelTrain(coinCode);
         return new ResponseEntity<>(new CommonResponse<>(result), HttpStatus.OK);
