@@ -39,4 +39,7 @@ public class CoinTraderProgramConfig {
     /** 매수/매도 프로세스 수동 중지 **/
     public static final String API_URI_TRADE_STOP = "api/trade/stop";
 
+    /** 모델 학습 수동 실행 **/
+    public static final String API_URI_MODEL_TRAIN = "api/model/train";
+
 }

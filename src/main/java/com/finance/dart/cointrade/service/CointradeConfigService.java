@@ -23,10 +23,10 @@ import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDateTime;
+import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.stream.Collectors;
-
 import java.util.Map;
+import java.util.stream.Collectors;
 
 /**
  * 코인 자동매매 설정 관리 서비스
@@ -353,6 +353,19 @@ public class CointradeConfigService {
         String url = buildUrl(CoinTraderProgramConfig.API_URI_TRADE_STOP);
         log.info("매수/매도 프로세스 수동 중지 요청 - URL: {}", url);
         return httpClientComponent.exchangeSync(url, HttpMethod.POST, new ParameterizedTypeReference<Map<String, Object>>() {}).getBody();
+    }
+
+    /**
+     * 모델 학습 수동 실행
+     */
+    public Map<String, Object> modelTrain(String coinCode) {
+
+        String url = buildUrl(CoinTraderProgramConfig.API_URI_MODEL_TRAIN);
+        log.info("매수/매도 프로세스 수동 중지 요청 - URL: {}", url);
+
+        Map<String, Object> param = new LinkedHashMap<>();
+        param.put("coin_code", coinCode);
+        return httpClientComponent.exchangeSync(url, HttpMethod.POST, null, param,new ParameterizedTypeReference<Map<String, Object>>() {}).getBody();
     }
 
     private String buildUrl(String uri) {

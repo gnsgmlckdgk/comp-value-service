@@ -18,6 +18,7 @@ import reactor.core.publisher.Mono;
 
 import java.net.URI;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -68,6 +69,8 @@ public class HttpClientComponent {
     public <T> ResponseEntity<T> exchangeSync(
             String url, HttpMethod method, Map<String ,String> httpHeaders, Object body, ParameterizedTypeReference<T> responseType
     ) {
+        if(httpHeaders == null) httpHeaders = new LinkedHashMap<>();
+
         final HttpEntity<?> httpEntity = ClientUtil.createHttpEntity(MediaType.APPLICATION_JSON, httpHeaders, body);
 
         if(log.isDebugEnabled()) log.debug("전송 요청 정보 = url[{}], method[{}], entity[{}], responseType[{}]", url, method, httpEntity, responseType);

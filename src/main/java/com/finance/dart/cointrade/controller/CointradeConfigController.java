@@ -182,7 +182,7 @@ public class CointradeConfigController {
     }
 
     /**
-     * 매수/매도 프로세스 수동 중지
+     * 12. 매수/매도 프로세스 수동 중지
      * @return
      */
     @EndPointConfig.RequireRole({RoleConstants.ROLE_SUPER_ADMIN})
@@ -193,4 +193,18 @@ public class CointradeConfigController {
         return new ResponseEntity<>(new CommonResponse<>(result), HttpStatus.OK);
     }
 
+    /**
+     * 13. 모델 수동 학습
+     * @return
+     */
+    @EndPointConfig.RequireRole({RoleConstants.ROLE_SUPER_ADMIN})
+    @GetMapping("/trade/model/train")
+    public ResponseEntity<CommonResponse<Map<String, Object>>> modelTrain(@RequestParam(name = "coin_code") String coinCode) {
+        log.info("모델 학습 수동 실행 요청");
+        Map<String, Object> result = cointradeConfigService.modelTrain(coinCode);
+        return new ResponseEntity<>(new CommonResponse<>(result), HttpStatus.OK);
+    }
+
 }
+
+
