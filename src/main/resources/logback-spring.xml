@@ -14,7 +14,7 @@
     <!-- application.yml 설정 가져오기 -->
     <springProperty scope="context" name="LOG_FILE" source="logging.file.name" defaultValue="./logs/app.log"/>
     <springProperty scope="context" name="LOG_PATTERN" source="logging.logback.rollingpolicy.file-name-pattern" defaultValue="./logs/app.%d{yyyy-MM-dd}.log"/>
-    <springProperty scope="context" name="MAX_HISTORY" source="logging.logback.rollingpolicy.max-history" defaultValue="7"/>
+    <springProperty scope="context" name="MAX_HISTORY" source="logging.logback.rollingpolicy.max-history" defaultValue="3"/>
 
     <!-- 파일 출력 Appender -->
     <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
