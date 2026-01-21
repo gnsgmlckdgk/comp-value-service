@@ -150,6 +150,7 @@ public class StockEvaluationResponse {
     /**
      * 계산 버전
      */
+    @Builder.Default
     private String calVersion = "";
 
 }
