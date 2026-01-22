@@ -45,4 +45,10 @@ public class CoinTraderProgramConfig {
     /** 스케줄러 설정 즉시 리로드 **/
     public static final String API_URI_SCHEDULER_RELOAD = "api/scheduler/reload";
 
+    /** 프로세스 진행율 상태 조회 **/
+    public static final String API_URI_PROCESS_STATUS_BUY = "api/process/status/buy";
+
+    /** 매도 프로세스 진행율 상태 조회 **/
+    public static final String API_URI_PROCESS_STATUS_SELL = "api/process/status/sell";
+
 }
