@@ -41,7 +41,7 @@ public class UpbitController {
 
     /**
      * 페어 단위 현재가 조회
-     * @param market KRW-BTC,KRW-ETH,BTC-ETH,BTC-XRP
+     * @param markets KRW-BTC,KRW-ETH,BTC-ETH,BTC-XRP
      * @return
      */
     @EndPointConfig.RequireRole({RoleConstants.ROLE_SUPER_ADMIN})
