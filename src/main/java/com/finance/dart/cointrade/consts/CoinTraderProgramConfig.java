@@ -42,4 +42,7 @@ public class CoinTraderProgramConfig {
     /** 모델 학습 수동 실행 **/
     public static final String API_URI_MODEL_TRAIN = "api/model/train";
 
+    /** 스케줄러 설정 즉시 리로드 **/
+    public static final String API_URI_SCHEDULER_RELOAD = "api/scheduler/reload";
+
 }

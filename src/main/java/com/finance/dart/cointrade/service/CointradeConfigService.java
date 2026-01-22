@@ -368,6 +368,15 @@ public class CointradeConfigService {
         return httpClientComponent.exchangeSync(url, HttpMethod.POST, null, param,new ParameterizedTypeReference<Map<String, Object>>() {}).getBody();
     }
 
+    /**
+     * 스케줄러 설정 즉시 리로드
+     */
+    public Map<String, Object> reloadScheduler() {
+        String url = buildUrl(CoinTraderProgramConfig.API_URI_SCHEDULER_RELOAD);
+        log.info("스케줄러 설정 리로드 요청 - URL: {}", url);
+        return httpClientComponent.exchangeSync(url, HttpMethod.POST, new ParameterizedTypeReference<Map<String, Object>>() {}).getBody();
+    }
+
     private String buildUrl(String uri) {
         String baseUrl = isLocal
                 ? CoinTraderProgramConfig.localHost

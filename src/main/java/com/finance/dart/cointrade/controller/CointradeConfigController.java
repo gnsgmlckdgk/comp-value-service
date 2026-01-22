@@ -207,6 +207,18 @@ public class CointradeConfigController {
         return new ResponseEntity<>(new CommonResponse<>(result), HttpStatus.OK);
     }
 
+    /**
+     * 14. 스케줄러 설정 즉시 리로드
+     * POST /api/cointrade/scheduler/reload
+     */
+    @EndPointConfig.RequireRole({RoleConstants.ROLE_SUPER_ADMIN})
+    @PostMapping("/scheduler/reload")
+    public ResponseEntity<CommonResponse<Map<String, Object>>> reloadScheduler() {
+        log.info("스케줄러 설정 즉시 리로드 요청");
+        Map<String, Object> result = cointradeConfigService.reloadScheduler();
+        return new ResponseEntity<>(new CommonResponse<>(result), HttpStatus.OK);
+    }
+
 
 
 }
