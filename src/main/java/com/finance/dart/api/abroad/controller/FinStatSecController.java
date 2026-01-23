@@ -4,6 +4,7 @@ import com.finance.dart.api.abroad.dto.sec.statement.CommonFinancialStatementDto
 import com.finance.dart.api.abroad.service.sec.SecFinStatementService;
 import com.finance.dart.api.abroad.util.sec.OperatingIncomeExtractor;
 import com.finance.dart.common.dto.CommonResponse;
+import com.finance.dart.common.logging.TransactionLogging;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -30,6 +31,7 @@ public class FinStatSecController {
      * @param cik
      * @return
      */
+    @TransactionLogging
     @GetMapping("/statement/detail/companyfacts")
     public ResponseEntity<CommonResponse<Map<String, Object>>> findFS_Companyfacts(@RequestParam(name = "cik") String cik) {
 
@@ -44,6 +46,7 @@ public class FinStatSecController {
      * @param cik
      * @return
      */
+    @TransactionLogging
     @GetMapping("/statement/detail/operatingIncomeLoss")
     public ResponseEntity<CommonResponse<List<OperatingIncomeExtractor.Result>>> findFS_OperatingIncomeLoss(@RequestParam(name = "cik") String cik) {
 
@@ -58,6 +61,7 @@ public class FinStatSecController {
      * @param cik
      * @return
      */
+    @TransactionLogging
     @GetMapping("/statement/detail/assetsCurrent")
     public ResponseEntity<CommonResponse<CommonFinancialStatementDto>> findFS_AssetsCurrent(@RequestParam(name = "cik") String cik) {
 
@@ -72,6 +76,7 @@ public class FinStatSecController {
      * @param cik
      * @return
      */
+    @TransactionLogging
     @GetMapping("/statement/detail/liabilitiesCurrent")
     public ResponseEntity<CommonResponse<CommonFinancialStatementDto>> findFS_LiabilitiesCurrent(@RequestParam(name = "cik") String cik) {
 
@@ -87,6 +92,7 @@ public class FinStatSecController {
      * @param cik
      * @return
      */
+    @TransactionLogging
     @GetMapping("/statement/detail/noncurrentInvestments")
     public ResponseEntity<CommonResponse<Map<String, CommonFinancialStatementDto>>> findFS_NoncurrentInvestments(@RequestParam(name = "cik") String cik) {
 
@@ -120,6 +126,7 @@ public class FinStatSecController {
      * @param cik
      * @return
      */
+    @TransactionLogging
     @GetMapping("/statement/detail/liabilities")
     public ResponseEntity<CommonResponse<CommonFinancialStatementDto>> findFS_Liabilities(@RequestParam(name = "cik") String cik) {
         CommonFinancialStatementDto response =
@@ -133,6 +140,7 @@ public class FinStatSecController {
      * @param cik
      * @return
      */
+    @TransactionLogging
     @GetMapping("/statement/detail/LiabilitiesNoncurrent")
     public ResponseEntity<CommonResponse<CommonFinancialStatementDto>> findFS_LiabilitiesNoncurrent(@RequestParam(name = "cik") String cik) {
 
@@ -147,6 +155,7 @@ public class FinStatSecController {
      * @param cik
      * @return
      */
+    @TransactionLogging
     @GetMapping("/statement/detail/stockSharesOutstanding")
     public ResponseEntity<CommonResponse<String>> findFS_EntityCommonStockSharesOutstanding(@RequestParam(name = "cik") String cik) {
 

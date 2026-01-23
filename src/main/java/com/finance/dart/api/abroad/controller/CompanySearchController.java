@@ -5,6 +5,7 @@ import com.finance.dart.api.abroad.dto.fmp.company.FindCompanySymbolResDto;
 import com.finance.dart.api.abroad.service.fmp.CompanyProfileSearchService;
 import com.finance.dart.api.abroad.service.fmp.CompanySymbolSearchService;
 import com.finance.dart.common.dto.CommonResponse;
+import com.finance.dart.common.logging.TransactionLogging;
 import com.finance.dart.common.util.StringUtil;
 import jakarta.annotation.Nullable;
 import lombok.AllArgsConstructor;
@@ -36,6 +37,7 @@ public class CompanySearchController {
      * @param symbol 기업심볼
      * @return
      */
+    @TransactionLogging
     @GetMapping("/symbol")
     public ResponseEntity<CommonResponse<List<FindCompanySymbolResDto>>> findSymbolByCompanyName(
             @Nullable @RequestParam(name = "cn") String companyName,
@@ -65,6 +67,7 @@ public class CompanySearchController {
      * @param symbol 기업심볼
      * @return
      */
+    @TransactionLogging
     @GetMapping("/profile")
     public ResponseEntity<CommonResponse<List<CompanyProfileDataResDto>>> findProfileBySymbol(@RequestParam(name = "symbol") String symbol) {
 

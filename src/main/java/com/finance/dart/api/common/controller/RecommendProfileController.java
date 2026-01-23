@@ -4,6 +4,7 @@ import com.finance.dart.api.common.dto.RecommendProfileDto;
 import com.finance.dart.api.common.service.RecommendProfileService;
 import com.finance.dart.common.config.EndPointConfig;
 import com.finance.dart.common.dto.CommonResponse;
+import com.finance.dart.common.logging.TransactionLogging;
 import com.finance.dart.member.enums.RoleConstants;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -28,6 +29,7 @@ public class RecommendProfileController {
      * 프로파일 등록
      */
     @EndPointConfig.RequireRole({RoleConstants.ROLE_SUPER_ADMIN})
+    @TransactionLogging
     @PostMapping("/regi")
     public ResponseEntity<CommonResponse<RecommendProfileDto>> regiProfile(@RequestBody RecommendProfileDto reqBody) {
 
@@ -40,6 +42,7 @@ public class RecommendProfileController {
      * 프로파일 수정
      */
     @EndPointConfig.RequireRole({RoleConstants.ROLE_SUPER_ADMIN})
+    @TransactionLogging
     @PostMapping("/modi")
     public ResponseEntity<CommonResponse<RecommendProfileDto>> modiProfile(@RequestBody RecommendProfileDto reqBody) {
 
@@ -52,6 +55,7 @@ public class RecommendProfileController {
      * 프로파일 삭제
      */
     @EndPointConfig.RequireRole({RoleConstants.ROLE_SUPER_ADMIN})
+    @TransactionLogging
     @PostMapping("/del")
     public ResponseEntity<CommonResponse<Void>> delProfile(@RequestBody RecommendProfileDto reqBody) {
 
@@ -63,6 +67,7 @@ public class RecommendProfileController {
     /**
      * 프로파일 단건 조회
      */
+    @TransactionLogging
     @GetMapping("/{id}")
     public ResponseEntity<CommonResponse<RecommendProfileDto>> getProfile(@PathVariable(name = "id") Long id) {
 
@@ -74,6 +79,7 @@ public class RecommendProfileController {
     /**
      * 프로파일 목록 조회 (사용중인 프로파일)
      */
+    @TransactionLogging
     @GetMapping("")
     public ResponseEntity<CommonResponse<List<RecommendProfileDto>>> getProfileList() {
 
@@ -85,6 +91,7 @@ public class RecommendProfileController {
     /**
      * 활성화된 프로파일 목록 조회 (스케줄러용)
      */
+    @TransactionLogging
     @GetMapping("/active")
     public ResponseEntity<CommonResponse<List<RecommendProfileDto>>> getActiveProfileList() {
 
@@ -97,6 +104,7 @@ public class RecommendProfileController {
      * 프로파일 활성화/비활성화 토글
      */
     @EndPointConfig.RequireRole({RoleConstants.ROLE_SUPER_ADMIN})
+    @TransactionLogging
     @PostMapping("/toggle/{id}")
     public ResponseEntity<CommonResponse<RecommendProfileDto>> toggleActive(@PathVariable(name = "id") Long id) {
 

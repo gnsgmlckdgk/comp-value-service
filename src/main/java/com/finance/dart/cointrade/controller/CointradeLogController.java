@@ -7,6 +7,7 @@ import com.finance.dart.cointrade.dto.CointradeLogFileListDto;
 import com.finance.dart.cointrade.dto.CointradeProcessStatusDto;
 import com.finance.dart.cointrade.service.CointradeLogService;
 import com.finance.dart.common.dto.CommonResponse;
+import com.finance.dart.common.logging.TransactionLogging;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -32,6 +33,7 @@ public class CointradeLogController {
     /**
      * 로그 파일 목록 조회
      */
+    @TransactionLogging
     @GetMapping("/logs")
     public ResponseEntity<CommonResponse<CointradeLogFileListDto>> getLogFileList() {
         if(log.isDebugEnabled()) log.debug("/api/cointrade/logs 거래 요청");
@@ -52,6 +54,7 @@ public class CointradeLogController {
     /**
      * 최신 로그 파일 정보 조회
      */
+    @TransactionLogging
     @GetMapping("/logs/latest")
     public ResponseEntity<CommonResponse<CointradeLogFileInfoDto>> getLatestLogFileInfo() {
         if(log.isDebugEnabled()) log.debug("/api/cointrade/logs/latest 거래 요청");
@@ -72,6 +75,7 @@ public class CointradeLogController {
     /**
      * 로그 파일 내용 조회
      */
+    @TransactionLogging
     @GetMapping("/logs/{filename}")
     public ResponseEntity<CommonResponse<CointradeLogContentDto>> getLogContent(@PathVariable(name = "filename") String filename) {
         if(log.isDebugEnabled()) log.debug("/api/cointrade/logs/{} 거래 요청", filename);
@@ -92,6 +96,7 @@ public class CointradeLogController {
     /** initialLines
      * 최신 로그 증분 조회 (폴링용)
      */
+    @TransactionLogging
     @GetMapping("/logs/stream/latest")
     public ResponseEntity<CommonResponse<CointradeLogContentDto>> getLatestLogStream(
             @RequestParam(name = "lastLine", required = false, defaultValue = "0") Integer lastLine,
@@ -115,6 +120,7 @@ public class CointradeLogController {
     /**
      * 프로세스 진행율 상태 조회
      */
+    @TransactionLogging
     @GetMapping("/process/status")
     public ResponseEntity<CommonResponse<CointradeProcessStatusDto>> getProcessStatus(
             @RequestParam(name = "mode", required = false) String mode

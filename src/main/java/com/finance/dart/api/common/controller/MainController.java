@@ -15,6 +15,7 @@ import com.finance.dart.api.domestic.service.DomesticStockCalculationService;
 import com.finance.dart.common.constant.ResponseEnum;
 import com.finance.dart.common.dto.CommonResponse;
 import com.finance.dart.common.exception.BizException;
+import com.finance.dart.common.logging.TransactionLogging;
 import jakarta.annotation.Nullable;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -44,6 +45,7 @@ public class MainController {
      * 헬스체크
      * @return
      */
+    @TransactionLogging
     @GetMapping("/check")
     public ResponseEntity<Object> healthCheck() {
         log.info("HealthCheck!!!_헬스체크!!!");
@@ -60,6 +62,7 @@ public class MainController {
      * @param corpName
      * @return
      */
+    @TransactionLogging
     @GetMapping("/cal/per_value")
     public ResponseEntity<CompanySharePriceResult> calDomesticCompanyStockPerValue(
             @RequestParam("year") String year,
@@ -85,6 +88,7 @@ public class MainController {
      * @param companySharePriceCalculator
      * @return
      */
+    @TransactionLogging
     @PostMapping("/cal/per_value/manual")
     public ResponseEntity<Map> calCompanyStockPerValueManual(
             @RequestBody CompanySharePriceCalculator companySharePriceCalculator
@@ -108,6 +112,7 @@ public class MainController {
      * @return
      * @throws Exception
      */
+    @TransactionLogging
     @GetMapping("/cal/per_value/abroad")
     public ResponseEntity<Object> calAbroadCompanyStockPerValue(@RequestParam("symbol") String symbol)
             throws Exception {
@@ -128,6 +133,7 @@ public class MainController {
      * @return
      * @throws Exception
      */
+    @TransactionLogging
     @GetMapping("/cal/per_value/abroad/arr")
     public ResponseEntity<Object> calAbroadCompanyStockPerValueArr(@RequestParam("symbol") String symbolList,
                                                                      @Nullable @RequestParam("detail") String detail)
@@ -144,6 +150,7 @@ public class MainController {
      * @param recommendedStocksReqDto 요청 DTO (profileName 필수)
      * @return
      */
+    @TransactionLogging
     @PostMapping("/rem/usstock")
     public ResponseEntity<CommonResponse<List<RecommendedStocksProcessor.RecommendedStockData>>>
     findRecommenedCompany(@RequestBody RecommendedStocksReqDto recommendedStocksReqDto) {
@@ -177,6 +184,7 @@ public class MainController {
      * @param request 평가 요청 (심볼 리스트)
      * @return 평가 결과 리스트
      */
+    @TransactionLogging
     @PostMapping("/evaluate/stocks")
     public ResponseEntity<CommonResponse<List<StockEvaluationResponse>>> evaluateStocks(
             @RequestBody StockEvaluationRequest request) {

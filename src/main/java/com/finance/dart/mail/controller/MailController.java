@@ -1,6 +1,7 @@
 package com.finance.dart.mail.controller;
 
 import com.finance.dart.common.dto.CommonResponse;
+import com.finance.dart.common.logging.TransactionLogging;
 import com.finance.dart.mail.dto.MailSendDto;
 import com.finance.dart.mail.service.MailService;
 import jakarta.validation.Valid;
@@ -19,6 +20,7 @@ public class MailController {
 
     private final MailService mailService;
 
+    @TransactionLogging
     @PostMapping("/send")
     public ResponseEntity<CommonResponse> send(@Valid @RequestBody MailSendDto body) {
         boolean isSend = mailService.sendEmail(body.getTo(), body.getSubject(), body.getContents());
@@ -26,6 +28,7 @@ public class MailController {
         return new ResponseEntity<>(new CommonResponse(isSend), HttpStatus.OK);
     }
 
+    @TransactionLogging
     @PostMapping("/send/html")
     public ResponseEntity<CommonResponse> sendHtml(@Valid @RequestBody MailSendDto body) {
         boolean isSend = mailService.sendHtmlMail(body.getTo(), body.getSubject(), body.getContents());

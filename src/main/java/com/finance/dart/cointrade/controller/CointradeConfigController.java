@@ -4,6 +4,7 @@ import com.finance.dart.cointrade.dto.*;
 import com.finance.dart.cointrade.service.CointradeConfigService;
 import com.finance.dart.common.config.EndPointConfig;
 import com.finance.dart.common.dto.CommonResponse;
+import com.finance.dart.common.logging.TransactionLogging;
 import com.finance.dart.member.enums.RoleConstants;
 import jakarta.annotation.Nullable;
 import lombok.RequiredArgsConstructor;
@@ -37,6 +38,7 @@ public class CointradeConfigController {
      * GET /api/cointrade/config
      */
     @EndPointConfig.RequireRole({RoleConstants.ROLE_SUPER_ADMIN})
+    @TransactionLogging
     @GetMapping("/config")
     public ResponseEntity<CommonResponse<List<CointradeConfigDto>>> getAllConfigs() {
         log.info("전체 설정값 조회 요청");
@@ -49,6 +51,7 @@ public class CointradeConfigController {
      * PUT /api/cointrade/config
      */
     @EndPointConfig.RequireRole({RoleConstants.ROLE_SUPER_ADMIN})
+    @TransactionLogging
     @PutMapping("/config")
     public ResponseEntity<CommonResponse<String>> updateConfigs(
             @RequestBody List<CointradeConfigUpdateDto> configs) {
@@ -61,6 +64,7 @@ public class CointradeConfigController {
      * 3. 대상 종목 목록 조회 (DB 조회)
      * GET /api/cointrade/coins
      */
+    @TransactionLogging
     @GetMapping("/coins")
     public ResponseEntity<CommonResponse<List<CointradeTargetCoinDto>>> getAllTargetCoins() {
         log.info("대상 종목 목록 조회 요청");
@@ -73,6 +77,7 @@ public class CointradeConfigController {
      * PUT /api/cointrade/coins
      */
     @EndPointConfig.RequireRole({RoleConstants.ROLE_SUPER_ADMIN})
+    @TransactionLogging
     @PutMapping("/coins")
     public ResponseEntity<CommonResponse<String>> updateTargetCoins(
             @RequestBody List<String> coinCodes) {
@@ -86,6 +91,7 @@ public class CointradeConfigController {
      * GET /api/cointrade/holdings
      */
     @EndPointConfig.RequireRole({RoleConstants.ROLE_SUPER_ADMIN})
+    @TransactionLogging
     @GetMapping("/holdings")
     public ResponseEntity<CommonResponse<List<CointradeHoldingDto>>> getAllHoldings() {
         log.info("보유 종목 조회 요청");
@@ -99,6 +105,7 @@ public class CointradeConfigController {
      * Query Params: startDate, endDate, coinCode, tradeType, page, size
      */
     @EndPointConfig.RequireRole({RoleConstants.ROLE_SUPER_ADMIN})
+    @TransactionLogging
     @GetMapping("/history")
     public ResponseEntity<CommonResponse<Page<CointradeTradeHistoryDto>>> getTradeHistory(
             @RequestParam(required = false, name = "startDate") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime startDate,
@@ -121,6 +128,7 @@ public class CointradeConfigController {
      * PUT /api/cointrade/scheduler/buy
      */
     @EndPointConfig.RequireRole({RoleConstants.ROLE_SUPER_ADMIN})
+    @TransactionLogging
     @PutMapping("/scheduler/buy")
     public ResponseEntity<CommonResponse<String>> updateBuyScheduler(
             @RequestBody CointradeSchedulerReqDto request) {
@@ -136,6 +144,7 @@ public class CointradeConfigController {
      * PUT /api/cointrade/scheduler/sell
      */
     @EndPointConfig.RequireRole({RoleConstants.ROLE_SUPER_ADMIN})
+    @TransactionLogging
     @PutMapping("/scheduler/sell")
     public ResponseEntity<CommonResponse<String>> updateSellScheduler(
             @RequestBody CointradeSchedulerReqDto request) {
@@ -151,6 +160,7 @@ public class CointradeConfigController {
      * GET /api/cointrade/status
      */
     @EndPointConfig.RequireRole({RoleConstants.ROLE_SUPER_ADMIN})
+    @TransactionLogging
     @GetMapping("/status")
     public ResponseEntity<CommonResponse<CointradeStatusDto>> getStatus() {
         log.info("현재 상태 조회 요청");
@@ -163,6 +173,7 @@ public class CointradeConfigController {
      * GET /api/cointrade/trade/buy/start
      */
     @EndPointConfig.RequireRole({RoleConstants.ROLE_SUPER_ADMIN})
+    @TransactionLogging
     @GetMapping("/trade/buy/start")
     public ResponseEntity<CommonResponse<Map<String, Object>>> startBuyProcess() {
         log.info("매수 프로세스 수동 실행 요청");
@@ -175,6 +186,7 @@ public class CointradeConfigController {
      * GET /api/cointrade/trade/sell/start
      */
     @EndPointConfig.RequireRole({RoleConstants.ROLE_SUPER_ADMIN})
+    @TransactionLogging
     @GetMapping("/trade/sell/start")
     public ResponseEntity<CommonResponse<Map<String, Object>>> startSellProcess() {
         log.info("매도 프로세스 수동 실행 요청");
@@ -187,6 +199,7 @@ public class CointradeConfigController {
      * @return
      */
     @EndPointConfig.RequireRole({RoleConstants.ROLE_SUPER_ADMIN})
+    @TransactionLogging
     @GetMapping("/trade/stop")
     public ResponseEntity<CommonResponse<Map<String, Object>>> stopProcess() {
         log.info("매수/매도 프로세스 수동 중지 요청");
@@ -199,6 +212,7 @@ public class CointradeConfigController {
      * @return
      */
     @EndPointConfig.RequireRole({RoleConstants.ROLE_SUPER_ADMIN})
+    @TransactionLogging
     @GetMapping("/trade/model/train")
     public ResponseEntity<CommonResponse<Map<String, Object>>> modelTrain(
             @RequestParam(name = "coin_code") @Nullable String coinCode) {
@@ -212,6 +226,7 @@ public class CointradeConfigController {
      * POST /api/cointrade/scheduler/reload
      */
     @EndPointConfig.RequireRole({RoleConstants.ROLE_SUPER_ADMIN})
+    @TransactionLogging
     @PostMapping("/scheduler/reload")
     public ResponseEntity<CommonResponse<Map<String, Object>>> reloadScheduler() {
         log.info("스케줄러 설정 즉시 리로드 요청");
@@ -222,5 +237,3 @@ public class CointradeConfigController {
 
 
 }
-
-

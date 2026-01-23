@@ -7,6 +7,7 @@ import com.finance.dart.api.abroad.dto.fmp.chart.StockPriceVolumeResDto;
 import com.finance.dart.api.abroad.service.fmp.HistoricalIndexService;
 import com.finance.dart.api.abroad.service.fmp.StockPriceVolumeService;
 import com.finance.dart.common.dto.CommonResponse;
+import com.finance.dart.common.logging.TransactionLogging;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -35,6 +36,7 @@ public class ChartController {
      * @param reqDto 요청 DTO
      * @return 주식 가격 및 거래량 데이터 목록
      */
+    @TransactionLogging
     @PostMapping("/stock-price-volume")
     public ResponseEntity<CommonResponse<List<StockPriceVolumeResDto>>> getStockPriceVolume(
             @RequestBody StockPriceVolumeReqDto reqDto) {
@@ -49,6 +51,7 @@ public class ChartController {
      * @param reqDto 요청 DTO
      * @return 거래소 인덱스 차트 데이터 목록
      */
+    @TransactionLogging
     @PostMapping("/historical-index")
     public ResponseEntity<CommonResponse<List<HistoricalIndexResDto>>> getHistoricalIndex(
             @RequestBody HistoricalIndexReqDto reqDto) {

@@ -9,14 +9,13 @@ import org.springframework.stereotype.Component;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.UUID;
 
 @Aspect
 @Component
 public class TransactionLoggingAspect {
 
     private static final String MDC_KEY = "transaction_log_file";
-    private static final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss");
+    private static final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyyMMdd");
 
     @Around("@annotation(transactionLogging)")
     public Object logTransaction(ProceedingJoinPoint joinPoint, TransactionLogging transactionLogging) throws Throwable {
@@ -28,9 +27,8 @@ public class TransactionLoggingAspect {
             name = className + "_" + methodName;
         }
 
-        String timestamp = LocalDateTime.now().format(formatter);
-        String uuid = UUID.randomUUID().toString().substring(0, 8);
-        String logFileName = String.format("%s_%s_%s", name, timestamp, uuid);
+        String date = LocalDateTime.now().format(formatter);
+        String logFileName = String.format("%s_%s", name, date);
 
         try {
             MDC.put(MDC_KEY, logFileName);

@@ -5,6 +5,7 @@ import com.finance.dart.cointrade.dto.upbit.TradingParisDto;
 import com.finance.dart.cointrade.service.UpbitService;
 import com.finance.dart.common.config.EndPointConfig;
 import com.finance.dart.common.dto.CommonResponse;
+import com.finance.dart.common.logging.TransactionLogging;
 import com.finance.dart.member.enums.RoleConstants;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -31,6 +32,7 @@ public class UpbitController {
      * @return
      */
     @EndPointConfig.RequireRole({RoleConstants.ROLE_SUPER_ADMIN})
+    @TransactionLogging
     @GetMapping("/market/all")
     public ResponseEntity<CommonResponse<List<TradingParisDto>>> getAllMarket() {
 
@@ -45,6 +47,7 @@ public class UpbitController {
      * @return
      */
     @EndPointConfig.RequireRole({RoleConstants.ROLE_SUPER_ADMIN})
+    @TransactionLogging
     @GetMapping("/v1/ticker")
     public ResponseEntity<CommonResponse<List<TickerDto>>> getTicker(@RequestParam(name = "markets") String markets) {
 

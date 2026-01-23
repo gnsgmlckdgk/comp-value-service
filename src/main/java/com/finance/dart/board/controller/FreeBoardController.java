@@ -4,6 +4,7 @@ import com.finance.dart.board.dto.FreeBoardDto;
 import com.finance.dart.board.dto.FreeBoardListResponseDto;
 import com.finance.dart.board.service.FreeBoardService;
 import com.finance.dart.common.dto.CommonResponse;
+import com.finance.dart.common.logging.TransactionLogging;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -24,6 +25,7 @@ public class FreeBoardController {
     private final FreeBoardService freeBoardService;
 
 
+    @TransactionLogging
     @GetMapping("")
     public ResponseEntity<CommonResponse<FreeBoardListResponseDto>> getFreeBoard(
             HttpServletRequest request,
@@ -39,6 +41,7 @@ public class FreeBoardController {
         return new ResponseEntity<>(new CommonResponse<>(response), HttpStatus.OK);
     }
 
+    @TransactionLogging
     @GetMapping("/view/{id}")
     public ResponseEntity<CommonResponse<FreeBoardDto>> viewFreeBoard(
             HttpServletRequest request,
@@ -49,6 +52,7 @@ public class FreeBoardController {
         return new ResponseEntity<>(new CommonResponse<>(board), HttpStatus.OK);
     }
 
+    @TransactionLogging
     @PostMapping("/regi")
     public ResponseEntity<CommonResponse<FreeBoardDto>> regiFreeBoard(
             HttpServletRequest request,
@@ -59,6 +63,7 @@ public class FreeBoardController {
         return new ResponseEntity<>(new CommonResponse<>(registedBoard), HttpStatus.CREATED);
     }
 
+    @TransactionLogging
     @PutMapping("/modi")
     public ResponseEntity<CommonResponse<FreeBoardDto>> modiFreeBoard(
             HttpServletRequest request,
@@ -69,6 +74,7 @@ public class FreeBoardController {
         return new ResponseEntity<>(new CommonResponse<>(updateBoard), HttpStatus.OK);
     }
 
+    @TransactionLogging
     @DeleteMapping("/delete/{id}")
     public ResponseEntity<CommonResponse<Void>> deleteFreeBoard(
             HttpServletRequest request,

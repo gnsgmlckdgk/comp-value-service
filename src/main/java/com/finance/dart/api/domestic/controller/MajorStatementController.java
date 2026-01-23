@@ -2,6 +2,7 @@ package com.finance.dart.api.domestic.controller;
 
 import com.finance.dart.api.domestic.dto.NumberOfSharesIssuedResDTO;
 import com.finance.dart.api.common.service.NumberOfSharesIssuedService;
+import com.finance.dart.common.logging.TransactionLogging;
 import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -28,6 +29,7 @@ public class MajorStatementController {
      * @param reprtCode
      * @return¢¢
      */
+    @TransactionLogging
     @GetMapping("/company/statement")
     public ResponseEntity<NumberOfSharesIssuedResDTO> getNumberOfSharesIssued(
             @RequestParam("corp_code") String corpCode,

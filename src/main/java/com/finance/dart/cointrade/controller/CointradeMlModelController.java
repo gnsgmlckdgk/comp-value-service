@@ -4,6 +4,7 @@ import com.finance.dart.cointrade.dto.CointradeMlModelDto;
 import com.finance.dart.cointrade.service.CointradeMlModelService;
 import com.finance.dart.common.config.EndPointConfig;
 import com.finance.dart.common.dto.CommonResponse;
+import com.finance.dart.common.logging.TransactionLogging;
 import com.finance.dart.member.enums.RoleConstants;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -30,6 +31,7 @@ public class CointradeMlModelController {
      * ML 모델 전체 목록 조회
      */
     @EndPointConfig.RequireRole({RoleConstants.ROLE_SUPER_ADMIN})
+    @TransactionLogging
     @GetMapping
     public ResponseEntity<CommonResponse<List<CointradeMlModelDto>>> getAllModels() {
         log.info("ML 모델 전체 목록 조회 요청");

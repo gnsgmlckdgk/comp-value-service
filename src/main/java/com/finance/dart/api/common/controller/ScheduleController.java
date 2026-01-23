@@ -3,6 +3,7 @@ package com.finance.dart.api.common.controller;
 import com.finance.dart.api.common.service.schedule.RecommendedStocks;
 import com.finance.dart.api.domestic.service.schedule.CalCompanyStockPerValueTotalService;
 import com.finance.dart.common.config.EndPointConfig;
+import com.finance.dart.common.logging.TransactionLogging;
 import com.finance.dart.common.util.StringUtil;
 import com.finance.dart.member.enums.RoleConstants;
 import lombok.AllArgsConstructor;
@@ -28,6 +29,7 @@ public class ScheduleController {
      * @return
      */
     @EndPointConfig.RequireRole({RoleConstants.ROLE_SUPER_ADMIN})
+    @TransactionLogging
     @GetMapping("/schedule")
     public ResponseEntity<Object> scheduleTest() {
 
@@ -42,6 +44,7 @@ public class ScheduleController {
      * @return 스케줄 실행 메시지
      */
     @EndPointConfig.RequireRole({RoleConstants.ROLE_SUPER_ADMIN})
+    @TransactionLogging
     @PostMapping("/recommended-stocks")
     public ResponseEntity<Object> recommendedStocksTest(@RequestBody(required = false) Map<String, Object> body) {
 

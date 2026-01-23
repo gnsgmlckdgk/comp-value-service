@@ -7,6 +7,7 @@ import com.finance.dart.stockpredictor.dto.LogFileListDto;
 import com.finance.dart.stockpredictor.dto.PredictionResponseDto;
 import com.finance.dart.stockpredictor.service.MlService;
 import com.finance.dart.common.dto.CommonResponse;
+import com.finance.dart.common.logging.TransactionLogging;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -34,6 +35,7 @@ public class StockPredictorController {
      * @param symbol 티커 심볼
      * @return 예측 결과
      */
+    @TransactionLogging
     @GetMapping("/predict")
     public ResponseEntity<CommonResponse<PredictionResponseDto>> predict(@RequestParam(name = "symbol") String symbol) {
 
@@ -65,6 +67,7 @@ public class StockPredictorController {
      * @param symbol
      * @return
      */
+    @TransactionLogging
     @GetMapping("/predict/w")
     public ResponseEntity<CommonResponse<PredictionResponseDto>> predictForWeb(@RequestParam(name = "symbol") String symbol) {
 
@@ -92,6 +95,7 @@ public class StockPredictorController {
      * 로그 파일 목록 조회
      * @return 로그 파일 목록
      */
+    @TransactionLogging
     @GetMapping("/logs")
     public ResponseEntity<CommonResponse<LogFileListDto>> getLogFileList() {
 
@@ -119,6 +123,7 @@ public class StockPredictorController {
      * 최신 로그 파일 정보 조회
      * @return 최신 로그 파일 정보
      */
+    @TransactionLogging
     @GetMapping("/logs/latest")
     public ResponseEntity<CommonResponse<LogFileInfoDto>> getLatestLogFileInfo() {
 
@@ -147,6 +152,7 @@ public class StockPredictorController {
      * @param filename 로그 파일명
      * @return 로그 내용
      */
+    @TransactionLogging
     @GetMapping("/logs/{filename}")
     public ResponseEntity<CommonResponse<LogContentDto>> getLogContent(@PathVariable(name = "filename") String filename) {
 
@@ -175,6 +181,7 @@ public class StockPredictorController {
      * @param lastLine 마지막으로 읽은 줄 번호 (0이면 초기 로드)
      * @return 최신 로그 내용
      */
+    @TransactionLogging
     @GetMapping("/logs/stream/latest")
     public ResponseEntity<CommonResponse<LogContentDto>> getLatestLogStream(
             @RequestParam(name = "lastLine", required = false, defaultValue = "0") Integer lastLine) {

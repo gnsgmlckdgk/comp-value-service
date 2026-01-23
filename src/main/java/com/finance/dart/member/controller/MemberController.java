@@ -6,6 +6,7 @@ import com.finance.dart.api.common.context.RequestContext;
 import com.finance.dart.common.config.EndPointConfig;
 import com.finance.dart.common.constant.ResponseEnum;
 import com.finance.dart.common.dto.CommonResponse;
+import com.finance.dart.common.logging.TransactionLogging;
 import com.finance.dart.common.util.StringUtil;
 import com.finance.dart.member.dto.*;
 import com.finance.dart.member.enums.RoleConstants;
@@ -41,6 +42,7 @@ public class MemberController {
      * @return "" 응답은 로그인 실패
      */
     @EndPointConfig.PublicEndpoint
+    @TransactionLogging
     @PostMapping("/login")
     public ResponseEntity<CommonResponse<LoginDTO>> login(@Valid @RequestBody LoginDTO loginDTO) {
 
@@ -64,6 +66,7 @@ public class MemberController {
      * @return
      */
     @EndPointConfig.RequireRole({RoleConstants.ROLE_ADMIN, RoleConstants.ROLE_SUPER_ADMIN})
+    @TransactionLogging
     @GetMapping("/admin/users")
     public ResponseEntity<?> getUsers01(HttpServletRequest request) {
 
@@ -78,6 +81,7 @@ public class MemberController {
      * @return
      */
     @EndPointConfig.RequireRole({RoleConstants.ROLE_SUPER_ADMIN})
+    @TransactionLogging
     @GetMapping("/super_admin/users")
     public ResponseEntity<?> getUsers02(HttpServletRequest request) {
 
@@ -91,6 +95,7 @@ public class MemberController {
      * @param request
      * @return
      */
+    @TransactionLogging
     @DeleteMapping("/logout")
     public ResponseEntity<CommonResponse> logout(HttpServletRequest request) {
 
@@ -109,6 +114,7 @@ public class MemberController {
      * @return
      */
     @EndPointConfig.PublicEndpoint
+    @TransactionLogging
     @PostMapping("/join")
     public ResponseEntity<CommonResponse<Member>> join(@Valid @RequestBody MemberJoinReqDto memberJoinReqDto) {
 
@@ -124,6 +130,7 @@ public class MemberController {
      * @return
      */
     @EndPointConfig.PublicEndpoint
+    @TransactionLogging
     @GetMapping("/me")
     public ResponseEntity<CommonResponse> me(HttpServletRequest request) {
 
@@ -144,6 +151,7 @@ public class MemberController {
      * @param request
      * @return
      */
+    @TransactionLogging
     @GetMapping("/me/info")
     public ResponseEntity<CommonResponse> getLoginMember(HttpServletRequest request) {
 
@@ -159,6 +167,7 @@ public class MemberController {
      * @param reqBody
      * @return
      */
+    @TransactionLogging
     @PostMapping("/update")
     public ResponseEntity<CommonResponse<Member>> updateMember(HttpServletRequest request, @RequestBody Member reqBody) {
 
@@ -174,6 +183,7 @@ public class MemberController {
      * @return
      */
     @EndPointConfig.RequireRole({RoleConstants.ROLE_ADMIN, RoleConstants.ROLE_SUPER_ADMIN})
+    @TransactionLogging
     @PostMapping("/update/approval")
     public ResponseEntity<CommonResponse<MemberApproval>> updateMemberApproval(HttpServletRequest request, @RequestBody MemberApproval reqBody) {
 
@@ -188,6 +198,7 @@ public class MemberController {
      * @param reqBody
      * @return
      */
+    @TransactionLogging
     @PostMapping("/password")
     public ResponseEntity<CommonResponse<Void>> changePassword(HttpServletRequest request, @Valid @RequestBody PasswordChangeDto reqBody) {
 
@@ -202,6 +213,7 @@ public class MemberController {
      * @param reqBody
      * @return
      */
+    @TransactionLogging
     @PostMapping("/delete")
     public ResponseEntity<CommonResponse<Void>> deleteMember(HttpServletRequest request, @Valid @RequestBody MemberDeleteDto reqBody) {
 
@@ -224,6 +236,7 @@ public class MemberController {
      * @return
      */
     @EndPointConfig.RequireRole({RoleConstants.ROLE_ADMIN, RoleConstants.ROLE_SUPER_ADMIN})
+    @TransactionLogging
     @PostMapping("/list")
     public ResponseEntity<CommonResponse<MemberListResponseDto>> getMemberList(
             HttpServletRequest httpRequest,
@@ -240,6 +253,7 @@ public class MemberController {
      * @return
      */
     @EndPointConfig.PublicEndpoint
+    @TransactionLogging
     @PostMapping("/find-usernames")
     public ResponseEntity<CommonResponse<List<String>>> findUserNamesByEmail(@RequestBody Member request) {
 
@@ -258,6 +272,7 @@ public class MemberController {
      * @return
      */
     @EndPointConfig.PublicEndpoint
+    @TransactionLogging
     @PostMapping("/password/reset/request")
     public ResponseEntity<CommonResponse<PasswordResetRequestResponseDto>> resetPasswordRequest(@Valid @RequestBody PasswordResetRequestDto reqBody) {
 
@@ -275,6 +290,7 @@ public class MemberController {
      * @return
      */
     @EndPointConfig.PublicEndpoint
+    @TransactionLogging
     @PostMapping("/password/reset/verify")
     public ResponseEntity<CommonResponse<PasswordResetResponseDto>> resetPasswordVerify(@Valid @RequestBody PasswordResetVerifyDto reqBody) {
 
@@ -300,6 +316,7 @@ public class MemberController {
      * @return
      */
     @EndPointConfig.RequireRole({RoleConstants.ROLE_ADMIN, RoleConstants.ROLE_SUPER_ADMIN})
+    @TransactionLogging
     @PostMapping("/admin/update")
     public ResponseEntity<CommonResponse<Member>> updateMemberByAdmin(
             HttpServletRequest httpRequest,
@@ -322,6 +339,7 @@ public class MemberController {
      * @return
      */
     @EndPointConfig.RequireRole({RoleConstants.ROLE_SUPER_ADMIN})
+    @TransactionLogging
     @PostMapping("/admin/delete")
     public ResponseEntity<CommonResponse<Void>> deleteMemberByAdmin(
             HttpServletRequest httpRequest,

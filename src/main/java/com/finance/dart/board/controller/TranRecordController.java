@@ -3,6 +3,7 @@ package com.finance.dart.board.controller;
 import com.finance.dart.board.dto.*;
 import com.finance.dart.board.service.TranRecordService;
 import com.finance.dart.common.dto.CommonResponse;
+import com.finance.dart.common.logging.TransactionLogging;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -29,6 +30,7 @@ public class TranRecordController {
      * @param reqBody
      * @return
      */
+    @TransactionLogging
     @PostMapping("/regi")
     public ResponseEntity<CommonResponse<TranRecordDto>> regiTranRecord(HttpServletRequest request, @RequestBody TranRecordDto reqBody) {
 
@@ -43,6 +45,7 @@ public class TranRecordController {
      * @param reqBody
      * @return
      */
+    @TransactionLogging
     @PostMapping("/modi")
     public ResponseEntity<CommonResponse<TranRecordDto>> modiTranRecord(HttpServletRequest request, @RequestBody TranRecordDto reqBody) {
 
@@ -56,6 +59,7 @@ public class TranRecordController {
      * @param reqBody
      * @return
      */
+    @TransactionLogging
     @PostMapping("/del")
     public ResponseEntity<CommonResponse<Void>> delTranRecord(@RequestBody TranRecordDto reqBody) {
 
@@ -70,6 +74,7 @@ public class TranRecordController {
      * @param request
      * @return
      */
+    @TransactionLogging
     @GetMapping("")
     public ResponseEntity<CommonResponse<List<TranRecordDto>>> getTranRecordList(HttpServletRequest request) {
 
@@ -83,6 +88,7 @@ public class TranRecordController {
      * @param reqBody
      * @return
      */
+    @TransactionLogging
     @PostMapping("/price")
     public ResponseEntity<CommonResponse<List<TranRecordCurValueResDto>>> getTranRecordCurValue(
             @RequestBody TranRecordCurValueReqDto reqBody
@@ -100,6 +106,7 @@ public class TranRecordController {
      * @param reqBody
      * @return
      */
+    @TransactionLogging
     @PostMapping("/rate")
     public ResponseEntity<CommonResponse<TranRecordFxRateResDto>> getCurrencyRate(
             @RequestBody TranRecordFxRateReqDto reqBody

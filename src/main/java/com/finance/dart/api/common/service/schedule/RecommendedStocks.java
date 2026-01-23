@@ -1,6 +1,7 @@
 package com.finance.dart.api.common.service.schedule;
 
 
+import com.finance.dart.common.logging.TransactionLogging;
 import jakarta.annotation.PreDestroy;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -24,6 +25,7 @@ public class RecommendedStocks {
 
     private final RecommendedStocksProcessor recommendedStocksProcessor;
 
+    @TransactionLogging
     @Scheduled(cron = "0 0 0 * * *") // 24시간 형식, 초 분 시 일 월 요일, 00시(오전12시) 시작
     public void startScheduledTask() {
         executorService.submit(this::processDataInBackground);

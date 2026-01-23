@@ -2,6 +2,7 @@ package com.finance.dart.api.common.controller;
 
 import com.finance.dart.common.component.RedisComponent;
 import com.finance.dart.common.config.EndPointConfig;
+import com.finance.dart.common.logging.TransactionLogging;
 import com.finance.dart.common.util.ConvertUtil;
 import com.finance.dart.common.util.StringUtil;
 import lombok.AllArgsConstructor;
@@ -25,12 +26,14 @@ public class TestController {
 
 
     @EndPointConfig.PublicEndpoint
+    @TransactionLogging
     @GetMapping("/")
     public ResponseEntity<Object> test() {
         return new ResponseEntity<>("OK", HttpStatus.OK);
     }
 
     @EndPointConfig.PublicEndpoint
+    @TransactionLogging
     @GetMapping("/redis/count")
     public ResponseEntity<String> count(@RequestParam(name = "key") String key) {
 

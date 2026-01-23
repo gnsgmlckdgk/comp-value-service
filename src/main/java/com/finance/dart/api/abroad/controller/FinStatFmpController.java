@@ -26,6 +26,7 @@ import com.finance.dart.api.abroad.dto.fmp.stockscreener.StockScreenerReqDto;
 import com.finance.dart.api.abroad.dto.fmp.stockscreener.StockScreenerResDto;
 import com.finance.dart.api.abroad.service.fmp.*;
 import com.finance.dart.common.dto.CommonResponse;
+import com.finance.dart.common.logging.TransactionLogging;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -63,6 +64,7 @@ public class FinStatFmpController {
      * @param requestDto
      * @return
      */
+    @TransactionLogging
     @PostMapping("/incomeStat")
     public ResponseEntity<CommonResponse<List<IncomeStatResDto>>> incomeStatement(@RequestBody IncomeStatReqDto requestDto) {
 
@@ -76,6 +78,7 @@ public class FinStatFmpController {
      * @param requestDto
      * @return
      */
+    @TransactionLogging
     @PostMapping("/balanceSheetStat")
     public ResponseEntity<CommonResponse<List<BalanceSheetResDto>>> balanceSheetStat(@RequestBody BalanceSheetReqDto requestDto) {
 
@@ -89,6 +92,7 @@ public class FinStatFmpController {
      * @param requestDto
      * @return
      */
+    @TransactionLogging
     @PostMapping("/keyMetrics")
     public ResponseEntity<CommonResponse<List<KeyMetricsResDto>>> keyMetrics(@RequestBody KeyMetricsReqDto requestDto) {
 
@@ -102,6 +106,7 @@ public class FinStatFmpController {
      * @param requestDto
      * @return
      */
+    @TransactionLogging
     @PostMapping("/enterpriseValues")
     public ResponseEntity<CommonResponse<List<EnterpriseValuesResDto>>> enterpriseValues(@RequestBody EnterpriseValuesReqDto requestDto) {
 
@@ -115,6 +120,7 @@ public class FinStatFmpController {
      * @param requestDto
      * @return
      */
+    @TransactionLogging
     @PostMapping("/financialRatios")
     public ResponseEntity<CommonResponse<List<FinancialRatiosResDto>>> financialRatios(@RequestBody FinancialRatiosReqDto requestDto) {
 
@@ -128,6 +134,7 @@ public class FinStatFmpController {
      * @param requestDto
      * @return
      */
+    @TransactionLogging
     @PostMapping("/financialRatiosTTM")
     public ResponseEntity<CommonResponse<List<FinancialRatiosTTM_ResDto>>> financialRatiosTTM(@RequestBody FinancialRatiosTTM_ReqDto requestDto) {
 
@@ -141,6 +148,7 @@ public class FinStatFmpController {
      * @param requestDto
      * @return
      */
+    @TransactionLogging
     @PostMapping("/financialGrowth")
     public ResponseEntity<CommonResponse<List<FinancialGrowthResDto>>> financialGrowth(@RequestBody FinancialGrowthReqDto requestDto) {
 
@@ -154,6 +162,7 @@ public class FinStatFmpController {
      * @param requestDto
      * @return
      */
+    @TransactionLogging
     @PostMapping("/IncomeStatGrowth")
     public ResponseEntity<CommonResponse<List<IncomeStatGrowthResDto>>> incomeStatementGrowth(@RequestBody IncomeStatGrowthReqDto requestDto) {
 
@@ -167,6 +176,7 @@ public class FinStatFmpController {
      * @param requestDto
      * @return
      */
+    @TransactionLogging
     @PostMapping("/forexQuote")
     public ResponseEntity<CommonResponse<List<ForexQuoteResDto>>> forexQuote(@RequestBody ForexQuoteReqDto requestDto) {
 
@@ -183,6 +193,7 @@ public class FinStatFmpController {
      * @param requestDto
      * @return
      */
+    @TransactionLogging
     @PostMapping("/stockQuote")
     public ResponseEntity<CommonResponse<List<StockQuoteResDto>>> stockQuote(@RequestBody StockQuoteReqDto requestDto) {
 
@@ -200,6 +211,7 @@ public class FinStatFmpController {
      * @param requestDto
      * @return
      */
+    @TransactionLogging
     @PostMapping("/stockQuote/short")
     public ResponseEntity<CommonResponse<List<StockQuoteShortResDto>>> stockQuoteShort(@RequestBody StockQuoteShortReqDto requestDto) {
 
@@ -213,6 +225,7 @@ public class FinStatFmpController {
      * @param requestDto
      * @return
      */
+    @TransactionLogging
     @PostMapping("/afterTrade")
     public ResponseEntity<CommonResponse<List<AfterTradeResDto>>> afterTrade(@RequestBody AfterTradeReqDto requestDto) {
 
@@ -226,6 +239,7 @@ public class FinStatFmpController {
      * @param requestDto
      * @return
      */
+    @TransactionLogging
     @PostMapping("/screener/stock")
     public ResponseEntity<CommonResponse<List<StockScreenerResDto>>> screenerStock(@RequestBody StockScreenerReqDto requestDto) {
 
@@ -239,6 +253,7 @@ public class FinStatFmpController {
      * @param requestDto
      * @return
      */
+    @TransactionLogging
     @PostMapping("/ratios/ttm")
     public ResponseEntity<CommonResponse<List<RatiosTtmResDto>>> ratiosTTM(@RequestBody RatiosTtmReqDto requestDto) {
 
@@ -252,6 +267,7 @@ public class FinStatFmpController {
      * @param requestDto
      * @return
      */
+    @TransactionLogging
     @PostMapping("/ratios/ttm/arr")
     public ResponseEntity<CommonResponse<Map<String, List<RatiosTtmResDto>>>> ratiosTTMArr(@RequestBody RatiosTtmArrReqDto requestDto) {
 

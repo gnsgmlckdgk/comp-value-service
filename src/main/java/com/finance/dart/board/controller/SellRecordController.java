@@ -3,6 +3,7 @@ package com.finance.dart.board.controller;
 import com.finance.dart.board.dto.SellRecordDto;
 import com.finance.dart.board.service.SellRecordService;
 import com.finance.dart.common.dto.CommonResponse;
+import com.finance.dart.common.logging.TransactionLogging;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -26,6 +27,7 @@ public class SellRecordController {
      * @param reqBody
      * @return
      */
+    @TransactionLogging
     @PostMapping("/regi")
     public ResponseEntity<CommonResponse<SellRecordDto>> regiSellRecord(HttpServletRequest request, @RequestBody SellRecordDto reqBody) {
 
@@ -40,6 +42,7 @@ public class SellRecordController {
      * @param reqBody
      * @return
      */
+    @TransactionLogging
     @PostMapping("/modi")
     public ResponseEntity<CommonResponse<SellRecordDto>> modiSellRecord(HttpServletRequest request, @RequestBody SellRecordDto reqBody) {
 
@@ -53,6 +56,7 @@ public class SellRecordController {
      * @param reqBody
      * @return
      */
+    @TransactionLogging
     @PostMapping("/del")
     public ResponseEntity<CommonResponse<Void>> delSellRecord(@RequestBody SellRecordDto reqBody) {
 
@@ -67,6 +71,7 @@ public class SellRecordController {
      * @param id
      * @return
      */
+    @TransactionLogging
     @GetMapping("/{id}")
     public ResponseEntity<CommonResponse<SellRecordDto>> getSellRecord(HttpServletRequest request, @PathVariable(name = "id") Long id) {
 
@@ -80,6 +85,7 @@ public class SellRecordController {
      * @param request
      * @return
      */
+    @TransactionLogging
     @GetMapping("")
     public ResponseEntity<CommonResponse<List<SellRecordDto>>> getSellRecordList(HttpServletRequest request) {
 
@@ -94,6 +100,7 @@ public class SellRecordController {
      * @param symbol
      * @return
      */
+    @TransactionLogging
     @GetMapping("/symbol/{symbol}")
     public ResponseEntity<CommonResponse<List<SellRecordDto>>> getSellRecordListBySymbol(HttpServletRequest request, @PathVariable(name = "symbol") String symbol) {
 

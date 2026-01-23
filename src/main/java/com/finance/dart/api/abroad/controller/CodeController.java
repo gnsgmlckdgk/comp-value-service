@@ -7,6 +7,7 @@ import com.finance.dart.api.abroad.dto.fmp.codelist.IndustiresDto;
 import com.finance.dart.api.abroad.dto.fmp.codelist.SectorsDto;
 import com.finance.dart.api.abroad.service.fmp.CodeListService;
 import com.finance.dart.common.dto.CommonResponse;
+import com.finance.dart.common.logging.TransactionLogging;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -30,6 +31,7 @@ public class CodeController {
      * 거래소 목록조회
      * @return
      */
+    @TransactionLogging
     @GetMapping("/exchanges")
     public ResponseEntity<CommonResponse<List<ExchangesDto>>> exchanges() {
 
@@ -42,6 +44,7 @@ public class CodeController {
      * 섹터 목록조회
      * @return
      */
+    @TransactionLogging
     @GetMapping("/sectors")
     public ResponseEntity<CommonResponse<List<SectorsDto>>> sectors() {
 
@@ -54,6 +57,7 @@ public class CodeController {
      * 산업 목록조회
      * @return
      */
+    @TransactionLogging
     @GetMapping("/industries")
     public ResponseEntity<CommonResponse<List<IndustiresDto>>> industries() {
 
@@ -67,6 +71,7 @@ public class CodeController {
      * 국가코드 목록조회
      * @return
      */
+    @TransactionLogging
     @GetMapping("/countries")
     public ResponseEntity<CommonResponse<List<CountriesDto>>> countries() {
 

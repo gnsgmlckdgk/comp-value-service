@@ -2,6 +2,7 @@ package com.finance.dart.api.openai.controller;
 
 import com.finance.dart.api.openai.service.OpenAiService;
 import com.finance.dart.common.dto.CommonResponse;
+import com.finance.dart.common.logging.TransactionLogging;
 import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -23,6 +24,7 @@ public class GptController {
      * @param koreanCompanyName
      * @return
      */
+    @TransactionLogging
     @GetMapping("/gpt/translate/company-name/eng")
     public ResponseEntity<CommonResponse<String>> translateCompanyNameToEng(@RequestParam(name = "kor") String koreanCompanyName) {
 

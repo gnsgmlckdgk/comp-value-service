@@ -2,6 +2,7 @@ package com.finance.dart.api.domestic.controller;
 
 import com.finance.dart.api.domestic.dto.FinancialStatementResDTO;
 import com.finance.dart.api.domestic.service.FinancialStatementService;
+import com.finance.dart.common.logging.TransactionLogging;
 import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -29,6 +30,7 @@ public class FinancialStatementController {
      * @param fsDiv     개별/연결구분
      * @return
      */
+    @TransactionLogging
     @GetMapping("/company/financial-statement")
     public ResponseEntity<FinancialStatementResDTO> getCompanyFinancialStatement(
             @RequestParam("corp_code") String corpCode,

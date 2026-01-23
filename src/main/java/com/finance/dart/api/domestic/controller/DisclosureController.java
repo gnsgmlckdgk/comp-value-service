@@ -3,6 +3,7 @@ package com.finance.dart.api.domestic.controller;
 import com.finance.dart.api.domestic.dto.DisclosuerInfoReqDTO;
 import com.finance.dart.api.domestic.service.CorpCodeService;
 import com.finance.dart.api.domestic.service.DisclosuerInfoService;
+import com.finance.dart.common.logging.TransactionLogging;
 import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -26,6 +27,7 @@ public class DisclosureController {
      * @param disclosuerInfoReqDTO
      * @return
      */
+    @TransactionLogging
     @PostMapping("/disc/list")
     public ResponseEntity<Object> getDisclosureInfoList(@RequestBody DisclosuerInfoReqDTO disclosuerInfoReqDTO) {
         return new ResponseEntity<>(disclosuerInfoService.getDisclosuerInfo(disclosuerInfoReqDTO), HttpStatus.OK);
@@ -35,6 +37,7 @@ public class DisclosureController {
      * 고유번호 조회
      * @return
      */
+    @TransactionLogging
     @GetMapping("corpCode")
     public ResponseEntity<Object> getCorpCode() {
 

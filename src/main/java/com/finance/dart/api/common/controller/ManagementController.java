@@ -10,6 +10,7 @@ import com.finance.dart.api.common.service.MgntRedisService;
 import com.finance.dart.common.config.EndPointConfig;
 import com.finance.dart.common.dto.CommonResponse;
 import com.finance.dart.common.logging.CircularLogBuffer;
+import com.finance.dart.common.logging.TransactionLogging;
 import com.finance.dart.member.enums.RoleConstants;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -34,6 +35,7 @@ public class ManagementController {
 
 
     @EndPointConfig.RequireRole({RoleConstants.ROLE_ADMIN, RoleConstants.ROLE_SUPER_ADMIN})
+    @TransactionLogging
     @PostMapping("/redis")
     public ResponseEntity<CommonResponse<MgntRedisResDto>> redisMgnt(@RequestBody MgntRedisReqDto reqDto) {
 
@@ -52,6 +54,7 @@ public class ManagementController {
      * 사용법: curl http://localhost:18080/dart/logs/stream
      */
     @EndPointConfig.RequireRole({RoleConstants.ROLE_ADMIN, RoleConstants.ROLE_SUPER_ADMIN})
+    @TransactionLogging
     @GetMapping(value = "/stream", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
     public SseEmitter streamLogs() {
         SseEmitter emitter = new SseEmitter(Long.MAX_VALUE);
@@ -112,6 +115,7 @@ public class ManagementController {
      * 현재 버퍼에 저장된 로그 조회 (일회성)
      */
     @EndPointConfig.RequireRole({RoleConstants.ROLE_ADMIN, RoleConstants.ROLE_SUPER_ADMIN})
+    @TransactionLogging
     @GetMapping("/buffer")
     public List<String> getBufferedLogs() {
         return logBuffer.getAllLogs();
@@ -123,6 +127,7 @@ public class ManagementController {
      * @return
      */
     @EndPointConfig.RequireRole({RoleConstants.ROLE_ADMIN, RoleConstants.ROLE_SUPER_ADMIN})
+    @TransactionLogging
     @GetMapping("/logs")
     public ResponseEntity<CommonResponse<LogFileListDto>> getLogFileList() {
         LogFileListDto logFileList = mgntLogService.getLogFileList();
@@ -135,6 +140,7 @@ public class ManagementController {
      * @return
      */
     @EndPointConfig.RequireRole({RoleConstants.ROLE_ADMIN, RoleConstants.ROLE_SUPER_ADMIN})
+    @TransactionLogging
     @GetMapping("/logs/{filename}")
     public ResponseEntity<CommonResponse<LogContentDto>> getLogContent(@PathVariable(name = "filename") String filename) {
 
