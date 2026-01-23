@@ -1,7 +1,6 @@
 package com.finance.dart.cointrade.controller;
 
-import com.finance.dart.cointrade.dto.upbit.TickerDto;
-import com.finance.dart.cointrade.dto.upbit.TradingParisDto;
+import com.finance.dart.cointrade.dto.upbit.*;
 import com.finance.dart.cointrade.service.UpbitService;
 import com.finance.dart.common.config.EndPointConfig;
 import com.finance.dart.common.dto.CommonResponse;
@@ -54,6 +53,58 @@ public class UpbitController {
         List<TickerDto> tickerDtoList = upbitService.getTicker(markets);
 
         return new ResponseEntity<>(new CommonResponse<>(tickerDtoList), HttpStatus.OK);
+    }
+
+    /**
+     * 일(Day) 캔들 조회
+     * @param reqDto
+     * @return
+     */
+    @EndPointConfig.RequireRole({RoleConstants.ROLE_SUPER_ADMIN})
+    @TransactionLogging
+    @GetMapping("/candles/days")
+    public ResponseEntity<CommonResponse<List<CandleDayResDto>>> getCandlesDays(CandleReqDto reqDto) {
+        List<CandleDayResDto> response = upbitService.getCandlesDays(reqDto);
+        return new ResponseEntity<>(new CommonResponse<>(response), HttpStatus.OK);
+    }
+
+    /**
+     * 주(Week) 캔들 조회
+     * @param reqDto
+     * @return
+     */
+    @EndPointConfig.RequireRole({RoleConstants.ROLE_SUPER_ADMIN})
+    @TransactionLogging
+    @GetMapping("/candles/weeks")
+    public ResponseEntity<CommonResponse<List<CandleWeekResDto>>> getCandlesWeeks(CandleReqDto reqDto) {
+        List<CandleWeekResDto> response = upbitService.getCandlesWeeks(reqDto);
+        return new ResponseEntity<>(new CommonResponse<>(response), HttpStatus.OK);
+    }
+
+    /**
+     * 월(Month) 캔들 조회
+     * @param reqDto
+     * @return
+     */
+    @EndPointConfig.RequireRole({RoleConstants.ROLE_SUPER_ADMIN})
+    @TransactionLogging
+    @GetMapping("/candles/months")
+    public ResponseEntity<CommonResponse<List<CandleMonthResDto>>> getCandlesMonths(CandleReqDto reqDto) {
+        List<CandleMonthResDto> response = upbitService.getCandlesMonths(reqDto);
+        return new ResponseEntity<>(new CommonResponse<>(response), HttpStatus.OK);
+    }
+
+    /**
+     * 연(Year) 캔들 조회
+     * @param reqDto
+     * @return
+     */
+    @EndPointConfig.RequireRole({RoleConstants.ROLE_SUPER_ADMIN})
+    @TransactionLogging
+    @GetMapping("/candles/years")
+    public ResponseEntity<CommonResponse<List<CandleYearResDto>>> getCandlesYears(CandleReqDto reqDto) {
+        List<CandleYearResDto> response = upbitService.getCandlesYears(reqDto);
+        return new ResponseEntity<>(new CommonResponse<>(response), HttpStatus.OK);
     }
 
 }
