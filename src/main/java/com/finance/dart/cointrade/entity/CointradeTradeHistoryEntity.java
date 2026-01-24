@@ -50,11 +50,14 @@ public class CointradeTradeHistoryEntity {
     @Column(name = "profit_loss_rate", precision = 10, scale = 4)
     private BigDecimal profitLossRate;
 
-    @Column(name = "buy_score", precision = 5, scale = 2)
-    private BigDecimal buyScore; // 매수 시 점수
+    @Column(name = "up_probability", precision = 5, scale = 2)
+    private BigDecimal upProbability; // 매수 시 상승 확률
 
-    @Column(name = "surge_probability", precision = 5, scale = 2)
-    private BigDecimal surgeProbability; // 매수 시 급등 확률
+    @Column(name = "down_probability", precision = 5, scale = 2)
+    private BigDecimal downProbability; // 매수 시 하락 확률
+
+    @Column(name = "expected_return", precision = 5, scale = 2)
+    private BigDecimal expectedReturn; // 매수 시 기대 수익률
 
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)

@@ -25,8 +25,7 @@ public class CointradeHoldingDto {
     private BigDecimal predictedHigh;
     private BigDecimal predictedLow;
     private LocalDateTime buyDate;
-    private BigDecimal surgeProbability;
-    private Integer surgeDay;
-    private LocalDate expireDate;
-    private BigDecimal buyScore;
+    private BigDecimal upProbability;
+    private BigDecimal downProbability;
+    private BigDecimal expectedReturn;
 }

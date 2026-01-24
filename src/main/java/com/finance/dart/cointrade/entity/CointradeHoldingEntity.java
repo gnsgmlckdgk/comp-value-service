@@ -42,17 +42,14 @@ public class CointradeHoldingEntity {
     @Column(name = "buy_date")
     private LocalDateTime buyDate;
 
-    @Column(name = "surge_probability", nullable = false, precision = 5, scale = 2)
-    private BigDecimal surgeProbability; // 급등 확률
+    @Column(name = "up_probability", nullable = false, precision = 5, scale = 2)
+    private BigDecimal upProbability; // 상승 확률
 
-    @Column(name = "surge_day")
-    private Integer surgeDay; // 급등 예상일
+    @Column(name = "down_probability", nullable = false, precision = 5, scale = 2)
+    private BigDecimal downProbability; // 하락 확률
 
-    @Column(name = "expire_date")
-    private LocalDate expireDate; // 만료일
-
-    @Column(name = "buy_score", nullable = false, precision = 5, scale = 2)
-    private BigDecimal buyScore; // 매수 점수
+    @Column(name = "expected_return", nullable = false, precision = 5, scale = 2)
+    private BigDecimal expectedReturn; // 기대 수익률 (%)
 
 
     @CreationTimestamp

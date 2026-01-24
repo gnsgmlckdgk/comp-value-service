@@ -12,6 +12,6 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class CointradeConfigUpdateDto {
 
-    private String paramName;
-    private String paramValue;
+    private String configKey;
+    private String configValue;
 }

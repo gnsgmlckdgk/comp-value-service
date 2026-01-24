@@ -69,9 +69,9 @@ public class CointradeConfigService {
     @Transactional
     public void updateConfigs(List<CointradeConfigUpdateDto> configs) {
         for (CointradeConfigUpdateDto dto : configs) {
-            configRepository.findByParamName(dto.getParamName())
+            configRepository.findByParamName(dto.getConfigKey())
                     .ifPresent(entity -> {
-                        entity.setParamValue(dto.getParamValue());
+                        entity.setParamValue(dto.getConfigValue());
                         configRepository.save(entity);
                     });
         }
@@ -152,10 +152,9 @@ public class CointradeConfigService {
                         .predictedHigh(entity.getPredictedHigh())
                         .predictedLow(entity.getPredictedLow())
                         .buyDate(entity.getBuyDate())
-                        .surgeProbability(entity.getSurgeProbability())
-                        .surgeDay(entity.getSurgeDay())
-                        .expireDate(entity.getExpireDate())
-                        .buyScore(entity.getBuyScore())
+                        .upProbability(entity.getUpProbability())
+                        .downProbability(entity.getDownProbability())
+                        .expectedReturn(entity.getExpectedReturn())
                         .build())
                 .collect(Collectors.toList());
     }
@@ -201,8 +200,9 @@ public class CointradeConfigService {
                 .reason(entity.getReason())
                 .profitLoss(entity.getProfitLoss())
                 .profitLossRate(entity.getProfitLossRate())
-                .buyScore(entity.getBuyScore())
-                .surgeProbability(entity.getSurgeProbability())
+                .upProbability(entity.getUpProbability())
+                .downProbability(entity.getDownProbability())
+                .expectedReturn(entity.getExpectedReturn())
                 .createdAt(entity.getCreatedAt())
                 .build());
     }

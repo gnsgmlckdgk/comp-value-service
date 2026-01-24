@@ -11,8 +11,8 @@ import java.util.Optional;
 public interface CointradeConfigRepository extends JpaRepository<CointradeConfigEntity, Long> {
 
     /**
-     * 파라미터 이름으로 설정값 조회
-     * @param paramName 파라미터 이름
+     * 키 값으로 설정값 조회
+     * @param paramName 설정 키
      * @return 설정값 Entity
      */
     Optional<CointradeConfigEntity> findByParamName(String paramName);
