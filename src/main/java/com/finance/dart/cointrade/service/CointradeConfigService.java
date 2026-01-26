@@ -10,6 +10,7 @@ import com.finance.dart.cointrade.repository.CointradeHoldingRepository;
 import com.finance.dart.cointrade.repository.CointradeTargetCoinRepository;
 import com.finance.dart.cointrade.repository.CointradeTradeHistoryRepository;
 import com.finance.dart.common.component.HttpClientComponent;
+import com.finance.dart.common.util.StringUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -363,8 +364,19 @@ public class CointradeConfigService {
         String url = buildUrl(CoinTraderProgramConfig.API_URI_MODEL_TRAIN);
         log.info("매수/매도 프로세스 수동 중지 요청 - URL: {}", url);
 
+        String predictionDays = configRepository.findByParamName("PREDICTION_DAYS")
+                .map(entity -> String.valueOf(entity.getParamValue()))
+                .orElse(null);
+
+        String ensembleMode = configRepository.findByParamName("ENSEMBLE_MODE")
+                .map(entity -> String.valueOf(entity.getParamValue()))
+                .orElse(null);
+
         Map<String, Object> param = new LinkedHashMap<>();
-        param.put("coin_code", coinCode);
+        param.put("coin_code", StringUtil.defaultString(coinCode));
+        param.put("prediction_days", predictionDays == null ? 3 : predictionDays);
+        param.put("ensemble_mode", ensembleMode == null ? "ensemble" : ensembleMode);
+
         return httpClientComponent.exchangeSync(url, HttpMethod.POST, null, param,new ParameterizedTypeReference<Map<String, Object>>() {}).getBody();
     }
 

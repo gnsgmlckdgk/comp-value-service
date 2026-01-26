@@ -33,6 +33,15 @@ public class RecommendProfileDto {
     private String exchange;                // 거래소 (콤마구분, 예: NYSE,NASDAQ)
     private Integer screenerLimit;          // 스크리너 조회 제한 건수
 
+    private BigDecimal priceMin;            // 주가 최소값
+    private BigDecimal priceMax;            // 주가 최대값
+    private BigDecimal betaMin;             // 베타 최소값
+    private Long volumeMax;                 // 거래량 최대값
+    private String sector;                  // 섹터 (예: Technology)
+    private String industry;                // 산업군 (예: Software)
+    private String country;                 // 국가 (예: US)
+
+
     // ========== 저평가 필터링 조건 ==========
 
     private BigDecimal peRatioMin;          // PER 최소값 (주가수익비율)

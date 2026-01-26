@@ -38,11 +38,23 @@ public class RecommendProfileConfigEntity {
     @Column(name = "market_cap_max")
     private Long marketCapMax;              // 시가총액 최대 (USD)
 
+    @Column(name = "price_min", precision = 10, scale = 2)
+    private BigDecimal priceMin;            // 주가 최소값
+
+    @Column(name = "price_max", precision = 10, scale = 2)
+    private BigDecimal priceMax;            // 주가 최대값
+
+    @Column(name = "beta_min", precision = 5, scale = 2)
+    private BigDecimal betaMin;             // 베타 최소값
+
     @Column(name = "beta_max", precision = 5, scale = 2)
     private BigDecimal betaMax;             // 베타 최대값 (변동성 지표)
 
     @Column(name = "volume_min")
     private Long volumeMin;                 // 거래량 최소
+
+    @Column(name = "volume_max")
+    private Long volumeMax;                 // 거래량 최대값
 
     @Column(name = "is_etf", length = 1)
     private String isEtf = "N";             // ETF 포함여부 (Y/N)
@@ -53,8 +65,17 @@ public class RecommendProfileConfigEntity {
     @Column(name = "is_actively_trading", length = 1)
     private String isActivelyTrading = "Y"; // 활성거래 종목만 (Y/N)
 
-    @Column(name = "exchange", length = 100)
+    @Column(name = "exchange", columnDefinition = "TEXT")
     private String exchange;                // 거래소 (콤마구분, 예: NYSE,NASDAQ)
+
+    @Column(name = "sector", columnDefinition = "TEXT")
+    private String sector;                  // 섹터 (예: Technology)
+
+    @Column(name = "industry", columnDefinition = "TEXT")
+    private String industry;                // 산업군 (예: Software)
+
+    @Column(name = "country", columnDefinition = "TEXT")
+    private String country;                 // 국가 (예: US)
 
     @Column(name = "screener_limit")
     private Integer screenerLimit = 10000;  // 스크리너 조회 제한 건수

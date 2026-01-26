@@ -46,6 +46,12 @@ public class CointradeMlModelEntity {
     @Column(name = "mse_up_prob", precision = 20, scale = 10)
     private BigDecimal mseUpProb; // 상승 확률 예측 MSE
 
+    @Column(name = "prediction_days")
+    private Integer predictionDays;
+
+    @Column(name = "model_type", length = 20)
+    private String modelType;
+
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;

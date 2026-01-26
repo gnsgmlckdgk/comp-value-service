@@ -37,6 +37,8 @@ public class CointradeMlModelService {
                         .mseHigh(entity.getMseHigh())
                         .mseLow(entity.getMseLow())
                         .mseUpProb(entity.getMseUpProb())
+                        .predictionDays(entity.getPredictionDays())
+                        .modelType(entity.getModelType())
                         .createdAt(entity.getCreatedAt())
                         .updatedAt(entity.getUpdatedAt())
                         .build())

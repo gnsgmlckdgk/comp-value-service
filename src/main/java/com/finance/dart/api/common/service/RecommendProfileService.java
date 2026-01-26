@@ -199,6 +199,13 @@ public class RecommendProfileService {
         if (dto.getIsActivelyTrading() != null) configEntity.setIsActivelyTrading(dto.getIsActivelyTrading());
         if (dto.getExchange() != null) configEntity.setExchange(dto.getExchange());
         if (dto.getScreenerLimit() != null) configEntity.setScreenerLimit(dto.getScreenerLimit());
+        if (dto.getPriceMin() != null) configEntity.setPriceMin(dto.getPriceMin());
+        if (dto.getPriceMax() != null) configEntity.setPriceMax(dto.getPriceMax());
+        if (dto.getBetaMin() != null) configEntity.setBetaMin(dto.getBetaMin());
+        if (dto.getVolumeMax() != null) configEntity.setVolumeMax(dto.getVolumeMax());
+        if (dto.getSector() != null) configEntity.setSector(dto.getSector());
+        if (dto.getIndustry() != null) configEntity.setIndustry(dto.getIndustry());
+        if (dto.getCountry() != null) configEntity.setCountry(dto.getCountry());
 
         // 저평가 필터링 조건
         if (dto.getPeRatioMin() != null) configEntity.setPeRatioMin(dto.getPeRatioMin());
@@ -234,6 +241,13 @@ public class RecommendProfileService {
             dto.setIsActivelyTrading(config.getIsActivelyTrading());
             dto.setExchange(config.getExchange());
             dto.setScreenerLimit(config.getScreenerLimit());
+            dto.setPriceMin(config.getPriceMin());
+            dto.setPriceMax(config.getPriceMax());
+            dto.setBetaMin(config.getBetaMin());
+            dto.setVolumeMax(config.getVolumeMax());
+            dto.setSector(config.getSector());
+            dto.setIndustry(config.getIndustry());
+            dto.setCountry(config.getCountry());
             dto.setPeRatioMin(config.getPeRatioMin());
             dto.setPeRatioMax(config.getPeRatioMax());
             dto.setPbRatioMax(config.getPbRatioMax());

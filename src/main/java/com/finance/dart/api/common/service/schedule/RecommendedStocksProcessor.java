@@ -147,8 +147,8 @@ public class RecommendedStocksProcessor {
                 Map<String, RecommendedStockData> batchResult = processBatch(batch, config, ratiosCache);
                 undervaluedStocks.putAll(batchResult);
 
-                log.info("[추천 종목] 프로파일 '{}' 배치 {}/{} 완료 - 저평가 종목: {}건",
-                        profile.getProfileName(), i + 1, batches.size(), batchResult.size());
+                log.info("[추천 종목] 프로파일 '{}' 배치 {}/{} 완료 - 이번 배치 발견: {}건 (누적: {}건)",
+                        profile.getProfileName(), i + 1, batches.size(), batchResult.size(), undervaluedStocks.size());
 
                 // 마지막 배치가 아니면 대기 (API 호출 제한)
                 if (i < batches.size() - 1) {
@@ -209,7 +209,18 @@ public class RecommendedStocksProcessor {
             reqDto.setMarketCapLowerThan(config.getMarketCapMax());
         }
 
+        // 주가
+        if (config.getPriceMin() != null) {
+            reqDto.setPriceMoreThan(config.getPriceMin().doubleValue());
+        }
+        if (config.getPriceMax() != null) {
+            reqDto.setPriceLowerThan(config.getPriceMax().doubleValue());
+        }
+
         // 베타
+        if (config.getBetaMin() != null) {
+            reqDto.setBetaMoreThan(config.getBetaMin().doubleValue());
+        }
         if (config.getBetaMax() != null) {
             reqDto.setBetaLowerThan(config.getBetaMax().doubleValue());
         }
@@ -218,6 +229,14 @@ public class RecommendedStocksProcessor {
         if (config.getVolumeMin() != null) {
             reqDto.setVolumeMoreThan(config.getVolumeMin());
         }
+        if (config.getVolumeMax() != null) {
+            reqDto.setVolumeLowerThan(config.getVolumeMax());
+        }
+
+        // 섹터/산업/국가
+        if (config.getSector() != null) reqDto.setSector(config.getSector());
+        if (config.getIndustry() != null) reqDto.setIndustry(config.getIndustry());
+        if (config.getCountry() != null) reqDto.setCountry(config.getCountry());
 
         // ETF/펀드 포함 여부 (Y/N -> boolean)
         reqDto.setIsEtf("Y".equals(config.getIsEtf()));
