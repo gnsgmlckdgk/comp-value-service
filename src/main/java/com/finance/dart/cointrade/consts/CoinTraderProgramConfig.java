@@ -51,4 +51,16 @@ public class CoinTraderProgramConfig {
     /** 매도 프로세스 진행율 상태 조회 **/
     public static final String API_URI_PROCESS_STATUS_SELL = "api/process/status/sell";
 
+    /** 백테스트 실행 **/
+    public static final String API_URI_BACKTEST_RUN = "api/backtest/run";
+
+    /** 백테스트 작업 상태 조회 **/
+    public static final String API_URI_BACKTEST_STATUS = "api/backtest/status";
+
+    /** 백테스트 결과 조회 **/
+    public static final String API_URI_BACKTEST_RESULT = "api/backtest/result";
+
+    /** 백테스트 이력 조회 **/
+    public static final String API_URI_BACKTEST_HISTORY = "api/backtest/history";
+
 }
