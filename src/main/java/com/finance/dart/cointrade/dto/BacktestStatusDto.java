@@ -41,4 +41,6 @@ public class BacktestStatusDto {
     private String errorMessage;
 
     private String progress;
+
+    private BacktestParamDto params;
 }

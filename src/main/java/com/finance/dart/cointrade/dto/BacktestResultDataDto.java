@@ -18,5 +18,7 @@ public class BacktestResultDataDto {
 
     private PortfolioDto portfolio;
 
+    private BacktestParamDto params;
+
     private Map<String, IndividualResultDto> individual;
 }
