@@ -43,4 +43,9 @@ public class BacktestParamDto {
     @JsonProperty("ensemble_mode")
     private String ensembleMode;
 
+    @JsonProperty("buy_fee_rate")
+    private String buyFeeRate;
+
+    @JsonProperty("sell_fee_rate")
+    private String selleeRate;
 }
