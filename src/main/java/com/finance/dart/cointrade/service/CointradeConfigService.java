@@ -209,7 +209,7 @@ public class CointradeConfigService {
     }
 
     /**
-     * 매수 스케줄러 ON/OFF (DB 설정만 변경)
+     * 매수 스케줄러 ON/OFF (DB 설정 변경 후 파이썬 스케줄러 리로드)
      */
     @Transactional
     public void updateBuyScheduler(boolean enabled) {
@@ -219,10 +219,11 @@ public class CointradeConfigService {
                     configRepository.save(entity);
                     log.info("매수 스케줄러 설정 변경: {}", enabled);
                 });
+        reloadScheduler();
     }
 
     /**
-     * 매도 스케줄러 ON/OFF (DB 설정만 변경)
+     * 매도 스케줄러 ON/OFF (DB 설정 변경 후 파이썬 스케줄러 리로드)
      */
     @Transactional
     public void updateSellScheduler(boolean enabled) {
@@ -232,6 +233,7 @@ public class CointradeConfigService {
                     configRepository.save(entity);
                     log.info("매도 스케줄러 설정 변경: {}", enabled);
                 });
+        reloadScheduler();
     }
 
     /**
