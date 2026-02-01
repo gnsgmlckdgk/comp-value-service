@@ -116,8 +116,9 @@ jobs:
           context: .
           push: true
           # 도커 환경 변경되면 조정 필요(현재 M1 Mac 미니큐브라 arm임)
-          platforms: linux/amd64,linux/arm64
+          # platforms: linux/amd64,linux/arm64
 #          platforms: linux/arm64
+          platforms: linux/amd64
           tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ env.VERSION }}
 
 #      - name: Publish container image
