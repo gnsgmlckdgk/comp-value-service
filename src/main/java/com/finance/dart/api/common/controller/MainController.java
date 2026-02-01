@@ -12,6 +12,7 @@ import com.finance.dart.api.common.service.RecommendedCompanyService;
 import com.finance.dart.api.common.service.StockEvaluationService;
 import com.finance.dart.api.common.service.schedule.RecommendedStocksProcessor;
 import com.finance.dart.api.domestic.service.DomesticStockCalculationService;
+import com.finance.dart.common.config.EndPointConfig;
 import com.finance.dart.common.constant.ResponseEnum;
 import com.finance.dart.common.dto.CommonResponse;
 import com.finance.dart.common.exception.BizException;
@@ -46,6 +47,7 @@ public class MainController {
      * @return
      */
     @TransactionLogging
+    @EndPointConfig.PublicEndpoint
     @GetMapping("/check")
     public ResponseEntity<Object> healthCheck() {
         log.info("HealthCheck!!!_헬스체크!!!");
