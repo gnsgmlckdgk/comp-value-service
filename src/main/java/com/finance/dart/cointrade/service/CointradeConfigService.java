@@ -389,6 +389,27 @@ public class CointradeConfigService {
         return httpClientComponent.exchangeSync(url, HttpMethod.POST, new ParameterizedTypeReference<Map<String, Object>>() {}).getBody();
     }
 
+    /**
+     * 보유 종목 매도
+     */
+    public CointradeSellResponseDto sellHoldings(CointradeSellRequestDto request) {
+        String url = buildUrl(CoinTraderProgramConfig.API_URI_HOLDINGS_SELL);
+        log.info("보유 종목 매도 요청 - URL: {}, coinCodes: {}", url, request.getCoinCodes());
+
+        Map<String, Object> param = new LinkedHashMap<>();
+        if (request.getCoinCodes() != null && !request.getCoinCodes().isEmpty()) {
+            param.put("coin_codes", request.getCoinCodes());
+        }
+
+        return httpClientComponent.exchangeSync(
+                url,
+                HttpMethod.POST,
+                null,
+                param,
+                new ParameterizedTypeReference<CointradeSellResponseDto>() {}
+        ).getBody();
+    }
+
     private String buildUrl(String uri) {
         String baseUrl = isLocal
                 ? CoinTraderProgramConfig.localHost

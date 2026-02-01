@@ -63,4 +63,7 @@ public class CoinTraderProgramConfig {
     /** 백테스트 이력 조회 **/
     public static final String API_URI_BACKTEST_HISTORY = "api/backtest/history";
 
+    /** 보유 종목 매도 **/
+    public static final String API_URI_HOLDINGS_SELL = "api/holdings/sell";
+
 }
