@@ -25,7 +25,6 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDateTime;
 import java.util.LinkedHashMap;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -111,7 +110,7 @@ public class CointradeConfigService {
         // 1. Upbit에 없는 마켓은 DB에서 삭제
         List<String> upbitMarketCodes = upbitMarkets.stream()
                 .map(TradingParisDto::getMarket)
-                .collect(Collectors.toList());
+                .toList();
 
         List<CointradeTargetCoinEntity> existingCoins = targetCoinRepository.findAll();
         for (CointradeTargetCoinEntity entity : existingCoins) {
@@ -365,7 +364,7 @@ public class CointradeConfigService {
     public Map<String, Object> modelTrain(String coinCodes) {
 
         String url = buildUrl(CoinTraderProgramConfig.API_URI_MODEL_TRAIN);
-        log.info("매수/매도 프로세스 수동 중지 요청 - URL: {}", url);
+        log.info("모델 학습 실행 요청 - URL: {}", url);
 
         List<String> coinCodeList = null;
         if(!StringUtil.isStringEmpty(coinCodes)) {
