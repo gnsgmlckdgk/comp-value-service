@@ -25,6 +25,7 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDateTime;
 import java.util.LinkedHashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -361,10 +362,15 @@ public class CointradeConfigService {
     /**
      * 모델 학습 수동 실행
      */
-    public Map<String, Object> modelTrain(String coinCode) {
+    public Map<String, Object> modelTrain(String coinCodes) {
 
         String url = buildUrl(CoinTraderProgramConfig.API_URI_MODEL_TRAIN);
         log.info("매수/매도 프로세스 수동 중지 요청 - URL: {}", url);
+
+        List<String> coinCodeList = null;
+        if(!StringUtil.isStringEmpty(coinCodes)) {
+            coinCodeList = List.of(coinCodes.split(","));
+        }
 
         String predictionDays = configRepository.findByParamName("PREDICTION_DAYS")
                 .map(entity -> String.valueOf(entity.getParamValue()))
@@ -375,8 +381,8 @@ public class CointradeConfigService {
                 .orElse(null);
 
         Map<String, Object> param = new LinkedHashMap<>();
-        param.put("coin_code", StringUtil.defaultString(coinCode));
-        param.put("prediction_days", predictionDays == null ? 3 : predictionDays);
+        param.put("coin_codes", coinCodeList);
+        param.put("prediction_days", predictionDays == null ? "3" : predictionDays);
         param.put("ensemble_mode", ensembleMode == null ? "ensemble" : ensembleMode);
 
         return httpClientComponent.exchangeSync(url, HttpMethod.POST, null, param,new ParameterizedTypeReference<Map<String, Object>>() {}).getBody();
