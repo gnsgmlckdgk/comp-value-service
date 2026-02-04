@@ -25,4 +25,7 @@ public class BacktestRunReqDto {
 
     @JsonProperty("end_date")
     private String endDate;
+
+    @JsonProperty("config")
+    private BacktestRequestConfigDto config;
 }

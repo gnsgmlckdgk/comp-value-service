@@ -3,6 +3,7 @@ package com.finance.dart.cointrade.service;
 import com.finance.dart.cointrade.consts.CoinTraderProgramConfig;
 import com.finance.dart.cointrade.dto.*;
 import com.finance.dart.common.component.HttpClientComponent;
+import com.finance.dart.common.util.ConvertUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -10,7 +11,9 @@ import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpMethod;
 import org.springframework.stereotype.Service;
 
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * 백테스트 서비스
@@ -29,14 +32,25 @@ public class CointradeBacktestService {
      * 백테스트 실행
      */
     public BacktestRunResDto runBacktest(BacktestRunReqDto request) {
+
         String url = buildUrl(CoinTraderProgramConfig.API_URI_BACKTEST_RUN);
         log.info("백테스트 실행 요청 - URL: {}, request: {}", url, request);
+
+        Map<String, Object> requestParam = new LinkedHashMap<>();
+        requestParam.put("coin_codes", request.getCoinCodes());
+        requestParam.put("start_date", request.getStartDate());
+        requestParam.put("end_date", request.getEndDate());
+
+        if(request.getConfig() != null) {
+            Map<String, Object> config = ConvertUtil.parseObject(request.getConfig(), Map.class);
+            requestParam.putAll(config);
+        }
 
         return httpClientComponent.exchangeSync(
                 url,
                 HttpMethod.POST,
                 null,
-                request,
+                requestParam,
                 new ParameterizedTypeReference<BacktestRunResDto>() {}
         ).getBody();
     }
