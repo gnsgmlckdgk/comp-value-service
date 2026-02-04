@@ -3674,6 +3674,179 @@
           "name": "업비트",
           "item": [
             {
+              "name": "차트 정보 조회",
+              "item": [
+                {
+                  "name": "일 캔들 조회",
+                  "request": {
+                    "method": "GET",
+                    "header": [],
+                    "url": {
+                      "raw": "http://localhost:18080/dart/api/upbit/candles/days?market=KRW-BTC&to=2023-01-01T00:00:00&count=3650&converting_price_unit=KRW",
+                      "protocol": "http",
+                      "host": [
+                        "localhost"
+                      ],
+                      "port": "18080",
+                      "path": [
+                        "dart",
+                        "api",
+                        "upbit",
+                        "candles",
+                        "days"
+                      ],
+                      "query": [
+                        {
+                          "key": "market",
+                          "value": "KRW-BTC",
+                          "description": "필수"
+                        },
+                        {
+                          "key": "to",
+                          "value": "2023-01-01T00:00:00",
+                          "description": "마지막 캔들 시각 (2023-01-01T00:00:00)"
+                        },
+                        {
+                          "key": "count",
+                          "value": "3650",
+                          "description": "캔들 개수 (기본 1, 최대 200)"
+                        },
+                        {
+                          "key": "converting_price_unit",
+                          "value": "KRW",
+                          "description": "종가 환산 화폐 단위(예: KRW)"
+                        }
+                      ]
+                    }
+                  },
+                  "response": []
+                },
+                {
+                  "name": "주 캔들 조회",
+                  "request": {
+                    "method": "GET",
+                    "header": [],
+                    "url": {
+                      "raw": "http://localhost:18080/dart/api/upbit/candles/weeks?market=KRW-BTC&to=2023-01-01T00:00:00&count=200&converting_price_unit=KRW",
+                      "protocol": "http",
+                      "host": [
+                        "localhost"
+                      ],
+                      "port": "18080",
+                      "path": [
+                        "dart",
+                        "api",
+                        "upbit",
+                        "candles",
+                        "weeks"
+                      ],
+                      "query": [
+                        {
+                          "key": "market",
+                          "value": "KRW-BTC"
+                        },
+                        {
+                          "key": "to",
+                          "value": "2023-01-01T00:00:00"
+                        },
+                        {
+                          "key": "count",
+                          "value": "200"
+                        },
+                        {
+                          "key": "converting_price_unit",
+                          "value": "KRW"
+                        }
+                      ]
+                    }
+                  },
+                  "response": []
+                },
+                {
+                  "name": "월 캔들 조회",
+                  "request": {
+                    "method": "GET",
+                    "header": [],
+                    "url": {
+                      "raw": "http://localhost:18080/dart/api/upbit/candles/months?market=KRW-BTC&to=2023-01-01T00:00:00&count=200&converting_price_unit=KRW",
+                      "protocol": "http",
+                      "host": [
+                        "localhost"
+                      ],
+                      "port": "18080",
+                      "path": [
+                        "dart",
+                        "api",
+                        "upbit",
+                        "candles",
+                        "months"
+                      ],
+                      "query": [
+                        {
+                          "key": "market",
+                          "value": "KRW-BTC"
+                        },
+                        {
+                          "key": "to",
+                          "value": "2023-01-01T00:00:00"
+                        },
+                        {
+                          "key": "count",
+                          "value": "200"
+                        },
+                        {
+                          "key": "converting_price_unit",
+                          "value": "KRW"
+                        }
+                      ]
+                    }
+                  },
+                  "response": []
+                },
+                {
+                  "name": "연 캔들 조회",
+                  "request": {
+                    "method": "GET",
+                    "header": [],
+                    "url": {
+                      "raw": "http://localhost:18080/dart/api/upbit/candles/years?market=KRW-BTC&to=2023-01-01T00:00:00&count=200&converting_price_unit=KRW",
+                      "protocol": "http",
+                      "host": [
+                        "localhost"
+                      ],
+                      "port": "18080",
+                      "path": [
+                        "dart",
+                        "api",
+                        "upbit",
+                        "candles",
+                        "years"
+                      ],
+                      "query": [
+                        {
+                          "key": "market",
+                          "value": "KRW-BTC"
+                        },
+                        {
+                          "key": "to",
+                          "value": "2023-01-01T00:00:00"
+                        },
+                        {
+                          "key": "count",
+                          "value": "200"
+                        },
+                        {
+                          "key": "converting_price_unit",
+                          "value": "KRW"
+                        }
+                      ]
+                    }
+                  },
+                  "response": []
+                }
+              ]
+            },
+            {
               "name": "마켓 조회",
               "request": {
                 "method": "GET",
@@ -3695,12 +3868,489 @@
                 }
               },
               "response": []
+            },
+            {
+              "name": "페어 단위 현재가 조회",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "http://localhost:18080/dart/api/upbit/v1/ticker?markets=KRW-BTC,KRW-ETH,BTC-ETH,BTC-XRP",
+                  "protocol": "http",
+                  "host": [
+                    "localhost"
+                  ],
+                  "port": "18080",
+                  "path": [
+                    "dart",
+                    "api",
+                    "upbit",
+                    "v1",
+                    "ticker"
+                  ],
+                  "query": [
+                    {
+                      "key": "markets",
+                      "value": "KRW-BTC,KRW-ETH,BTC-ETH,BTC-XRP",
+                      "description": "KRW-BTC,KRW-ETH,BTC-ETH,BTC-XRP"
+                    }
+                  ]
+                }
+              },
+              "response": []
             }
           ]
         },
         {
-          "name": "스케줄로 프로세스 수동 실행(파이썬)",
+          "name": "수동 실행(파이썬)",
           "item": [
+            {
+              "name": "백테스트(파이썬)",
+              "item": [
+                {
+                  "name": "백테스트 실행",
+                  "request": {
+                    "method": "POST",
+                    "header": [],
+                    "body": {
+                      "mode": "raw",
+                      "raw": "{\n    \"coin_codes\": [\"KRW-BTC\"],\n    \"start_date\": \"2024-01-01\",\n    \"end_date\": \"2024-12-31\"\n}",
+                      "options": {
+                        "raw": {
+                          "language": "json"
+                        }
+                      }
+                    },
+                    "url": {
+                      "raw": "http://localhost:18082/api/backtest/run",
+                      "protocol": "http",
+                      "host": [
+                        "localhost"
+                      ],
+                      "port": "18082",
+                      "path": [
+                        "api",
+                        "backtest",
+                        "run"
+                      ]
+                    },
+                    "description": "\"coin_codes\": \\[\"KRW-BTC\"\\]\n\ncoin_codes 가 없으면 DB에 활성화된 종목 전체 백테스트 실행\n\n{ \"coin_codes\": \\[\n\n\"KRW-FLUID\", \"KRW-MIRA\", \"KRW-AQT\", \"KRW-XEC\", \"KRW-MOC\", \"KRW-MED\", \"KRW-ORBS\", \"KRW-MVL\"\n\n\\],\n\n\"start_date\": \"2025-09-01\",\n\n\"end_date\": \"2025-12-31\",\n\n\"use_active_coins\" : true}"
+                  },
+                  "response": []
+                },
+                {
+                  "name": "백테스트 작업상태 조회",
+                  "event": [
+                    {
+                      "listen": "prerequest",
+                      "script": {
+                        "exec": [
+                          "pm.environment.set(\"task_id\", \"KRW-BTC_2024-01-01_2024-12-31_20260129120519\");"
+                        ],
+                        "type": "text/javascript",
+                        "packages": {},
+                        "requests": {}
+                      }
+                    }
+                  ],
+                  "request": {
+                    "method": "GET",
+                    "header": [],
+                    "url": {
+                      "raw": "http://localhost:18082/api/backtest/status/{{task_id}}",
+                      "protocol": "http",
+                      "host": [
+                        "localhost"
+                      ],
+                      "port": "18082",
+                      "path": [
+                        "api",
+                        "backtest",
+                        "status",
+                        "{{task_id}}"
+                      ]
+                    }
+                  },
+                  "response": []
+                },
+                {
+                  "name": "백테스트 결과 조회",
+                  "event": [
+                    {
+                      "listen": "prerequest",
+                      "script": {
+                        "exec": [
+                          "pm.environment.set(\"task_id\", \"KRW-FLUID,KRW-BIGTIME,KRW-SNT,KRW-SOL,KRW-QKC,KRW-META,KRW-SAHARA,KRW-MLK,KRW-SXP,KRW-VTHO,KRW-KITE,KRW-MINA,KRW-MMT,KRW-ZORA,KRW-GAS,KRW-MNT,KRW-MOC,KRW-MOODENG,KRW-XEC,KRW-KAITO,KRW-WLD,KRW-PEPE,KRW-HBAR,KRW-BCH,KRW-NEWT,KRW-SEI,KRW-BONK,KRW-JST,KRW-AAVE,KRW-JTO,KRW-JUP,KRW-VANA,KRW-MON,KRW-ZIL,KRW-GAME2,KRW-STX,KRW-FLOCK,KRW-PROVE,KRW-BSV,KRW-SUI,KRW-SYRUP,KRW-BTC,KRW-ZBT,KRW-A,KRW-F,KRW-AWE,KRW-THETA,KRW-AXL,KRW-HP,KRW-WCT,KRW-YGG,KRW-ARDR,KRW-CVC,KRW-TFUEL,KRW-HOLO,KRW-MIRA,KRW-SUN,KRW-ONG,KRW-BTT,KRW-ENSO,KRW-ONT,KRW-SOMI,KRW-DEEP,KRW-STRAX,KRW-BREV,KRW-ICX,KRW-ERA,KRW-POLYX,KRW-ME,KRW-TRUST,KRW-ORDER,KRW-DRIFT,KRW-AQT,KRW-ZKP,KRW-PUNDIX,KRW-FLOW,KRW-ALT,KRW-LAYER,KRW-TRX,KRW-POWR,KRW-AUCTION,KRW-ATOM,KRW-ARKM,KRW-CRO,KRW-ALGO,KRW-NXPC,KRW-SHIB,KRW-UNI,KRW-BORA,KRW-DOGE,KRW-AERGO,KRW-DOOD,KRW-BOUNTY,KRW-DKA,KRW-WAXP,KRW-CARV,KRW-LSK,KRW-0G,KRW-USD1,KRW-BAT,KRW-HUNT,KRW-PENGU,KRW-FIL,KRW-BEAM,KRW-WAVES,KRW-USDC,KRW-MOVE,KRW-TREE,KRW-USDE,KRW-WET,KRW-USDT,KRW-2Z,KRW-LPT,KRW-BLAST,KRW-ANKR,KRW-BIO,KRW-WLFI,KRW-TOKAMAK,KRW-CYBER,KRW-SONIC,KRW-PLUME,KRW-NEO,KRW-IOTA,KRW-ETH,KRW-IQ,KRW-ARB,KRW-POL,KRW-T,KRW-W,KRW-ARK,KRW-AVNT,KRW-LA,KRW-HYPER,KRW-ATH,KRW-TAIKO,KRW-SAND,KRW-AVAX,KRW-XAUT,KRW-AXS,KRW-CPOOL,KRW-IMX,KRW-SC,KRW-INJ,KRW-MVL,KRW-HIVE,KRW-CBK,KRW-OM,KRW-XLM,KRW-OP,KRW-SAFE,KRW-GLM,KRW-SUPER,KRW-LINEA,KRW-KERNEL,KRW-POKT,KRW-ZKC,KRW-KNC,KRW-FCT2,KRW-MTL,KRW-VET,KRW-QTUM,KRW-TT,KRW-LINK,KRW-XRP,KRW-CHZ,KRW-XPL,KRW-MASK,KRW-COMP,KRW-ZETA,KRW-RED,KRW-TIA,KRW-ADA,KRW-ELF,KRW-STEEM,KRW-ELSA,KRW-SOPH,KRW-MED,KRW-1INCH,KRW-MEW,KRW-ORBS,KRW-RENDER,KRW-STG,KRW-ORCA,KRW-BERA,KRW-SIGN,KRW-DOT,KRW-MET2,KRW-MBL,KRW-ASTR,KRW-ZK,KRW-STORJ,KRW-ENA,KRW-MANA,KRW-OPEN,KRW-PYTH,KRW-ENS,KRW-GRT,KRW-PUMP,KRW-XTZ,KRW-CKB,KRW-KAVA,KRW-TOSHI,KRW-BARD,KRW-ZRO,KRW-RAY,KRW-ONDO,KRW-ZRX,KRW-GMT,KRW-TRUMP,KRW-G,KRW-CELO,KRW-AERO,KRW-CTC,KRW-ANIME,KRW-APT,KRW-MOCA,KRW-API3,KRW-AHT,KRW-EGLD,KRW-FF,KRW-ETC,KRW-IOST,KRW-AKT,KRW-COW,KRW-VIRTUAL,KRW-IP,KRW-NEAR,KRW-RVN,KRW-AGLD,KRW-ID,KRW-IN,KRW-NOM,KRW-WAL,KRW-PENDLE,KRW-BLUR_2025-10-30_2026-01-30_20260130160124\");"
+                        ],
+                        "type": "text/javascript",
+                        "packages": {},
+                        "requests": {}
+                      }
+                    }
+                  ],
+                  "request": {
+                    "method": "GET",
+                    "header": [],
+                    "url": {
+                      "raw": "http://localhost:18082/api/backtest/result/{{task_id}}",
+                      "protocol": "http",
+                      "host": [
+                        "localhost"
+                      ],
+                      "port": "18082",
+                      "path": [
+                        "api",
+                        "backtest",
+                        "result",
+                        "{{task_id}}"
+                      ]
+                    }
+                  },
+                  "response": []
+                },
+                {
+                  "name": "백테스트 결과 조회 (단건확인용)",
+                  "event": [
+                    {
+                      "listen": "prerequest",
+                      "script": {
+                        "exec": [
+                          "pm.environment.set(\"task_id\", \"KRW-BTC_2024-01-01_2024-12-31_20260129120519\");"
+                        ],
+                        "type": "text/javascript",
+                        "packages": {},
+                        "requests": {}
+                      }
+                    }
+                  ],
+                  "request": {
+                    "method": "GET",
+                    "header": [],
+                    "url": {
+                      "raw": "http://localhost:18082/api/backtest/result/{{task_id}}?include_individual=true&include_trades=true",
+                      "protocol": "http",
+                      "host": [
+                        "localhost"
+                      ],
+                      "port": "18082",
+                      "path": [
+                        "api",
+                        "backtest",
+                        "result",
+                        "{{task_id}}"
+                      ],
+                      "query": [
+                        {
+                          "key": "include_individual",
+                          "value": "true"
+                        },
+                        {
+                          "key": "include_trades",
+                          "value": "true"
+                        }
+                      ]
+                    }
+                  },
+                  "response": []
+                },
+                {
+                  "name": "백테스트 결과 삭제",
+                  "event": [
+                    {
+                      "listen": "prerequest",
+                      "script": {
+                        "exec": [
+                          "pm.environment.set(\"task_id\", \"KRW-BTC_2024-01-01_2024-12-31_20260128150235\");"
+                        ],
+                        "type": "text/javascript",
+                        "packages": {},
+                        "requests": {}
+                      }
+                    }
+                  ],
+                  "request": {
+                    "method": "DELETE",
+                    "header": [],
+                    "url": {
+                      "raw": "http://localhost:18082/api/backtest/result/{{task_id}}",
+                      "protocol": "http",
+                      "host": [
+                        "localhost"
+                      ],
+                      "port": "18082",
+                      "path": [
+                        "api",
+                        "backtest",
+                        "result",
+                        "{{task_id}}"
+                      ]
+                    }
+                  },
+                  "response": []
+                },
+                {
+                  "name": "백테스트 이력 조회",
+                  "event": [
+                    {
+                      "listen": "prerequest",
+                      "script": {
+                        "exec": [
+                          ""
+                        ],
+                        "type": "text/javascript",
+                        "packages": {},
+                        "requests": {}
+                      }
+                    }
+                  ],
+                  "request": {
+                    "method": "GET",
+                    "header": [],
+                    "url": {
+                      "raw": "http://localhost:18082/api/backtest/history?limit=100",
+                      "protocol": "http",
+                      "host": [
+                        "localhost"
+                      ],
+                      "port": "18082",
+                      "path": [
+                        "api",
+                        "backtest",
+                        "history"
+                      ],
+                      "query": [
+                        {
+                          "key": "limit",
+                          "value": "100"
+                        }
+                      ]
+                    }
+                  },
+                  "response": []
+                }
+              ]
+            },
+            {
+              "name": "매도 기능(파이썬)",
+              "item": [
+                {
+                  "name": "보유종목 매도",
+                  "request": {
+                    "method": "POST",
+                    "header": [],
+                    "body": {
+                      "mode": "raw",
+                      "raw": "{\n    \"coin_codes\": [\n        \"KRW-BTC\"\n    ]\n}",
+                      "options": {
+                        "raw": {
+                          "language": "json"
+                        }
+                      }
+                    },
+                    "url": {
+                      "raw": "http://localhost:18082/api/holdings/sell",
+                      "protocol": "http",
+                      "host": [
+                        "localhost"
+                      ],
+                      "port": "18082",
+                      "path": [
+                        "api",
+                        "holdings",
+                        "sell"
+                      ]
+                    },
+                    "description": "{\"coin_codes\": \\[\"KRW-BTC\"\\]}\n\ncoin_codes 아무것도 없으면 전체 매도( \\[\\] )"
+                  },
+                  "response": []
+                }
+              ]
+            },
+            {
+              "name": "백테스트 옵티마이저(파이썬)",
+              "item": [
+                {
+                  "name": "백테스트 옵티마이저 실행 (기본 범위)",
+                  "request": {
+                    "method": "POST",
+                    "header": [],
+                    "body": {
+                      "mode": "raw",
+                      "raw": "{\n    \"coin_codes\": [\n        \"KRW-BTC\",\n        \"KRW-ETH\"\n    ],\n    \"start_date\": \"2024-01-01\",\n    \"end_date\": \"2024-06-30\",\n    \"max_runs\": 20,\n    \"max_time_minutes\": 10,\n    \"num_workers\" : 2\n}",
+                      "options": {
+                        "raw": {
+                          "language": "json"
+                        }
+                      }
+                    },
+                    "url": {
+                      "raw": "http://localhost:18082/api/backtest/optimizer",
+                      "protocol": "http",
+                      "host": [
+                        "localhost"
+                      ],
+                      "port": "18082",
+                      "path": [
+                        "api",
+                        "backtest",
+                        "optimizer"
+                      ]
+                    },
+                    "description": "\"coin_codes\": \\[\"KRW-BTC\"\\]\n\ncoin_codes 가 없으면 DB에 활성화된 종목 전체 백테스트 실행\n\n\"start_date\": \"2025-09-01\",\n\n\"end_date\": \"2025-12-31\",\n\n\"max_runs\" : \"10\" : 최대 몇번 실행할지\n\n\"max_time_minutes\" : 30 : 최대 몇분까지 실행할지\n\n\"num_wokers\" : 병렬처리개수\n\n기본값\n\n│ 파라미터 │ 최소 │ 최대 │ 스텝 │ 설명 │  \n│ min_up_probability │ 0.50 │ 0.80 │ 0.05 │ 최소 상승 확률 (50%\\~80%) │  \n│ buy_profit_threshold │ 5.0 │ 20.0 │ 1.0 │ 기대 수익률 하한 (%) │  \n│ take_profit_buffer │ 1.0 │ 5.0 │ 0.5 │ 익절 버퍼 (%) │  \n│ stop_loss_threshold │ 3.0 │ 10.0 │ 1.0 │ 손절 임계값 (%) │  \n│ min_profit_rate │ 3.0 │ 10.0 │ 1.0 │ 최소 기대 수익률 (%) │  \n│ max_profit_rate │ 15.0 │ 50.0 │ 5.0 │ 최대 기대 수익률 (%) │"
+                  },
+                  "response": []
+                },
+                {
+                  "name": "백테스트 옵티마이저 실행 (범위 설정)",
+                  "request": {
+                    "method": "POST",
+                    "header": [],
+                    "body": {
+                      "mode": "raw",
+                      "raw": "{\n    \"coin_codes\": [\n        \"KRW-BTC\",\n        \"KRW-ETH\"\n    ],\n    \"start_date\": \"2024-01-01\",\n    \"end_date\": \"2024-06-30\",\n    \"max_runs\": 50,\n    \"max_time_minutes\": 30,\n    \"target_return\": 15.0,\n    \"num_workers\": 2,\n    \"custom_param_ranges\": {\n        \"min_up_probability\": {\n            \"min_value\": 0.55,\n            \"max_value\": 0.75,\n            \"step\": 0.05\n        },\n        \"buy_profit_threshold\": {\n            \"min_value\": 8.0,\n            \"max_value\": 15.0,\n            \"step\": 1.0\n        },\n        \"stop_loss_threshold\": {\n            \"min_value\": 3.0,\n            \"max_value\": 7.0,\n            \"step\": 0.5\n        },\n        \"take_profit_buffer\": {\n            \"min_value\": 1.5,\n            \"max_value\": 4.0,\n            \"step\": 0.5\n        },\n        \"min_profit_rate\": {\n            \"min_value\": 3.0,\n            \"max_value\": 8.0,\n            \"step\": 1.0\n        },\n        \"max_profit_rate\": {\n            \"min_value\": 20.0,\n            \"max_value\": 40.0,\n            \"step\": 5.0\n        }\n    }\n}",
+                      "options": {
+                        "raw": {
+                          "language": "json"
+                        }
+                      }
+                    },
+                    "url": {
+                      "raw": "http://localhost:18082/api/backtest/optimizer",
+                      "protocol": "http",
+                      "host": [
+                        "localhost"
+                      ],
+                      "port": "18082",
+                      "path": [
+                        "api",
+                        "backtest",
+                        "optimizer"
+                      ]
+                    }
+                  },
+                  "response": []
+                },
+                {
+                  "name": "백테스트 옵티마이저 상태조회",
+                  "event": [
+                    {
+                      "listen": "prerequest",
+                      "script": {
+                        "exec": [
+                          "pm.environment.set(\"task_id\", \"opt_KRW-BTC,KRW-ETH_2024-01-01_2024-06-30_20260204134354\");"
+                        ],
+                        "type": "text/javascript",
+                        "packages": {},
+                        "requests": {}
+                      }
+                    }
+                  ],
+                  "request": {
+                    "method": "GET",
+                    "header": [],
+                    "url": {
+                      "raw": "http://localhost:18082/api/backtest/optimizer/status/{{task_id}}",
+                      "protocol": "http",
+                      "host": [
+                        "localhost"
+                      ],
+                      "port": "18082",
+                      "path": [
+                        "api",
+                        "backtest",
+                        "optimizer",
+                        "status",
+                        "{{task_id}}"
+                      ]
+                    }
+                  },
+                  "response": []
+                },
+                {
+                  "name": "백테스트 옵티마이저 결과조회",
+                  "event": [
+                    {
+                      "listen": "prerequest",
+                      "script": {
+                        "exec": [
+                          "pm.environment.set(\"task_id\", \"opt_KRW-BTC,KRW-ETH_2024-01-01_2024-06-30_20260204140715\");"
+                        ],
+                        "type": "text/javascript",
+                        "packages": {},
+                        "requests": {}
+                      }
+                    }
+                  ],
+                  "request": {
+                    "method": "GET",
+                    "header": [],
+                    "url": {
+                      "raw": "http://localhost:18082/api/backtest/optimizer/result/{{task_id}}?include_all_trials=true",
+                      "protocol": "http",
+                      "host": [
+                        "localhost"
+                      ],
+                      "port": "18082",
+                      "path": [
+                        "api",
+                        "backtest",
+                        "optimizer",
+                        "result",
+                        "{{task_id}}"
+                      ],
+                      "query": [
+                        {
+                          "key": "include_all_trials",
+                          "value": "true"
+                        }
+                      ]
+                    }
+                  },
+                  "response": []
+                },
+                {
+                  "name": "백테스트 옵티마이저 이력조회",
+                  "event": [
+                    {
+                      "listen": "prerequest",
+                      "script": {
+                        "exec": [
+                          ""
+                        ],
+                        "type": "text/javascript",
+                        "packages": {},
+                        "requests": {}
+                      }
+                    }
+                  ],
+                  "request": {
+                    "method": "GET",
+                    "header": [],
+                    "url": {
+                      "raw": "http://localhost:18082/api/backtest/optimizer/history?limit=100",
+                      "protocol": "http",
+                      "host": [
+                        "localhost"
+                      ],
+                      "port": "18082",
+                      "path": [
+                        "api",
+                        "backtest",
+                        "optimizer",
+                        "history"
+                      ],
+                      "query": [
+                        {
+                          "key": "limit",
+                          "value": "100"
+                        }
+                      ]
+                    }
+                  },
+                  "response": []
+                }
+              ]
+            },
             {
               "name": "매수 프로세스 수동 실행",
               "request": {
@@ -3754,7 +4404,7 @@
                 "header": [],
                 "body": {
                   "mode": "raw",
-                  "raw": "{\n    \"coin_code\" : \"KRW-BTC\"\n}",
+                  "raw": "{\n    \"coin_code\": \"KRW-BTC\",\n    \"prediction_days\": 3,\n    \"ensemble_mode\": \"lstm\"\n}",
                   "options": {
                     "raw": {
                       "language": "json"
@@ -3774,7 +4424,7 @@
                     "train"
                   ]
                 },
-                "description": "coin_code : 없으면 전체 학습"
+                "description": "coin_code : 없으면 전체 학습\n\nprediction_days : 예측일\n\nensemble_mode : 앙상블 모드 (lstm_only/gru_only/cnn_only/ensemble)"
               },
               "response": []
             },
@@ -3803,417 +4453,952 @@
           ]
         },
         {
-          "name": "전체 설정값 조회",
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "http://localhost:18080/dart/api/cointrade/config",
-              "protocol": "http",
-              "host": [
-                "localhost"
-              ],
-              "port": "18080",
-              "path": [
-                "dart",
-                "api",
-                "cointrade",
-                "config"
-              ]
-            }
-          },
-          "response": []
-        },
-        {
-          "name": "설정값 일괄 수정",
-          "request": {
-            "method": "PUT",
-            "header": [],
-            "body": {
-              "mode": "raw",
-              "raw": "[\n    {\n            \"paramName\" : \"BUY_PROFIT_THRESHOLD\",\n            \"paramValue\" : \"10\"\n    }\n]",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            },
-            "url": {
-              "raw": "http://localhost:18080/dart/api/cointrade/config",
-              "protocol": "http",
-              "host": [
-                "localhost"
-              ],
-              "port": "18080",
-              "path": [
-                "dart",
-                "api",
-                "cointrade",
-                "config"
-              ]
-            }
-          },
-          "response": []
-        },
-        {
-          "name": "대상 종목 목록 조회",
-          "protocolProfileBehavior": {
-            "disableBodyPruning": true
-          },
-          "request": {
-            "method": "GET",
-            "header": [],
-            "body": {
-              "mode": "raw",
-              "raw": "[\n    {\n            \"paramName\" : \"\",\n            \"paramValue\" : \"\"\n    }\n]",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            },
-            "url": {
-              "raw": "http://localhost:18080/dart/api/cointrade/coins",
-              "protocol": "http",
-              "host": [
-                "localhost"
-              ],
-              "port": "18080",
-              "path": [
-                "dart",
-                "api",
-                "cointrade",
-                "coins"
-              ]
-            }
-          },
-          "response": []
-        },
-        {
-          "name": "대상 종목 설정",
-          "request": {
-            "method": "PUT",
-            "header": [],
-            "body": {
-              "mode": "raw",
-              "raw": "[\n    {\n            \"coinCode\" : \"\",\n            \"coinName\" : \"\",\n            \"isActive\" : true\n    }\n]",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            },
-            "url": {
-              "raw": "http://localhost:18080/dart/api/cointrade/coins",
-              "protocol": "http",
-              "host": [
-                "localhost"
-              ],
-              "port": "18080",
-              "path": [
-                "dart",
-                "api",
-                "cointrade",
-                "coins"
-              ]
-            }
-          },
-          "response": []
-        },
-        {
-          "name": "보유 종목 조회",
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "http://localhost:18080/dart/api/cointrade/holdings",
-              "protocol": "http",
-              "host": [
-                "localhost"
-              ],
-              "port": "18080",
-              "path": [
-                "dart",
-                "api",
-                "cointrade",
-                "holdings"
-              ]
-            }
-          },
-          "response": []
-        },
-        {
-          "name": "거래 기록 조회(페이징)",
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "http://localhost:18080/dart/api/cointrade/history",
-              "protocol": "http",
-              "host": [
-                "localhost"
-              ],
-              "port": "18080",
-              "path": [
-                "dart",
-                "api",
-                "cointrade",
-                "history"
-              ],
-              "query": [
+          "name": "수동 실행",
+          "item": [
+            {
+              "name": "백테스트",
+              "item": [
                 {
-                  "key": "startDate",
-                  "value": null,
-                  "type": "text",
-                  "disabled": true
+                  "name": "백테스트 실행",
+                  "request": {
+                    "method": "POST",
+                    "header": [],
+                    "body": {
+                      "mode": "raw",
+                      "raw": "{\n    \"coin_codes\": [\"KRW-BTC\"],\n    \"start_date\": \"2024-01-01\",\n    \"end_date\": \"2024-12-31\"\n}",
+                      "options": {
+                        "raw": {
+                          "language": "json"
+                        }
+                      }
+                    },
+                    "url": {
+                      "raw": "http://localhost:18080/dart/api/backtest/run",
+                      "protocol": "http",
+                      "host": [
+                        "localhost"
+                      ],
+                      "port": "18080",
+                      "path": [
+                        "dart",
+                        "api",
+                        "backtest",
+                        "run"
+                      ]
+                    },
+                    "description": "\"coin_codes\": \\[\"KRW-BTC\"\\]\n\ncoin_codes 가 없으면 DB에 활성화된 종목 전체 백테스트 실행\n\n{ \"coin_codes\": \\[\n\n\"KRW-FLUID\", \"KRW-MIRA\", \"KRW-AQT\", \"KRW-XEC\", \"KRW-MOC\", \"KRW-MED\", \"KRW-ORBS\", \"KRW-MVL\"\n\n\\],\n\n\"start_date\": \"2025-09-01\",\n\n\"end_date\": \"2025-12-31\",\n\n\"use_active_coins\" : true}"
+                  },
+                  "response": []
                 },
                 {
-                  "key": "endDate",
-                  "value": null,
-                  "type": "text",
-                  "disabled": true
+                  "name": "백테스트 작업상태 조회",
+                  "event": [
+                    {
+                      "listen": "prerequest",
+                      "script": {
+                        "exec": [
+                          "pm.environment.set(\"task_id\", \"KRW-BTC_2024-01-01_2024-12-31_20260128152327\");"
+                        ],
+                        "type": "text/javascript",
+                        "packages": {},
+                        "requests": {}
+                      }
+                    }
+                  ],
+                  "request": {
+                    "method": "GET",
+                    "header": [],
+                    "url": {
+                      "raw": "http://localhost:18080/dart/api/backtest/status/{{task_id}}",
+                      "protocol": "http",
+                      "host": [
+                        "localhost"
+                      ],
+                      "port": "18080",
+                      "path": [
+                        "dart",
+                        "api",
+                        "backtest",
+                        "status",
+                        "{{task_id}}"
+                      ]
+                    }
+                  },
+                  "response": []
                 },
                 {
-                  "key": "coinCode",
-                  "value": null,
-                  "type": "text",
-                  "disabled": true
+                  "name": "백테스트 결과 조회",
+                  "event": [
+                    {
+                      "listen": "prerequest",
+                      "script": {
+                        "exec": [
+                          "pm.environment.set(\"task_id\", \"KRW-FLUID,KRW-BIGTIME,KRW-SNT,KRW-SOL,KRW-QKC,KRW-META,KRW-SAHARA,KRW-MLK,KRW-SXP,KRW-VTHO,KRW-KITE,KRW-MINA,KRW-MMT,KRW-ZORA,KRW-GAS,KRW-MNT,KRW-MOC,KRW-MOODENG,KRW-XEC,KRW-KAITO,KRW-WLD,KRW-PEPE,KRW-HBAR,KRW-BCH,KRW-NEWT,KRW-SEI,KRW-BONK,KRW-JST,KRW-AAVE,KRW-JTO,KRW-JUP,KRW-VANA,KRW-MON,KRW-ZIL,KRW-GAME2,KRW-STX,KRW-FLOCK,KRW-PROVE,KRW-BSV,KRW-SUI,KRW-SYRUP,KRW-BTC,KRW-ZBT,KRW-A,KRW-F,KRW-AWE,KRW-THETA,KRW-AXL,KRW-HP,KRW-WCT,KRW-YGG,KRW-ARDR,KRW-CVC,KRW-TFUEL,KRW-HOLO,KRW-MIRA,KRW-SUN,KRW-ONG,KRW-BTT,KRW-ENSO,KRW-ONT,KRW-SOMI,KRW-DEEP,KRW-STRAX,KRW-BREV,KRW-ICX,KRW-ERA,KRW-POLYX,KRW-ME,KRW-TRUST,KRW-ORDER,KRW-DRIFT,KRW-AQT,KRW-ZKP,KRW-PUNDIX,KRW-FLOW,KRW-ALT,KRW-LAYER,KRW-TRX,KRW-POWR,KRW-AUCTION,KRW-ATOM,KRW-ARKM,KRW-CRO,KRW-ALGO,KRW-NXPC,KRW-SHIB,KRW-UNI,KRW-BORA,KRW-DOGE,KRW-AERGO,KRW-DOOD,KRW-BOUNTY,KRW-DKA,KRW-WAXP,KRW-CARV,KRW-LSK,KRW-0G,KRW-USD1,KRW-BAT,KRW-HUNT,KRW-PENGU,KRW-FIL,KRW-BEAM,KRW-WAVES,KRW-USDC,KRW-MOVE,KRW-TREE,KRW-USDE,KRW-WET,KRW-USDT,KRW-2Z,KRW-LPT,KRW-BLAST,KRW-ANKR,KRW-BIO,KRW-WLFI,KRW-TOKAMAK,KRW-CYBER,KRW-SONIC,KRW-PLUME,KRW-NEO,KRW-IOTA,KRW-ETH,KRW-IQ,KRW-ARB,KRW-POL,KRW-T,KRW-W,KRW-ARK,KRW-AVNT,KRW-LA,KRW-HYPER,KRW-ATH,KRW-TAIKO,KRW-SAND,KRW-AVAX,KRW-XAUT,KRW-AXS,KRW-CPOOL,KRW-IMX,KRW-SC,KRW-INJ,KRW-MVL,KRW-HIVE,KRW-CBK,KRW-OM,KRW-XLM,KRW-OP,KRW-SAFE,KRW-GLM,KRW-SUPER,KRW-LINEA,KRW-KERNEL,KRW-POKT,KRW-ZKC,KRW-KNC,KRW-FCT2,KRW-MTL,KRW-VET,KRW-QTUM,KRW-TT,KRW-LINK,KRW-XRP,KRW-CHZ,KRW-XPL,KRW-MASK,KRW-COMP,KRW-ZETA,KRW-RED,KRW-TIA,KRW-ADA,KRW-ELF,KRW-STEEM,KRW-ELSA,KRW-SOPH,KRW-MED,KRW-1INCH,KRW-MEW,KRW-ORBS,KRW-RENDER,KRW-STG,KRW-ORCA,KRW-BERA,KRW-SIGN,KRW-DOT,KRW-MET2,KRW-MBL,KRW-ASTR,KRW-ZK,KRW-STORJ,KRW-ENA,KRW-MANA,KRW-OPEN,KRW-PYTH,KRW-ENS,KRW-GRT,KRW-PUMP,KRW-XTZ,KRW-CKB,KRW-KAVA,KRW-TOSHI,KRW-BARD,KRW-ZRO,KRW-RAY,KRW-ONDO,KRW-ZRX,KRW-GMT,KRW-TRUMP,KRW-G,KRW-CELO,KRW-AERO,KRW-CTC,KRW-ANIME,KRW-APT,KRW-MOCA,KRW-API3,KRW-AHT,KRW-EGLD,KRW-FF,KRW-ETC,KRW-IOST,KRW-AKT,KRW-COW,KRW-VIRTUAL,KRW-IP,KRW-NEAR,KRW-RVN,KRW-AGLD,KRW-ID,KRW-IN,KRW-NOM,KRW-WAL,KRW-PENDLE,KRW-BLUR_2025-10-30_2026-01-30_20260130160124\");"
+                        ],
+                        "type": "text/javascript",
+                        "packages": {},
+                        "requests": {}
+                      }
+                    }
+                  ],
+                  "request": {
+                    "method": "GET",
+                    "header": [],
+                    "url": {
+                      "raw": "http://localhost:18080/dart/api/backtest/result/{{task_id}}",
+                      "protocol": "http",
+                      "host": [
+                        "localhost"
+                      ],
+                      "port": "18080",
+                      "path": [
+                        "dart",
+                        "api",
+                        "backtest",
+                        "result",
+                        "{{task_id}}"
+                      ]
+                    }
+                  },
+                  "response": []
                 },
                 {
-                  "key": "tradeType",
-                  "value": null,
-                  "type": "text",
-                  "disabled": true
+                  "name": "백테스트 결과 조회 (단건확인용)",
+                  "event": [
+                    {
+                      "listen": "prerequest",
+                      "script": {
+                        "exec": [
+                          "pm.environment.set(\"task_id\", \"KRW-BTC_2024-01-01_2024-12-31_20260129120519\");"
+                        ],
+                        "type": "text/javascript",
+                        "packages": {},
+                        "requests": {}
+                      }
+                    }
+                  ],
+                  "request": {
+                    "method": "GET",
+                    "header": [],
+                    "url": {
+                      "raw": "http://localhost:18080/dart/api/backtest/result/{{task_id}}?include_individual=true&include_trades=true",
+                      "protocol": "http",
+                      "host": [
+                        "localhost"
+                      ],
+                      "port": "18080",
+                      "path": [
+                        "dart",
+                        "api",
+                        "backtest",
+                        "result",
+                        "{{task_id}}"
+                      ],
+                      "query": [
+                        {
+                          "key": "include_individual",
+                          "value": "true"
+                        },
+                        {
+                          "key": "include_trades",
+                          "value": "true"
+                        }
+                      ]
+                    }
+                  },
+                  "response": []
+                },
+                {
+                  "name": "백테스트 결과 삭제",
+                  "event": [
+                    {
+                      "listen": "prerequest",
+                      "script": {
+                        "exec": [
+                          "pm.environment.set(\"task_id\", \"KRW-BTC_2024-01-01_2024-12-31_20260128151906\");"
+                        ],
+                        "type": "text/javascript",
+                        "packages": {},
+                        "requests": {}
+                      }
+                    }
+                  ],
+                  "request": {
+                    "method": "DELETE",
+                    "header": [],
+                    "url": {
+                      "raw": "http://localhost:18080/dart/api/backtest/result/{{task_id}}",
+                      "protocol": "http",
+                      "host": [
+                        "localhost"
+                      ],
+                      "port": "18080",
+                      "path": [
+                        "dart",
+                        "api",
+                        "backtest",
+                        "result",
+                        "{{task_id}}"
+                      ]
+                    }
+                  },
+                  "response": []
+                },
+                {
+                  "name": "백테스트 이력 조회",
+                  "event": [
+                    {
+                      "listen": "prerequest",
+                      "script": {
+                        "exec": [
+                          ""
+                        ],
+                        "type": "text/javascript",
+                        "packages": {},
+                        "requests": {}
+                      }
+                    }
+                  ],
+                  "request": {
+                    "method": "GET",
+                    "header": [],
+                    "url": {
+                      "raw": "http://localhost:18080/dart/api/backtest/history",
+                      "protocol": "http",
+                      "host": [
+                        "localhost"
+                      ],
+                      "port": "18080",
+                      "path": [
+                        "dart",
+                        "api",
+                        "backtest",
+                        "history"
+                      ]
+                    }
+                  },
+                  "response": []
                 }
               ]
-            }
-          },
-          "response": []
-        },
-        {
-          "name": "매도 스케줄러 ON/OFF",
-          "request": {
-            "method": "PUT",
-            "header": [],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n    \"enabled\": false\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
             },
-            "url": {
-              "raw": "http://localhost:18080/dart/api/cointrade/scheduler/sell",
-              "protocol": "http",
-              "host": [
-                "localhost"
-              ],
-              "port": "18080",
-              "path": [
-                "dart",
-                "api",
-                "cointrade",
-                "scheduler",
-                "sell"
-              ]
-            }
-          },
-          "response": []
-        },
-        {
-          "name": "매수 스케줄러 ON/OFF",
-          "request": {
-            "method": "PUT",
-            "header": [],
-            "body": {
-              "mode": "raw",
-              "raw": "[\n    {\n            \"enabled\" : true\n    }\n]",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            },
-            "url": {
-              "raw": "http://localhost:18080/dart/api/cointrade/scheduler/buy",
-              "protocol": "http",
-              "host": [
-                "localhost"
-              ],
-              "port": "18080",
-              "path": [
-                "dart",
-                "api",
-                "cointrade",
-                "scheduler",
-                "buy"
-              ]
-            }
-          },
-          "response": []
-        },
-        {
-          "name": "현재 상태 조회",
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "http://localhost:18080/dart/api/cointrade/status",
-              "protocol": "http",
-              "host": [
-                "localhost"
-              ],
-              "port": "18080",
-              "path": [
-                "dart",
-                "api",
-                "cointrade",
-                "status"
-              ]
-            }
-          },
-          "response": []
-        },
-        {
-          "name": "매수 스케줄러 수동 실행",
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "http://localhost:18080/dart/api/cointrade/trade/buy/start",
-              "protocol": "http",
-              "host": [
-                "localhost"
-              ],
-              "port": "18080",
-              "path": [
-                "dart",
-                "api",
-                "cointrade",
-                "trade",
-                "buy",
-                "start"
-              ]
-            }
-          },
-          "response": []
-        },
-        {
-          "name": "매도 스케줄러 수동 실행",
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "http://localhost:18080/dart/api/cointrade/trade/sell/start",
-              "protocol": "http",
-              "host": [
-                "localhost"
-              ],
-              "port": "18080",
-              "path": [
-                "dart",
-                "api",
-                "cointrade",
-                "trade",
-                "sell",
-                "start"
-              ]
-            }
-          },
-          "response": []
-        },
-        {
-          "name": "매수/매도 스케줄러 수동 중지",
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "http://localhost:18080/dart/api/cointrade/trade/stop",
-              "protocol": "http",
-              "host": [
-                "localhost"
-              ],
-              "port": "18080",
-              "path": [
-                "dart",
-                "api",
-                "cointrade",
-                "trade",
-                "stop"
-              ]
-            }
-          },
-          "response": []
-        },
-        {
-          "name": "모델 학습 수동 실행",
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "http://localhost:18080/dart/api/cointrade/trade/model/train",
-              "protocol": "http",
-              "host": [
-                "localhost"
-              ],
-              "port": "18080",
-              "path": [
-                "dart",
-                "api",
-                "cointrade",
-                "trade",
-                "model",
-                "train"
-              ],
-              "query": [
+            {
+              "name": "백테스트 옵티마이저",
+              "item": [
                 {
-                  "key": "coin_code",
-                  "value": "KRW-BTC",
-                  "description": "값 없으면 활성화된 코인 전체학습 ",
-                  "disabled": true
+                  "name": "백테스트 옵티마이저 실행 (기본 범위)",
+                  "request": {
+                    "method": "POST",
+                    "header": [],
+                    "body": {
+                      "mode": "raw",
+                      "raw": "{\n    \"coin_codes\": [\n        \"KRW-BTC\",\n        \"KRW-ETH\"\n    ],\n    \"start_date\": \"2024-01-01\",\n    \"end_date\": \"2024-06-30\",\n    \"max_runs\": 20,\n    \"max_time_minutes\": 10,\n    \"num_workers\" : 2\n}",
+                      "options": {
+                        "raw": {
+                          "language": "json"
+                        }
+                      }
+                    },
+                    "url": {
+                      "raw": "http://localhost:18080/dart/api/backtest/optimizer",
+                      "protocol": "http",
+                      "host": [
+                        "localhost"
+                      ],
+                      "port": "18080",
+                      "path": [
+                        "dart",
+                        "api",
+                        "backtest",
+                        "optimizer"
+                      ]
+                    },
+                    "description": "\"coin_codes\": \\[\"KRW-BTC\"\\]\n\ncoin_codes 가 없으면 DB에 활성화된 종목 전체 백테스트 실행\n\n\"start_date\": \"2025-09-01\",\n\n\"end_date\": \"2025-12-31\",\n\n\"max_runs\" : \"10\" : 최대 몇번 실행할지\n\n\"max_time_minutes\" : 30 : 최대 몇분까지 실행할지\n\n\"num_wokers\" : 병렬처리개수\n\n기본값\n\n│ 파라미터 │ 최소 │ 최대 │ 스텝 │ 설명 │  \n│ min_up_probability │ 0.50 │ 0.80 │ 0.05 │ 최소 상승 확률 (50%\\~80%) │  \n│ buy_profit_threshold │ 5.0 │ 20.0 │ 1.0 │ 기대 수익률 하한 (%) │  \n│ take_profit_buffer │ 1.0 │ 5.0 │ 0.5 │ 익절 버퍼 (%) │  \n│ stop_loss_threshold │ 3.0 │ 10.0 │ 1.0 │ 손절 임계값 (%) │  \n│ min_profit_rate │ 3.0 │ 10.0 │ 1.0 │ 최소 기대 수익률 (%) │  \n│ max_profit_rate │ 15.0 │ 50.0 │ 5.0 │ 최대 기대 수익률 (%) │"
+                  },
+                  "response": []
                 },
                 {
-                  "key": "",
-                  "value": null,
-                  "type": "text",
-                  "disabled": true
+                  "name": "백테스트 옵티마이저 실행 (범위 설정)",
+                  "request": {
+                    "method": "POST",
+                    "header": [],
+                    "body": {
+                      "mode": "raw",
+                      "raw": "{\n    \"coin_codes\": [\n        \"KRW-BTC\",\n        \"KRW-ETH\"\n    ],\n    \"start_date\": \"2024-01-01\",\n    \"end_date\": \"2024-06-30\",\n    \"max_runs\": 50,\n    \"max_time_minutes\": 30,\n    \"target_return\": 15.0,\n    \"num_workers\": 2,\n    \"custom_param_ranges\": {\n        \"min_up_probability\": {\n            \"min_value\": 0.55,\n            \"max_value\": 0.75,\n            \"step\": 0.05\n        },\n        \"buy_profit_threshold\": {\n            \"min_value\": 8.0,\n            \"max_value\": 15.0,\n            \"step\": 1.0\n        },\n        \"stop_loss_threshold\": {\n            \"min_value\": 3.0,\n            \"max_value\": 7.0,\n            \"step\": 0.5\n        },\n        \"take_profit_buffer\": {\n            \"min_value\": 1.5,\n            \"max_value\": 4.0,\n            \"step\": 0.5\n        },\n        \"min_profit_rate\": {\n            \"min_value\": 3.0,\n            \"max_value\": 8.0,\n            \"step\": 1.0\n        },\n        \"max_profit_rate\": {\n            \"min_value\": 20.0,\n            \"max_value\": 40.0,\n            \"step\": 5.0\n        }\n    }\n}",
+                      "options": {
+                        "raw": {
+                          "language": "json"
+                        }
+                      }
+                    },
+                    "url": {
+                      "raw": "http://localhost:18080/dart/api/backtest/optimizer",
+                      "protocol": "http",
+                      "host": [
+                        "localhost"
+                      ],
+                      "port": "18080",
+                      "path": [
+                        "dart",
+                        "api",
+                        "backtest",
+                        "optimizer"
+                      ]
+                    }
+                  },
+                  "response": []
+                },
+                {
+                  "name": "백테스트 옵티마이저 상태조회",
+                  "event": [
+                    {
+                      "listen": "prerequest",
+                      "script": {
+                        "exec": [
+                          "pm.environment.set(\"task_id\", \"opt_KRW-BTC,KRW-ETH_2024-01-01_2024-06-30_20260204140715\");"
+                        ],
+                        "type": "text/javascript",
+                        "packages": {},
+                        "requests": {}
+                      }
+                    }
+                  ],
+                  "request": {
+                    "method": "GET",
+                    "header": [],
+                    "url": {
+                      "raw": "http://localhost:18080/dart/api/backtest/optimizer/status/{{task_id}}",
+                      "protocol": "http",
+                      "host": [
+                        "localhost"
+                      ],
+                      "port": "18080",
+                      "path": [
+                        "dart",
+                        "api",
+                        "backtest",
+                        "optimizer",
+                        "status",
+                        "{{task_id}}"
+                      ]
+                    }
+                  },
+                  "response": []
+                },
+                {
+                  "name": "백테스트 옵티마이저 결과조회",
+                  "event": [
+                    {
+                      "listen": "prerequest",
+                      "script": {
+                        "exec": [
+                          "pm.environment.set(\"task_id\", \"opt_KRW-BTC,KRW-ETH_2024-01-01_2024-06-30_20260204140715\");"
+                        ],
+                        "type": "text/javascript",
+                        "packages": {},
+                        "requests": {}
+                      }
+                    }
+                  ],
+                  "request": {
+                    "method": "GET",
+                    "header": [],
+                    "url": {
+                      "raw": "http://localhost:18080/dart/api/backtest/optimizer/result/{{task_id}}?include_all_trials=true",
+                      "protocol": "http",
+                      "host": [
+                        "localhost"
+                      ],
+                      "port": "18080",
+                      "path": [
+                        "dart",
+                        "api",
+                        "backtest",
+                        "optimizer",
+                        "result",
+                        "{{task_id}}"
+                      ],
+                      "query": [
+                        {
+                          "key": "include_all_trials",
+                          "value": "true"
+                        }
+                      ]
+                    }
+                  },
+                  "response": []
+                },
+                {
+                  "name": "백테스트 옵티마이저 이력조회",
+                  "event": [
+                    {
+                      "listen": "prerequest",
+                      "script": {
+                        "exec": [
+                          "pm.environment.set(\"task_id\", \"opt_KRW-BTC,KRW-ETH_2024-01-01_2024-06-30_20260204140715\");"
+                        ],
+                        "type": "text/javascript",
+                        "packages": {},
+                        "requests": {}
+                      }
+                    }
+                  ],
+                  "request": {
+                    "method": "GET",
+                    "header": [],
+                    "url": {
+                      "raw": "http://localhost:18080/dart/api/backtest/optimizer/history?limit=100",
+                      "protocol": "http",
+                      "host": [
+                        "localhost"
+                      ],
+                      "port": "18080",
+                      "path": [
+                        "dart",
+                        "api",
+                        "backtest",
+                        "optimizer",
+                        "history"
+                      ],
+                      "query": [
+                        {
+                          "key": "limit",
+                          "value": "100"
+                        }
+                      ]
+                    }
+                  },
+                  "response": []
                 }
               ]
+            },
+            {
+              "name": "매수 스케줄러 수동 실행",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "http://localhost:18080/dart/api/cointrade/trade/buy/start",
+                  "protocol": "http",
+                  "host": [
+                    "localhost"
+                  ],
+                  "port": "18080",
+                  "path": [
+                    "dart",
+                    "api",
+                    "cointrade",
+                    "trade",
+                    "buy",
+                    "start"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "매도 스케줄러 수동 실행",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "http://localhost:18080/dart/api/cointrade/trade/sell/start",
+                  "protocol": "http",
+                  "host": [
+                    "localhost"
+                  ],
+                  "port": "18080",
+                  "path": [
+                    "dart",
+                    "api",
+                    "cointrade",
+                    "trade",
+                    "sell",
+                    "start"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "매수/매도 스케줄러 수동 중지",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "http://localhost:18080/dart/api/cointrade/trade/stop",
+                  "protocol": "http",
+                  "host": [
+                    "localhost"
+                  ],
+                  "port": "18080",
+                  "path": [
+                    "dart",
+                    "api",
+                    "cointrade",
+                    "trade",
+                    "stop"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "모델 학습 수동 실행",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "http://localhost:18080/dart/api/cointrade/trade/model/train",
+                  "protocol": "http",
+                  "host": [
+                    "localhost"
+                  ],
+                  "port": "18080",
+                  "path": [
+                    "dart",
+                    "api",
+                    "cointrade",
+                    "trade",
+                    "model",
+                    "train"
+                  ],
+                  "query": [
+                    {
+                      "key": "coin_code",
+                      "value": "KRW-BTC",
+                      "description": "값 없으면 활성화된 코인 전체학습 ",
+                      "disabled": true
+                    },
+                    {
+                      "key": "",
+                      "value": null,
+                      "type": "text",
+                      "disabled": true
+                    }
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "스케줄러 설정 즉시 리로드",
+              "request": {
+                "method": "POST",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n    \n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "http://localhost:18080/dart/api/cointrade/scheduler/reload",
+                  "protocol": "http",
+                  "host": [
+                    "localhost"
+                  ],
+                  "port": "18080",
+                  "path": [
+                    "dart",
+                    "api",
+                    "cointrade",
+                    "scheduler",
+                    "reload"
+                  ],
+                  "query": [
+                    {
+                      "key": "",
+                      "value": "",
+                      "type": "text",
+                      "disabled": true
+                    }
+                  ]
+                }
+              },
+              "response": []
             }
-          },
-          "response": []
+          ]
         },
         {
-          "name": "ML 모델 데이터 전체 조회",
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "http://localhost:18080/dart/api/cointrade/ml-models",
-              "protocol": "http",
-              "host": [
-                "localhost"
-              ],
-              "port": "18080",
-              "path": [
-                "dart",
-                "api",
-                "cointrade",
-                "ml-models"
-              ],
-              "query": [
-                {
-                  "key": "",
-                  "value": "",
-                  "type": "text",
-                  "disabled": true
+          "name": "설정",
+          "item": [
+            {
+              "name": "전체 설정값 조회",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "http://localhost:18080/dart/api/cointrade/config",
+                  "protocol": "http",
+                  "host": [
+                    "localhost"
+                  ],
+                  "port": "18080",
+                  "path": [
+                    "dart",
+                    "api",
+                    "cointrade",
+                    "config"
+                  ]
                 }
-              ]
+              },
+              "response": []
+            },
+            {
+              "name": "설정값 일괄 수정",
+              "request": {
+                "method": "PUT",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "[\n    {\n            \"paramName\" : \"BUY_PROFIT_THRESHOLD\",\n            \"paramValue\" : \"10\"\n    }\n]",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "http://localhost:18080/dart/api/cointrade/config",
+                  "protocol": "http",
+                  "host": [
+                    "localhost"
+                  ],
+                  "port": "18080",
+                  "path": [
+                    "dart",
+                    "api",
+                    "cointrade",
+                    "config"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "대상 종목 목록 조회",
+              "protocolProfileBehavior": {
+                "disableBodyPruning": true
+              },
+              "request": {
+                "method": "GET",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "[\n    {\n            \"paramName\" : \"\",\n            \"paramValue\" : \"\"\n    }\n]",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "http://localhost:18080/dart/api/cointrade/coins",
+                  "protocol": "http",
+                  "host": [
+                    "localhost"
+                  ],
+                  "port": "18080",
+                  "path": [
+                    "dart",
+                    "api",
+                    "cointrade",
+                    "coins"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "대상 종목 설정",
+              "request": {
+                "method": "PUT",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "[\n    {\n            \"coinCode\" : \"\",\n            \"coinName\" : \"\",\n            \"isActive\" : true\n    }\n]",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "http://localhost:18080/dart/api/cointrade/coins",
+                  "protocol": "http",
+                  "host": [
+                    "localhost"
+                  ],
+                  "port": "18080",
+                  "path": [
+                    "dart",
+                    "api",
+                    "cointrade",
+                    "coins"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "보유 종목 조회",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "http://localhost:18080/dart/api/cointrade/holdings",
+                  "protocol": "http",
+                  "host": [
+                    "localhost"
+                  ],
+                  "port": "18080",
+                  "path": [
+                    "dart",
+                    "api",
+                    "cointrade",
+                    "holdings"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "거래 기록 조회(페이징)",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "http://localhost:18080/dart/api/cointrade/history",
+                  "protocol": "http",
+                  "host": [
+                    "localhost"
+                  ],
+                  "port": "18080",
+                  "path": [
+                    "dart",
+                    "api",
+                    "cointrade",
+                    "history"
+                  ],
+                  "query": [
+                    {
+                      "key": "startDate",
+                      "value": null,
+                      "type": "text",
+                      "disabled": true
+                    },
+                    {
+                      "key": "endDate",
+                      "value": null,
+                      "type": "text",
+                      "disabled": true
+                    },
+                    {
+                      "key": "coinCode",
+                      "value": null,
+                      "type": "text",
+                      "disabled": true
+                    },
+                    {
+                      "key": "tradeType",
+                      "value": null,
+                      "type": "text",
+                      "disabled": true
+                    }
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "매도 스케줄러 ON/OFF",
+              "request": {
+                "method": "PUT",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n    \"enabled\": false\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "http://localhost:18080/dart/api/cointrade/scheduler/sell",
+                  "protocol": "http",
+                  "host": [
+                    "localhost"
+                  ],
+                  "port": "18080",
+                  "path": [
+                    "dart",
+                    "api",
+                    "cointrade",
+                    "scheduler",
+                    "sell"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "매수 스케줄러 ON/OFF",
+              "request": {
+                "method": "PUT",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "[\n    {\n            \"enabled\" : true\n    }\n]",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "http://localhost:18080/dart/api/cointrade/scheduler/buy",
+                  "protocol": "http",
+                  "host": [
+                    "localhost"
+                  ],
+                  "port": "18080",
+                  "path": [
+                    "dart",
+                    "api",
+                    "cointrade",
+                    "scheduler",
+                    "buy"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "현재 상태 조회",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "http://localhost:18080/dart/api/cointrade/status",
+                  "protocol": "http",
+                  "host": [
+                    "localhost"
+                  ],
+                  "port": "18080",
+                  "path": [
+                    "dart",
+                    "api",
+                    "cointrade",
+                    "status"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "ML 모델 데이터 전체 조회",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "http://localhost:18080/dart/api/cointrade/ml-models",
+                  "protocol": "http",
+                  "host": [
+                    "localhost"
+                  ],
+                  "port": "18080",
+                  "path": [
+                    "dart",
+                    "api",
+                    "cointrade",
+                    "ml-models"
+                  ],
+                  "query": [
+                    {
+                      "key": "",
+                      "value": "",
+                      "type": "text",
+                      "disabled": true
+                    }
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "매수 프로세스 진행률 조회(풀링)",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "http://localhost:18080/dart/api/cointrade/log/process/status",
+                  "protocol": "http",
+                  "host": [
+                    "localhost"
+                  ],
+                  "port": "18080",
+                  "path": [
+                    "dart",
+                    "api",
+                    "cointrade",
+                    "log",
+                    "process",
+                    "status"
+                  ],
+                  "query": [
+                    {
+                      "key": "",
+                      "value": "",
+                      "type": "text",
+                      "disabled": true
+                    }
+                  ]
+                }
+              },
+              "response": []
             }
-          },
-          "response": []
+          ]
+        },
+        {
+          "name": "매도 기능",
+          "item": [
+            {
+              "name": "보유종목 매도",
+              "request": {
+                "method": "POST",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n    \"coin_codes\": [\n        \"KRW-BTC\"\n    ]\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "http://localhost:18080/dart/api/holdings/sell",
+                  "protocol": "http",
+                  "host": [
+                    "localhost"
+                  ],
+                  "port": "18080",
+                  "path": [
+                    "dart",
+                    "api",
+                    "holdings",
+                    "sell"
+                  ]
+                },
+                "description": "{\"coin_codes\": \\[\"KRW-BTC\"\\]}\n\ncoin_codes 아무것도 없으면 전체 매도( \\[\\] )"
+              },
+              "response": []
+            }
+          ]
         }
       ]
     }
