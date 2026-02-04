@@ -96,4 +96,62 @@ public class CointradeBacktestController {
         List<BacktestHistoryDto> history = backtestService.getHistory();
         return new ResponseEntity<>(new CommonResponse<>(history), HttpStatus.OK);
     }
+
+    /**
+     * 백테스트 옵티마이저 실행
+     * POST /api/backtest/optimizer
+     * 백테스트를 이용해 최적의 파라미터 값을 분석
+     */
+    @EndPointConfig.RequireRole({RoleConstants.ROLE_SUPER_ADMIN})
+    @TransactionLogging
+    @PostMapping("/optimizer")
+    public ResponseEntity<CommonResponse<OptimizerRunResDto>> runOptimizer(
+            @RequestBody OptimizerRunReqDto request) {
+        log.info("백테스트 옵티마이저 실행 요청: {}", request);
+        OptimizerRunResDto result = backtestService.runOptimizer(request);
+        return new ResponseEntity<>(new CommonResponse<>(result), HttpStatus.OK);
+    }
+
+    /**
+     * 백테스트 옵티마이저 상태 조회
+     * GET /api/backtest/optimizer/status/{taskId}
+     */
+    @EndPointConfig.RequireRole({RoleConstants.ROLE_SUPER_ADMIN})
+    @TransactionLogging
+    @GetMapping("/optimizer/status/{taskId}")
+    public ResponseEntity<CommonResponse<OptimizerStatusDto>> getOptimizerStatus(
+            @PathVariable(name = "taskId") String taskId) {
+        log.info("백테스트 옵티마이저 상태 조회 요청: {}", taskId);
+        OptimizerStatusDto status = backtestService.getOptimizerStatus(taskId);
+        return new ResponseEntity<>(new CommonResponse<>(status), HttpStatus.OK);
+    }
+
+    /**
+     * 백테스트 옵티마이저 결과 조회
+     * GET /api/backtest/optimizer/result/{taskId}
+     */
+    @EndPointConfig.RequireRole({RoleConstants.ROLE_SUPER_ADMIN})
+    @TransactionLogging
+    @GetMapping("/optimizer/result/{taskId}")
+    public ResponseEntity<CommonResponse<OptimizerResultDto>> getOptimizerResult(
+            @PathVariable(name = "taskId") String taskId,
+            @RequestParam(required = false, name = "include_all_trials") Boolean includeAllTrials) {
+        log.info("백테스트 옵티마이저 결과 조회 요청 - taskId: {}, includeAllTrials: {}", taskId, includeAllTrials);
+        OptimizerResultDto result = backtestService.getOptimizerResult(taskId, includeAllTrials);
+        return new ResponseEntity<>(new CommonResponse<>(result), HttpStatus.OK);
+    }
+
+    /**
+     * 백테스트 옵티마이저 이력 조회
+     * GET /api/backtest/optimizer/history
+     */
+    @EndPointConfig.RequireRole({RoleConstants.ROLE_SUPER_ADMIN})
+    @TransactionLogging
+    @GetMapping("/optimizer/history")
+    public ResponseEntity<CommonResponse<List<OptimizerHistoryDto>>> getOptimizerHistory(
+            @RequestParam(required = false, name = "limit") Integer limit) {
+        log.info("백테스트 옵티마이저 이력 조회 요청 - limit: {}", limit);
+        List<OptimizerHistoryDto> history = backtestService.getOptimizerHistory(limit);
+        return new ResponseEntity<>(new CommonResponse<>(history), HttpStatus.OK);
+    }
 }

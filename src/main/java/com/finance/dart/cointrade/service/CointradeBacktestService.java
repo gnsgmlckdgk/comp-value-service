@@ -129,6 +129,100 @@ public class CointradeBacktestService {
     }
 
     /**
+     * 백테스트 옵티마이저 실행
+     */
+    public OptimizerRunResDto runOptimizer(OptimizerRunReqDto request) {
+
+        String url = buildUrl(CoinTraderProgramConfig.API_URI_OPTIMIZER_RUN);
+        log.info("백테스트 옵티마이저 실행 요청 - URL: {}, request: {}", url, request);
+
+        Map<String, Object> requestParam = new LinkedHashMap<>();
+        requestParam.put("coin_codes", request.getCoinCodes());
+        requestParam.put("start_date", request.getStartDate());
+        requestParam.put("end_date", request.getEndDate());
+
+        if (request.getMaxRuns() != null) {
+            requestParam.put("max_runs", request.getMaxRuns());
+        }
+        if (request.getMaxTimeMinutes() != null) {
+            requestParam.put("max_time_minutes", request.getMaxTimeMinutes());
+        }
+        if (request.getTargetReturn() != null) {
+            requestParam.put("target_return", request.getTargetReturn());
+        }
+        if (request.getNumWorkers() != null) {
+            requestParam.put("num_workers", request.getNumWorkers());
+        }
+        if (request.getCustomParamRanges() != null) {
+            requestParam.put("custom_param_ranges", request.getCustomParamRanges());
+        }
+
+        return httpClientComponent.exchangeSync(
+                url,
+                HttpMethod.POST,
+                null,
+                requestParam,
+                new ParameterizedTypeReference<OptimizerRunResDto>() {}
+        ).getBody();
+    }
+
+    /**
+     * 백테스트 옵티마이저 상태 조회
+     */
+    public OptimizerStatusDto getOptimizerStatus(String taskId) {
+        String url = buildUrl(CoinTraderProgramConfig.API_URI_OPTIMIZER_STATUS + "/" + taskId);
+        log.info("백테스트 옵티마이저 상태 조회 요청 - URL: {}, taskId: {}", url, taskId);
+
+        return httpClientComponent.exchangeSync(
+                url,
+                HttpMethod.GET,
+                new ParameterizedTypeReference<OptimizerStatusDto>() {}
+        ).getBody();
+    }
+
+    /**
+     * 백테스트 옵티마이저 결과 조회
+     */
+    public OptimizerResultDto getOptimizerResult(String taskId, Boolean includeAllTrials) {
+        StringBuilder urlBuilder = new StringBuilder();
+        urlBuilder.append(buildUrl(CoinTraderProgramConfig.API_URI_OPTIMIZER_RESULT + "/" + taskId));
+
+        if (includeAllTrials != null && includeAllTrials) {
+            urlBuilder.append("?include_all_trials=true");
+        }
+
+        String url = urlBuilder.toString();
+        log.info("백테스트 옵티마이저 결과 조회 요청 - URL: {}, taskId: {}", url, taskId);
+
+        return httpClientComponent.exchangeSync(
+                url,
+                HttpMethod.GET,
+                new ParameterizedTypeReference<OptimizerResultDto>() {}
+        ).getBody();
+    }
+
+    /**
+     * 백테스트 옵티마이저 이력 조회
+     */
+    public List<OptimizerHistoryDto> getOptimizerHistory(Integer limit) {
+        StringBuilder urlBuilder = new StringBuilder();
+        urlBuilder.append(buildUrl(CoinTraderProgramConfig.API_URI_OPTIMIZER_HISTORY));
+
+        if (limit != null) {
+            urlBuilder.append("?limit=").append(limit);
+        }
+
+        String url = urlBuilder.toString();
+        log.info("백테스트 옵티마이저 이력 조회 요청 - URL: {}", url);
+
+        return httpClientComponent.exchangeSync(
+                url,
+                HttpMethod.GET,
+                new ParameterizedTypeReference<List<OptimizerHistoryDto>>() {}
+        ).getBody();
+    }
+
+    /**
      * URL 생성 헬퍼 메서드
      */
     private String buildUrl(String uri) {

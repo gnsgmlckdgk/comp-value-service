@@ -66,4 +66,16 @@ public class CoinTraderProgramConfig {
     /** 보유 종목 매도 **/
     public static final String API_URI_HOLDINGS_SELL = "api/holdings/sell";
 
+    /** 백테스트 옵티마이저 실행 **/
+    public static final String API_URI_OPTIMIZER_RUN = "api/backtest/optimizer";
+
+    /** 백테스트 옵티마이저 상태 조회 **/
+    public static final String API_URI_OPTIMIZER_STATUS = "api/backtest/optimizer/status";
+
+    /** 백테스트 옵티마이저 결과 조회 **/
+    public static final String API_URI_OPTIMIZER_RESULT = "api/backtest/optimizer/result";
+
+    /** 백테스트 옵티마이저 이력 조회 **/
+    public static final String API_URI_OPTIMIZER_HISTORY = "api/backtest/optimizer/history";
+
 }
