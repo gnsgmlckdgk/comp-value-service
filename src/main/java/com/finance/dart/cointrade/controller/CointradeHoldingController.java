@@ -49,6 +49,8 @@ public class CointradeHoldingController {
 
         CointradeSellResponseDto response = cointradeConfigService.sellHoldings(request);
 
+        log.info("보유 종목 매도 결과 - response = {}", response);
+
         return new ResponseEntity<>(new CommonResponse<>(response), HttpStatus.OK);
     }
 }

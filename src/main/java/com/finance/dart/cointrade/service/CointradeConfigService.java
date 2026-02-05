@@ -408,12 +408,14 @@ public class CointradeConfigService {
             param.put("coin_codes", request.getCoinCodes());
         }
 
-        return httpClientComponent.exchangeSync(
+        // 60초 타임아웃으로 호출 (매도는 시간이 오래 걸릴 수 있음)
+        return httpClientComponent.exchangeSyncWithTimeout(
                 url,
                 HttpMethod.POST,
                 null,
                 param,
-                new ParameterizedTypeReference<CointradeSellResponseDto>() {}
+                new ParameterizedTypeReference<CointradeSellResponseDto>() {},
+                300000  // 300초(5분), 종목 많으면 오래걸림
         ).getBody();
     }
 

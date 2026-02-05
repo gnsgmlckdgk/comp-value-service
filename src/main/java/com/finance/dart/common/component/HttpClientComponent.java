@@ -11,6 +11,7 @@ import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Flux;
@@ -30,6 +31,50 @@ public class HttpClientComponent {
 
     private final RestTemplate restTemplate;
     private final WebClient webClient;
+
+    /**
+     * 커스텀 타임아웃으로 동기 호출
+     * @param url
+     * @param method
+     * @param httpHeaders
+     * @param body
+     * @param responseType
+     * @param readTimeoutMs 읽기 타임아웃 (밀리초)
+     * @return
+     * @param <T>
+     */
+    public <T> ResponseEntity<T> exchangeSyncWithTimeout(
+            String url, HttpMethod method, Map<String, String> httpHeaders,
+            Object body, ParameterizedTypeReference<T> responseType,
+            int readTimeoutMs) {
+
+        if (httpHeaders == null) httpHeaders = new LinkedHashMap<>();
+
+        // 임시 RestTemplate 생성 (커스텀 타임아웃)
+        SimpleClientHttpRequestFactory factory = new SimpleClientHttpRequestFactory();
+        factory.setConnectTimeout(5000);
+        factory.setReadTimeout(readTimeoutMs);
+        RestTemplate customRestTemplate = new RestTemplate(factory);
+
+        final HttpEntity<?> httpEntity = ClientUtil.createHttpEntity(MediaType.APPLICATION_JSON, httpHeaders, body);
+
+        if (log.isDebugEnabled()) {
+            log.debug("전송 요청 정보 (커스텀 타임아웃 {}ms) = url[{}], method[{}], entity[{}], responseType[{}]",
+                    readTimeoutMs, url, method, httpEntity, responseType);
+        }
+
+        long startTime = DateUtil.getCurrentNanoTime();
+
+        ResponseEntity<T> response = customRestTemplate.exchange(url, method, httpEntity, responseType);
+
+        long elapsedTime = DateUtil.getElapsedTimeMillis(startTime);
+        if (log.isDebugEnabled()) {
+            log.debug("API 호출 완료 - URL: {}, Method: {}, 응답시간: {}ms, 상태코드: {}",
+                    url, method, elapsedTime, response.getStatusCode());
+        }
+
+        return response;
+    }
 
     /**
      * 전송[동기]
