@@ -4,6 +4,7 @@ import com.finance.dart.cointrade.dto.CointradeSellRequestDto;
 import com.finance.dart.cointrade.dto.CointradeSellResponseDto;
 import com.finance.dart.cointrade.service.CointradeConfigService;
 import com.finance.dart.common.config.EndPointConfig;
+import com.finance.dart.common.dto.CommonResponse;
 import com.finance.dart.common.logging.TransactionLogging;
 import com.finance.dart.member.enums.RoleConstants;
 import lombok.RequiredArgsConstructor;
@@ -36,7 +37,7 @@ public class CointradeHoldingController {
     @EndPointConfig.RequireRole({RoleConstants.ROLE_SUPER_ADMIN})
     @TransactionLogging
     @PostMapping("/sell")
-    public ResponseEntity<CointradeSellResponseDto> sellHoldings(
+    public ResponseEntity<CommonResponse<CointradeSellResponseDto>> sellHoldings(
             @RequestBody(required = false) CointradeSellRequestDto request) {
 
         // request가 null인 경우 빈 객체 생성 (전체 매도)
@@ -48,6 +49,6 @@ public class CointradeHoldingController {
 
         CointradeSellResponseDto response = cointradeConfigService.sellHoldings(request);
 
-        return new ResponseEntity<>(response, HttpStatus.OK);
+        return new ResponseEntity<>(new CommonResponse<>(response), HttpStatus.OK);
     }
 }
