@@ -36,6 +36,9 @@ public class OptimizerResultDataDto {
     @JsonProperty("failed_trials")
     private Integer failedTrials;
 
+    @JsonProperty("target_met_trials")
+    private Integer targetMetTrials;
+
     @JsonProperty("elapsed_time_seconds")
     private Double elapsedTimeSeconds;
 

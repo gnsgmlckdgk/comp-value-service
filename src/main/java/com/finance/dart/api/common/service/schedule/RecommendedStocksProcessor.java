@@ -331,6 +331,7 @@ public class RecommendedStocksProcessor {
         // 1. PER 기준
         boolean validPE = true;
         if (config.getPeRatioMin() != null || config.getPeRatioMax() != null) {
+            if(log.isDebugEnabled()) log.debug("PER 비교, 최소 [{}] / 최대 [{}]", config.getPeRatioMin(), config.getPeRatioMax());
             if (pe == null) {
                 validPE = false;
             } else {
@@ -343,27 +344,51 @@ public class RecommendedStocksProcessor {
             }
         }
 
-        // 2. PBR 기준
+        // 2. PBR 기준 (PER과 동일 패턴)
         boolean validPB = true;
-        if (config.getPbRatioMax() != null) {
-            if (pb != null && pb > config.getPbRatioMax().doubleValue()) {
+        if (config.getPbRatioMin() != null || config.getPbRatioMax() != null) {
+            if(log.isDebugEnabled()) log.debug("PBR 비교, 최소 [{}] / 최대 [{}]", config.getPbRatioMin(), config.getPbRatioMax());
+            if (pb == null) {
                 validPB = false;
+            } else {
+                if (config.getPbRatioMin() != null && pb < config.getPbRatioMin().doubleValue()) {
+                    validPB = false;
+                }
+                if (config.getPbRatioMax() != null && pb > config.getPbRatioMax().doubleValue()) {
+                    validPB = false;
+                }
             }
         }
 
-        // 3. ROE 기준
+        // 3. ROE 기준 (동일 패턴)
         boolean validROE = true;
-        if (config.getRoeMin() != null) {
-            if (roe == null || roe < config.getRoeMin().doubleValue()) {
+        if (config.getRoeMin() != null || config.getRoeMax() != null) {
+            if(log.isDebugEnabled()) log.debug("ROE 비교, 최소 [{}] / 최대 [{}]", config.getRoeMin(), config.getRoeMax());
+            if (roe == null) {
                 validROE = false;
+            } else {
+                if (config.getRoeMin() != null && roe < config.getRoeMin().doubleValue()) {
+                    validROE = false;
+                }
+                if (config.getRoeMax() != null && roe > config.getRoeMax().doubleValue()) {
+                    validROE = false;
+                }
             }
         }
 
-        // 4. 부채비율
+        // 4. 부채비율 (동일 패턴)
         boolean validDebt = true;
-        if (config.getDebtEquityMax() != null) {
-            if (debtEquity != null && debtEquity > config.getDebtEquityMax().doubleValue()) {
+        if (config.getDebtEquityMin() != null || config.getDebtEquityMax() != null) {
+            if(log.isDebugEnabled()) log.debug("부채비율 비교, 최소 [{}] / 최대 [{}]", config.getDebtEquityMin(), config.getDebtEquityMax());
+            if (debtEquity == null) {
                 validDebt = false;
+            } else {
+                if (config.getDebtEquityMin() != null && debtEquity < config.getDebtEquityMin().doubleValue()) {
+                    validDebt = false;
+                }
+                if (config.getDebtEquityMax() != null && debtEquity > config.getDebtEquityMax().doubleValue()) {
+                    validDebt = false;
+                }
             }
         }
 

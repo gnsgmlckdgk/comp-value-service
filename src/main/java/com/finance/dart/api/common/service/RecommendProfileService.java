@@ -210,8 +210,11 @@ public class RecommendProfileService {
         // 저평가 필터링 조건
         if (dto.getPeRatioMin() != null) configEntity.setPeRatioMin(dto.getPeRatioMin());
         if (dto.getPeRatioMax() != null) configEntity.setPeRatioMax(dto.getPeRatioMax());
+        if (dto.getPbRatioMin() != null) configEntity.setPbRatioMin(dto.getPbRatioMin());
         if (dto.getPbRatioMax() != null) configEntity.setPbRatioMax(dto.getPbRatioMax());
         if (dto.getRoeMin() != null) configEntity.setRoeMin(dto.getRoeMin());
+        if (dto.getRoeMax() != null) configEntity.setRoeMax(dto.getRoeMax());
+        if (dto.getDebtEquityMin() != null) configEntity.setDebtEquityMin(dto.getDebtEquityMin());
         if (dto.getDebtEquityMax() != null) configEntity.setDebtEquityMax(dto.getDebtEquityMax());
     }
 
@@ -250,8 +253,11 @@ public class RecommendProfileService {
             dto.setCountry(config.getCountry());
             dto.setPeRatioMin(config.getPeRatioMin());
             dto.setPeRatioMax(config.getPeRatioMax());
+            dto.setPbRatioMin(config.getPbRatioMin());
             dto.setPbRatioMax(config.getPbRatioMax());
             dto.setRoeMin(config.getRoeMin());
+            dto.setRoeMax(config.getRoeMax());
+            dto.setDebtEquityMin(config.getDebtEquityMin());
             dto.setDebtEquityMax(config.getDebtEquityMax());
         }
 

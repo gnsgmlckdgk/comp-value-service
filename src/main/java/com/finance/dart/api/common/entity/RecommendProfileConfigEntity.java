@@ -88,11 +88,20 @@ public class RecommendProfileConfigEntity {
     @Column(name = "pe_ratio_max", precision = 10, scale = 2)
     private BigDecimal peRatioMax;          // PER 최대값
 
+    @Column(name = "pb_ratio_min", precision = 10, scale = 2)
+    private BigDecimal pbRatioMin;          // PBR 최소값 (주가순자산비율)
+
     @Column(name = "pb_ratio_max", precision = 10, scale = 2)
     private BigDecimal pbRatioMax;          // PBR 최대값 (주가순자산비율)
 
     @Column(name = "roe_min", precision = 10, scale = 4)
     private BigDecimal roeMin;              // ROE 최소값 (자기자본이익률, 0.10 = 10%)
+
+    @Column(name = "roe_max", precision = 10, scale = 4)
+    private BigDecimal roeMax;              // ROE 최대값 (자기자본이익률)
+
+    @Column(name = "debt_equity_min", precision = 10, scale = 2)
+    private BigDecimal debtEquityMin;       // 부채비율 최소값 (D/E Ratio)
 
     @Column(name = "debt_equity_max", precision = 10, scale = 2)
     private BigDecimal debtEquityMax;       // 부채비율 최대값 (D/E Ratio)

@@ -46,7 +46,10 @@ public class RecommendProfileDto {
 
     private BigDecimal peRatioMin;          // PER 최소값 (주가수익비율)
     private BigDecimal peRatioMax;          // PER 최대값
+    private BigDecimal pbRatioMin;          // PBR 최소값 (주가순자산비율)
     private BigDecimal pbRatioMax;          // PBR 최대값 (주가순자산비율)
     private BigDecimal roeMin;              // ROE 최소값 (자기자본이익률, 0.10 = 10%)
+    private BigDecimal roeMax;              // ROE 최대값 (자기자본이익률)
+    private BigDecimal debtEquityMin;       // 부채비율 최소값 (D/E Ratio)
     private BigDecimal debtEquityMax;       // 부채비율 최대값 (D/E Ratio)
 }
