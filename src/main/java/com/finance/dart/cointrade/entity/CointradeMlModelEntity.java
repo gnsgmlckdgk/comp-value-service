@@ -43,8 +43,8 @@ public class CointradeMlModelEntity {
     @Column(name = "mse_low", precision = 20, scale = 10)
     private BigDecimal mseLow; // 저가 예측 MSE
 
-    @Column(name = "mse_up_prob", precision = 20, scale = 10)
-    private BigDecimal mseUpProb; // 상승 확률 예측 MSE
+    @Column(name = "loss_up_prob", precision = 20, scale = 10)
+    private BigDecimal lossUpProb; // 상승 확률 예측 Loss
 
     @Column(name = "prediction_days")
     private Integer predictionDays;

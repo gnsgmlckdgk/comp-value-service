@@ -36,7 +36,7 @@ public class CointradeMlModelService {
                         .trainDataEnd(entity.getTrainDataEnd())
                         .mseHigh(entity.getMseHigh())
                         .mseLow(entity.getMseLow())
-                        .mseUpProb(entity.getMseUpProb())
+                        .lossUpProb(entity.getLossUpProb())
                         .predictionDays(entity.getPredictionDays())
                         .modelType(entity.getModelType())
                         .createdAt(entity.getCreatedAt())

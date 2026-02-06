@@ -18,7 +18,7 @@ public class CointradeMlModelDto {
     private LocalDate trainDataEnd;
     private BigDecimal mseHigh;
     private BigDecimal mseLow;
-    private BigDecimal mseUpProb;
+    private BigDecimal lossUpProb;
     private Integer predictionDays;
     private String modelType;
     private LocalDateTime createdAt;
