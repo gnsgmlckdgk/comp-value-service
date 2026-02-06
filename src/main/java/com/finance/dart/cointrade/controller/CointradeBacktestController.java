@@ -182,4 +182,18 @@ public class CointradeBacktestController {
         BacktestDeleteResDto result = backtestService.cancelOptimizer(taskId);
         return new ResponseEntity<>(new CommonResponse<>(result), HttpStatus.OK);
     }
+
+    /**
+     * 백테스트 옵티마이저 결과 삭제
+     * DELETE /api/backtest/optimizer/result/{taskId}
+     */
+    @EndPointConfig.RequireRole({RoleConstants.ROLE_SUPER_ADMIN})
+    @TransactionLogging
+    @DeleteMapping("/optimizer/result/{taskId}")
+    public ResponseEntity<CommonResponse<BacktestDeleteResDto>> deleteOptimizerResult(
+            @PathVariable(name = "taskId") String taskId) {
+        log.info("백테스트 옵티마이저 결과 삭제 요청: {}", taskId);
+        BacktestDeleteResDto result = backtestService.deleteOptimizerResult(taskId);
+        return new ResponseEntity<>(new CommonResponse<>(result), HttpStatus.OK);
+    }
 }

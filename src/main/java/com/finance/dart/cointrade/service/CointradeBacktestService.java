@@ -251,6 +251,20 @@ public class CointradeBacktestService {
     }
 
     /**
+     * 백테스트 옵티마이저 결과 삭제
+     */
+    public BacktestDeleteResDto deleteOptimizerResult(String taskId) {
+        String url = buildUrl(CoinTraderProgramConfig.API_URI_OPTIMIZER_DELETE + "/" + taskId);
+        log.info("백테스트 옵티마이저 결과 삭제 요청 - URL: {}, taskId: {}", url, taskId);
+
+        return httpClientComponent.exchangeSync(
+                url,
+                HttpMethod.DELETE,
+                new ParameterizedTypeReference<BacktestDeleteResDto>() {}
+        ).getBody();
+    }
+
+    /**
      * URL 생성 헬퍼 메서드
      */
     private String buildUrl(String uri) {

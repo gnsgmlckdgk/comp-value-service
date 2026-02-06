@@ -81,6 +81,9 @@ public class CoinTraderProgramConfig {
     /** 백테스트 옵티마이저 이력 조회 **/
     public static final String API_URI_OPTIMIZER_HISTORY = "api/backtest/optimizer/history";
 
+    /** 백테스트 옵티마이저 결과 삭제 **/
+    public static final String API_URI_OPTIMIZER_DELETE = "api/backtest/optimizer/result";
+
     /** 백테스트 옵티마이저 작업 취소 **/
     public static final String API_URI_OPTIMIZER_CANCEL = "api/backtest/optimizer/cancel";
 
