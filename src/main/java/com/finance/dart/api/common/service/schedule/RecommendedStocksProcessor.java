@@ -2,11 +2,12 @@ package com.finance.dart.api.common.service.schedule;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.finance.dart.api.abroad.dto.fmp.incomestatgrowth.IncomeStatGrowthResDto;
 import com.finance.dart.api.abroad.dto.fmp.ratiosttm.RatiosTtmArrReqDto;
-import com.finance.dart.api.abroad.dto.fmp.ratiosttm.RatiosTtmReqDto;
 import com.finance.dart.api.abroad.dto.fmp.ratiosttm.RatiosTtmResDto;
 import com.finance.dart.api.abroad.dto.fmp.stockscreener.StockScreenerReqDto;
 import com.finance.dart.api.abroad.dto.fmp.stockscreener.StockScreenerResDto;
+import com.finance.dart.api.abroad.service.fmp.IncomeStatGrowthService;
 import com.finance.dart.api.abroad.service.fmp.RatiosTtmService;
 import com.finance.dart.api.abroad.service.fmp.StockScreenerService;
 import com.finance.dart.api.common.entity.RecommendProfileConfigEntity;
@@ -19,7 +20,6 @@ import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
-import java.math.BigDecimal;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 
@@ -48,6 +48,7 @@ public class RecommendedStocksProcessor {
 
     private final StockScreenerService stockScreenerService;
     private final RatiosTtmService ratiosTtmService;
+    private final IncomeStatGrowthService incomeStatGrowthService;
     private final RedisComponent redisComponent;
     private final ObjectMapper objectMapper;
     private final RecommendProfileRepository recommendProfileRepository;
@@ -80,6 +81,7 @@ public class RecommendedStocksProcessor {
             // 2. API 호출 결과 캐싱용 맵 (심볼별로 캐싱)
             Map<String, StockScreenerResDto> screenerCache = new HashMap<>();
             Map<String, List<RatiosTtmResDto>> ratiosCache = new HashMap<>();
+            Map<String, List<IncomeStatGrowthResDto>> growthCache = new HashMap<>();
 
             // 3. 프로파일별로 독립적으로 처리
             for (int profileIdx = 0; profileIdx < activeProfiles.size(); profileIdx++) {
@@ -87,7 +89,7 @@ public class RecommendedStocksProcessor {
                 log.info("[추천 종목] 프로파일 처리 시작 [{}/{}]: {}",
                         profileIdx + 1, activeProfiles.size(), profile.getProfileName());
 
-                processProfile(profile, maxCount, screenerCache, ratiosCache);
+                processProfile(profile, maxCount, screenerCache, ratiosCache, growthCache);
 
                 log.info("[추천 종목] 프로파일 처리 완료 [{}/{}]: {}",
                         profileIdx + 1, activeProfiles.size(), profile.getProfileName());
@@ -107,7 +109,8 @@ public class RecommendedStocksProcessor {
             RecommendProfileEntity profile,
             int maxCount,
             Map<String, StockScreenerResDto> screenerCache,
-            Map<String, List<RatiosTtmResDto>> ratiosCache) {
+            Map<String, List<RatiosTtmResDto>> ratiosCache,
+            Map<String, List<IncomeStatGrowthResDto>> growthCache) {
 
         try {
             RecommendProfileConfigEntity config = profile.getConfig();
@@ -144,7 +147,7 @@ public class RecommendedStocksProcessor {
                         profile.getProfileName(), i + 1, batches.size(), batch.size());
 
                 // RatiosTTM 병렬 조회 (캐시 활용)
-                Map<String, RecommendedStockData> batchResult = processBatch(batch, config, ratiosCache);
+                Map<String, RecommendedStockData> batchResult = processBatch(batch, config, ratiosCache, growthCache);
                 undervaluedStocks.putAll(batchResult);
 
                 log.info("[추천 종목] 프로파일 '{}' 배치 {}/{} 완료 - 이번 배치 발견: {}건 (누적: {}건)",
@@ -262,7 +265,8 @@ public class RecommendedStocksProcessor {
     private Map<String, RecommendedStockData> processBatch(
             List<StockScreenerResDto> batch,
             RecommendProfileConfigEntity config,
-            Map<String, List<RatiosTtmResDto>> ratiosCache) {
+            Map<String, List<RatiosTtmResDto>> ratiosCache,
+            Map<String, List<IncomeStatGrowthResDto>> growthCache) {
 
         Map<String, RecommendedStockData> result = new LinkedHashMap<>();
 
@@ -292,6 +296,30 @@ public class RecommendedStocksProcessor {
             }
         }
 
+        // 성장률 필터 조건 존재 여부 확인
+        boolean needsGrowthData = config.getRevenueGrowthMin() != null
+                || config.getRevenueGrowthMax() != null
+                || config.getNetIncomeGrowthMin() != null
+                || config.getNetIncomeGrowthMax() != null;
+
+        // 성장률 데이터 조회 (필요한 경우만)
+        if (needsGrowthData) {
+            if (log.isDebugEnabled()) log.debug("성장률 데이터 조회 필터");
+            List<String> growthSymbolsToFetch = new ArrayList<>();
+            for (String symbol : symbols) {
+                if (!growthCache.containsKey(symbol)) {
+                    growthSymbolsToFetch.add(symbol);
+                }
+            }
+            if (!growthSymbolsToFetch.isEmpty()) {
+                Map<String, List<IncomeStatGrowthResDto>> newGrowthMap =
+                        incomeStatGrowthService.findIncomeStatGrowthParallel(growthSymbolsToFetch);
+                if (newGrowthMap != null) {
+                    growthCache.putAll(newGrowthMap);
+                }
+            }
+        }
+
         // StockScreener 결과를 Map으로 변환 (빠른 조회용)
         Map<String, StockScreenerResDto> screenerMap = new HashMap<>();
         for (StockScreenerResDto dto : batch) {
@@ -308,10 +336,19 @@ public class RecommendedStocksProcessor {
 
             RatiosTtmResDto ratios = ratiosList.get(0);
 
-            // Config 기반 저평가 필터링
-            if (isUndervalued(ratios, config)) {
+            // 3년 평균 성장률 계산
+            Double avgRevenueGrowth = null;
+            Double avgNetIncomeGrowth = null;
+            if (needsGrowthData) {
+                List<IncomeStatGrowthResDto> growthList = growthCache.get(symbol);
+                avgRevenueGrowth = calcAvgGrowth(growthList, IncomeStatGrowthResDto::getGrowthRevenue);
+                avgNetIncomeGrowth = calcAvgGrowth(growthList, IncomeStatGrowthResDto::getGrowthNetIncome);
+            }
+
+            // Config 기반 저평가 필터링 + 성장률 필터링
+            if (isUndervalued(ratios, config) && isGrowthSatisfied(avgRevenueGrowth, avgNetIncomeGrowth, config)) {
                 StockScreenerResDto screenerData = screenerMap.get(symbol);
-                RecommendedStockData stockData = new RecommendedStockData(screenerData, ratios);
+                RecommendedStockData stockData = new RecommendedStockData(screenerData, ratios, avgRevenueGrowth, avgNetIncomeGrowth);
                 result.put(symbol, stockData);
             }
         }
@@ -396,6 +433,56 @@ public class RecommendedStocksProcessor {
     }
 
     /**
+     * 성장률 필터링 조건 충족 여부 판단
+     */
+    public boolean isGrowthSatisfied(Double avgRevenueGrowth, Double avgNetIncomeGrowth,
+                                      RecommendProfileConfigEntity config) {
+        // 5. 매출 성장률 (3년 평균)
+        boolean validRevGrowth = true;
+        if (config.getRevenueGrowthMin() != null || config.getRevenueGrowthMax() != null) {
+            if (log.isDebugEnabled()) log.debug("매출 성장률 3년평균 필터링");
+            if (avgRevenueGrowth == null) {
+                validRevGrowth = false;
+            } else {
+                if (config.getRevenueGrowthMin() != null && avgRevenueGrowth < config.getRevenueGrowthMin().doubleValue())
+                    validRevGrowth = false;
+                if (config.getRevenueGrowthMax() != null && avgRevenueGrowth > config.getRevenueGrowthMax().doubleValue())
+                    validRevGrowth = false;
+            }
+        }
+
+        // 6. 순이익 성장률 (3년 평균)
+        boolean validNiGrowth = true;
+        if (config.getNetIncomeGrowthMin() != null || config.getNetIncomeGrowthMax() != null) {
+            if (log.isDebugEnabled()) log.debug("순이익 성장률 3년평균 필터링");
+            if (avgNetIncomeGrowth == null) {
+                validNiGrowth = false;
+            } else {
+                if (config.getNetIncomeGrowthMin() != null && avgNetIncomeGrowth < config.getNetIncomeGrowthMin().doubleValue())
+                    validNiGrowth = false;
+                if (config.getNetIncomeGrowthMax() != null && avgNetIncomeGrowth > config.getNetIncomeGrowthMax().doubleValue())
+                    validNiGrowth = false;
+            }
+        }
+
+        return validRevGrowth && validNiGrowth;
+    }
+
+    /**
+     * 성장률 리스트에서 평균값 계산
+     */
+    private Double calcAvgGrowth(List<IncomeStatGrowthResDto> growthList,
+                                 java.util.function.Function<IncomeStatGrowthResDto, Double> getter) {
+        if (growthList == null || growthList.isEmpty()) return null;
+        List<Double> values = growthList.stream()
+                .map(getter)
+                .filter(Objects::nonNull)
+                .toList();
+        if (values.isEmpty()) return null;
+        return values.stream().mapToDouble(Double::doubleValue).average().orElse(0.0);
+    }
+
+    /**
      * Redis에 프로파일별로 저장
      */
     private void saveToRedis(String profileName, Map<String, RecommendedStockData> undervaluedStocks) {
@@ -454,11 +541,16 @@ public class RecommendedStocksProcessor {
             Double priceToSalesRatioTTM,
             Double enterpriseValueMultipleTTM,
 
+            // 성장률 (3년 평균)
+            Double avgRevenueGrowth,
+            Double avgNetIncomeGrowth,
+
             // 부가 데이터
             String trscDt,
             String trscTm
     ) {
-        public RecommendedStockData(StockScreenerResDto screener, RatiosTtmResDto ratios) {
+        public RecommendedStockData(StockScreenerResDto screener, RatiosTtmResDto ratios,
+                                    Double avgRevenueGrowth, Double avgNetIncomeGrowth) {
             this(
                     screener.getSymbol(),
                     screener.getCompanyName(),
@@ -483,7 +575,8 @@ public class RecommendedStocksProcessor {
                     ratios.getReturnOnAssetsTTM(),
                     ratios.getPriceToSalesRatioTTM(),
                     ratios.getEnterpriseValueMultipleTTM(),
-
+                    avgRevenueGrowth,
+                    avgNetIncomeGrowth,
                     DateUtil.getToday("yyyyMMdd"),
                     DateUtil.getToday("HHmmss")
             );

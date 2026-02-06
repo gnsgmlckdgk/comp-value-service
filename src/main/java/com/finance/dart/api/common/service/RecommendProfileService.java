@@ -189,33 +189,41 @@ public class RecommendProfileService {
      * 설정 필드 세팅 헬퍼
      */
     private void setConfigFields(RecommendProfileConfigEntity configEntity, RecommendProfileDto dto) {
-        // Stock Screener 조건
-        if (dto.getMarketCapMin() != null) configEntity.setMarketCapMin(dto.getMarketCapMin());
-        if (dto.getMarketCapMax() != null) configEntity.setMarketCapMax(dto.getMarketCapMax());
-        if (dto.getBetaMax() != null) configEntity.setBetaMax(dto.getBetaMax());
-        if (dto.getVolumeMin() != null) configEntity.setVolumeMin(dto.getVolumeMin());
+        // Stock Screener 조건 - 슬라이더 필드는 null 허용 (비활성 시 null로 클리어)
+        configEntity.setMarketCapMin(dto.getMarketCapMin());
+        configEntity.setMarketCapMax(dto.getMarketCapMax());
+        configEntity.setPriceMin(dto.getPriceMin());
+        configEntity.setPriceMax(dto.getPriceMax());
+        configEntity.setBetaMin(dto.getBetaMin());
+        configEntity.setBetaMax(dto.getBetaMax());
+        configEntity.setVolumeMin(dto.getVolumeMin());
+        configEntity.setVolumeMax(dto.getVolumeMax());
+
+        // Stock Screener 조건 - 비슬라이더 필드는 null 체크 유지
         if (dto.getIsEtf() != null) configEntity.setIsEtf(dto.getIsEtf());
         if (dto.getIsFund() != null) configEntity.setIsFund(dto.getIsFund());
         if (dto.getIsActivelyTrading() != null) configEntity.setIsActivelyTrading(dto.getIsActivelyTrading());
         if (dto.getExchange() != null) configEntity.setExchange(dto.getExchange());
         if (dto.getScreenerLimit() != null) configEntity.setScreenerLimit(dto.getScreenerLimit());
-        if (dto.getPriceMin() != null) configEntity.setPriceMin(dto.getPriceMin());
-        if (dto.getPriceMax() != null) configEntity.setPriceMax(dto.getPriceMax());
-        if (dto.getBetaMin() != null) configEntity.setBetaMin(dto.getBetaMin());
-        if (dto.getVolumeMax() != null) configEntity.setVolumeMax(dto.getVolumeMax());
         if (dto.getSector() != null) configEntity.setSector(dto.getSector());
         if (dto.getIndustry() != null) configEntity.setIndustry(dto.getIndustry());
         if (dto.getCountry() != null) configEntity.setCountry(dto.getCountry());
 
-        // 저평가 필터링 조건
-        if (dto.getPeRatioMin() != null) configEntity.setPeRatioMin(dto.getPeRatioMin());
-        if (dto.getPeRatioMax() != null) configEntity.setPeRatioMax(dto.getPeRatioMax());
-        if (dto.getPbRatioMin() != null) configEntity.setPbRatioMin(dto.getPbRatioMin());
-        if (dto.getPbRatioMax() != null) configEntity.setPbRatioMax(dto.getPbRatioMax());
-        if (dto.getRoeMin() != null) configEntity.setRoeMin(dto.getRoeMin());
-        if (dto.getRoeMax() != null) configEntity.setRoeMax(dto.getRoeMax());
-        if (dto.getDebtEquityMin() != null) configEntity.setDebtEquityMin(dto.getDebtEquityMin());
-        if (dto.getDebtEquityMax() != null) configEntity.setDebtEquityMax(dto.getDebtEquityMax());
+        // 저평가 필터링 조건 - 슬라이더 필드는 null 허용
+        configEntity.setPeRatioMin(dto.getPeRatioMin());
+        configEntity.setPeRatioMax(dto.getPeRatioMax());
+        configEntity.setPbRatioMin(dto.getPbRatioMin());
+        configEntity.setPbRatioMax(dto.getPbRatioMax());
+        configEntity.setRoeMin(dto.getRoeMin());
+        configEntity.setRoeMax(dto.getRoeMax());
+        configEntity.setDebtEquityMin(dto.getDebtEquityMin());
+        configEntity.setDebtEquityMax(dto.getDebtEquityMax());
+
+        // 성장률 필터링 조건
+        configEntity.setRevenueGrowthMin(dto.getRevenueGrowthMin());
+        configEntity.setRevenueGrowthMax(dto.getRevenueGrowthMax());
+        configEntity.setNetIncomeGrowthMin(dto.getNetIncomeGrowthMin());
+        configEntity.setNetIncomeGrowthMax(dto.getNetIncomeGrowthMax());
     }
 
     /**
@@ -259,6 +267,10 @@ public class RecommendProfileService {
             dto.setRoeMax(config.getRoeMax());
             dto.setDebtEquityMin(config.getDebtEquityMin());
             dto.setDebtEquityMax(config.getDebtEquityMax());
+            dto.setRevenueGrowthMin(config.getRevenueGrowthMin());
+            dto.setRevenueGrowthMax(config.getRevenueGrowthMax());
+            dto.setNetIncomeGrowthMin(config.getNetIncomeGrowthMin());
+            dto.setNetIncomeGrowthMax(config.getNetIncomeGrowthMax());
         }
 
         return dto;

@@ -106,6 +106,20 @@ public class RecommendProfileConfigEntity {
     @Column(name = "debt_equity_max", precision = 10, scale = 2)
     private BigDecimal debtEquityMax;       // 부채비율 최대값 (D/E Ratio)
 
+    // ========== 성장률 필터링 조건 ==========
+
+    @Column(name = "revenue_growth_min", precision = 10, scale = 4)
+    private BigDecimal revenueGrowthMin;        // 3년 평균 매출 성장률 최소값 (0.10 = 10%)
+
+    @Column(name = "revenue_growth_max", precision = 10, scale = 4)
+    private BigDecimal revenueGrowthMax;        // 3년 평균 매출 성장률 최대값
+
+    @Column(name = "net_income_growth_min", precision = 10, scale = 4)
+    private BigDecimal netIncomeGrowthMin;      // 3년 평균 순이익 성장률 최소값 (0.20 = 20%)
+
+    @Column(name = "net_income_growth_max", precision = 10, scale = 4)
+    private BigDecimal netIncomeGrowthMax;      // 3년 평균 순이익 성장률 최대값
+
     // ========== 공통 ==========
 
     private LocalDateTime createdAt = LocalDateTime.now();  // 등록일시

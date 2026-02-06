@@ -52,4 +52,11 @@ public class RecommendProfileDto {
     private BigDecimal roeMax;              // ROE 최대값 (자기자본이익률)
     private BigDecimal debtEquityMin;       // 부채비율 최소값 (D/E Ratio)
     private BigDecimal debtEquityMax;       // 부채비율 최대값 (D/E Ratio)
+
+    // ========== 성장률 필터링 조건 ==========
+
+    private BigDecimal revenueGrowthMin;        // 3년 평균 매출 성장률 최소값 (0.10 = 10%)
+    private BigDecimal revenueGrowthMax;        // 3년 평균 매출 성장률 최대값
+    private BigDecimal netIncomeGrowthMin;      // 3년 평균 순이익 성장률 최소값 (0.20 = 20%)
+    private BigDecimal netIncomeGrowthMax;      // 3년 평균 순이익 성장률 최대값
 }
