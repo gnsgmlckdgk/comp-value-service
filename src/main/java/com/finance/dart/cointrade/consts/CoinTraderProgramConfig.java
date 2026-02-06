@@ -63,6 +63,9 @@ public class CoinTraderProgramConfig {
     /** 백테스트 이력 조회 **/
     public static final String API_URI_BACKTEST_HISTORY = "api/backtest/history";
 
+    /** 백테스트 작업 취소 **/
+    public static final String API_URI_BACKTEST_CANCEL = "api/backtest/cancel";
+
     /** 보유 종목 매도 **/
     public static final String API_URI_HOLDINGS_SELL = "api/holdings/sell";
 
@@ -77,5 +80,8 @@ public class CoinTraderProgramConfig {
 
     /** 백테스트 옵티마이저 이력 조회 **/
     public static final String API_URI_OPTIMIZER_HISTORY = "api/backtest/optimizer/history";
+
+    /** 백테스트 옵티마이저 작업 취소 **/
+    public static final String API_URI_OPTIMIZER_CANCEL = "api/backtest/optimizer/cancel";
 
 }

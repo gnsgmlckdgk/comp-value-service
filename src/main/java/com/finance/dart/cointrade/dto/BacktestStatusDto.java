@@ -42,5 +42,11 @@ public class BacktestStatusDto {
 
     private String progress;
 
+    @JsonProperty("current_step")
+    private Integer currentStep;
+
+    @JsonProperty("total_steps")
+    private Integer totalSteps;
+
     private BacktestParamDto params;
 }

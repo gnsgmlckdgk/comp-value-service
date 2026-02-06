@@ -98,6 +98,20 @@ public class CointradeBacktestController {
     }
 
     /**
+     * 백테스트 작업 취소
+     * POST /api/backtest/cancel/{taskId}
+     */
+    @EndPointConfig.RequireRole({RoleConstants.ROLE_SUPER_ADMIN})
+    @TransactionLogging
+    @PostMapping("/cancel/{taskId}")
+    public ResponseEntity<CommonResponse<BacktestDeleteResDto>> cancelBacktest(
+            @PathVariable(name = "taskId") String taskId) {
+        log.info("백테스트 작업 취소 요청: {}", taskId);
+        BacktestDeleteResDto result = backtestService.cancelBacktest(taskId);
+        return new ResponseEntity<>(new CommonResponse<>(result), HttpStatus.OK);
+    }
+
+    /**
      * 백테스트 옵티마이저 실행
      * POST /api/backtest/optimizer
      * 백테스트를 이용해 최적의 파라미터 값을 분석
@@ -153,5 +167,19 @@ public class CointradeBacktestController {
         log.info("백테스트 옵티마이저 이력 조회 요청 - limit: {}", limit);
         List<OptimizerHistoryDto> history = backtestService.getOptimizerHistory(limit);
         return new ResponseEntity<>(new CommonResponse<>(history), HttpStatus.OK);
+    }
+
+    /**
+     * 백테스트 옵티마이저 작업 취소
+     * POST /api/backtest/optimizer/cancel/{taskId}
+     */
+    @EndPointConfig.RequireRole({RoleConstants.ROLE_SUPER_ADMIN})
+    @TransactionLogging
+    @PostMapping("/optimizer/cancel/{taskId}")
+    public ResponseEntity<CommonResponse<BacktestDeleteResDto>> cancelOptimizer(
+            @PathVariable(name = "taskId") String taskId) {
+        log.info("백테스트 옵티마이저 작업 취소 요청: {}", taskId);
+        BacktestDeleteResDto result = backtestService.cancelOptimizer(taskId);
+        return new ResponseEntity<>(new CommonResponse<>(result), HttpStatus.OK);
     }
 }

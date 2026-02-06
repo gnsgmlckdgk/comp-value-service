@@ -129,6 +129,20 @@ public class CointradeBacktestService {
     }
 
     /**
+     * 백테스트 작업 취소
+     */
+    public BacktestDeleteResDto cancelBacktest(String taskId) {
+        String url = buildUrl(CoinTraderProgramConfig.API_URI_BACKTEST_CANCEL + "/" + taskId);
+        log.info("백테스트 작업 취소 요청 - URL: {}, taskId: {}", url, taskId);
+
+        return httpClientComponent.exchangeSync(
+                url,
+                HttpMethod.POST,
+                new ParameterizedTypeReference<BacktestDeleteResDto>() {}
+        ).getBody();
+    }
+
+    /**
      * 백테스트 옵티마이저 실행
      */
     public OptimizerRunResDto runOptimizer(OptimizerRunReqDto request) {
@@ -219,6 +233,20 @@ public class CointradeBacktestService {
                 url,
                 HttpMethod.GET,
                 new ParameterizedTypeReference<List<OptimizerHistoryDto>>() {}
+        ).getBody();
+    }
+
+    /**
+     * 백테스트 옵티마이저 작업 취소
+     */
+    public BacktestDeleteResDto cancelOptimizer(String taskId) {
+        String url = buildUrl(CoinTraderProgramConfig.API_URI_OPTIMIZER_CANCEL + "/" + taskId);
+        log.info("백테스트 옵티마이저 작업 취소 요청 - URL: {}, taskId: {}", url, taskId);
+
+        return httpClientComponent.exchangeSync(
+                url,
+                HttpMethod.POST,
+                new ParameterizedTypeReference<BacktestDeleteResDto>() {}
         ).getBody();
     }
 
