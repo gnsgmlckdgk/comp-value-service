@@ -28,7 +28,7 @@ public class CalCompanyStockPerValueTotalService {
 
 
     @TransactionLogging
-    @Scheduled(cron = "0 0 1 * * *") // 24시간 형식, 초 분 시 일 월 요일
+    @Scheduled(cron = "0 0 1 * * 0,2,4") // 24시간 형식, 초 분 시 일 월 요일
     public void startScheduledTask() {
         executorService.submit(this::processDataInBackground);
     }
