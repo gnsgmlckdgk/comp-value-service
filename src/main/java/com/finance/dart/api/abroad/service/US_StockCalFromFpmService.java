@@ -245,9 +245,17 @@ public class US_StockCalFromFpmService {
         }
 
         for(String symbol : symbolList) {
-            CompanySharePriceResult result = calPerValueV5(symbol);
-            if("F".equals(StringUtil.defaultString(detail))) result.set상세정보(null);
-            resultList.add(result);
+            try {
+                CompanySharePriceResult result = calPerValueV5(symbol);
+                if("F".equals(StringUtil.defaultString(detail))) result.set상세정보(null);
+                resultList.add(result);
+            } catch (Exception e) {
+                log.error("[대량조회] {} 처리 중 오류: {}", symbol, e.getMessage());
+                CompanySharePriceResult errorResult = new CompanySharePriceResult();
+                errorResult.set기업심볼(symbol);
+                errorProcess(errorResult, "처리 중 오류가 발생했습니다.");
+                resultList.add(errorResult);
+            }
             Thread.sleep(TRSC_DELAY);   // 너무 빠르게 연속호출하면 타겟에서 거부할 수 있음
         }
 
@@ -272,12 +280,18 @@ public class US_StockCalFromFpmService {
         //@1. 정보 조회 ---------------------------------
         CompanyProfileDataResDto companyProfile = getCompanyProfile(symbol, result);
         if(log.isDebugEnabled()) log.debug("기업 정보 = {}", companyProfile);
-        if(companyProfile == null) errorProcess(result, "기업 정보 조회에 실패했습니다.");
+        if(companyProfile == null) {
+            errorProcess(result, "기업 정보 조회에 실패했습니다.");
+            return result;
+        }
 
         CompanySharePriceCalculator calParam = getCalParamData(symbol, result, resultDetail); // 계산 정보
+        if(calParam == null) {
+            errorProcess(result, "재무정보 조회에 실패했습니다.");
+            return result;
+        }
         calParam.setUnit(UNIT);
         if(log.isDebugEnabled()) log.debug("계산 정보 = {}", calParam);
-        if(calParam == null) errorProcess(result, "재무정보 조회에 실패했습니다.");
 
 
         //@2. 계산 ---------------------------------
@@ -319,12 +333,18 @@ public class US_StockCalFromFpmService {
         //@1. 정보 조회 ---------------------------------
         CompanyProfileDataResDto companyProfile = getCompanyProfile(symbol, result);
         if(log.isDebugEnabled()) log.debug("기업 정보 = {}", companyProfile);
-        if(companyProfile == null) errorProcess(result, "기업 정보 조회에 실패했습니다.");
+        if(companyProfile == null) {
+            errorProcess(result, "기업 정보 조회에 실패했습니다.");
+            return result;
+        }
 
         CompanySharePriceCalculator calParam = getCalParamDataV2(symbol, result, resultDetail); // 계산 정보
+        if(calParam == null) {
+            errorProcess(result, "재무정보 조회에 실패했습니다.");
+            return result;
+        }
         calParam.setUnit(UNIT);
         if(log.isDebugEnabled()) log.debug("계산 정보 = {}", calParam);
-        if(calParam == null) errorProcess(result, "재무정보 조회에 실패했습니다.");
 
 
         //@2. 계산 ---------------------------------
@@ -369,12 +389,18 @@ public class US_StockCalFromFpmService {
         //@1. 정보 조회 ---------------------------------
         CompanyProfileDataResDto companyProfile = getCompanyProfile(symbol, result);
         if(log.isDebugEnabled()) log.debug("기업 정보 = {}", companyProfile);
-        if(companyProfile == null) errorProcess(result, "기업 정보 조회에 실패했습니다.");
+        if(companyProfile == null) {
+            errorProcess(result, "기업 정보 조회에 실패했습니다.");
+            return result;
+        }
 
         CompanySharePriceCalculator calParam = getCalParamDataV5(symbol, result, resultDetail); // 계산 정보
+        if(calParam == null) {
+            errorProcess(result, "재무정보 조회에 실패했습니다.");
+            return result;
+        }
         calParam.setUnit(UNIT);
         if(log.isDebugEnabled()) log.debug("계산 정보 = {}", calParam);
-        if(calParam == null) errorProcess(result, "재무정보 조회에 실패했습니다.");
 
 
         //@2. 계산 ---------------------------------
@@ -450,16 +476,22 @@ public class US_StockCalFromFpmService {
         //@1. 정보 조회 ---------------------------------
         CompanyProfileDataResDto companyProfile = getCompanyProfile(symbol, result);
         if(log.isDebugEnabled()) log.debug("기업 정보 = {}", companyProfile);
-        if(companyProfile == null) errorProcess(result, "기업 정보 조회에 실패했습니다.");
+        if(companyProfile == null) {
+            errorProcess(result, "기업 정보 조회에 실패했습니다.");
+            return result;
+        }
 
         // 섹터 정보 추출
         String sector = companyProfile.getSector();
         if(log.isDebugEnabled()) log.debug("[V4] 섹터 정보: {}", sector);
 
         CompanySharePriceCalculator calParam = getCalParamDataV5(symbol, result, resultDetail); // 계산 정보 (V3와 동일)
+        if(calParam == null) {
+            errorProcess(result, "재무정보 조회에 실패했습니다.");
+            return result;
+        }
         calParam.setUnit(UNIT);
         if(log.isDebugEnabled()) log.debug("계산 정보 = {}", calParam);
-        if(calParam == null) errorProcess(result, "재무정보 조회에 실패했습니다.");
 
 
         //@2. 계산 (섹터 정보 전달) ---------------------------------
@@ -537,16 +569,22 @@ public class US_StockCalFromFpmService {
         //@1. 정보 조회 ---------------------------------
         CompanyProfileDataResDto companyProfile = getCompanyProfile(symbol, result);
         if(log.isDebugEnabled()) log.debug("기업 정보 = {}", companyProfile);
-        if(companyProfile == null) errorProcess(result, "기업 정보 조회에 실패했습니다.");
+        if(companyProfile == null) {
+            errorProcess(result, "기업 정보 조회에 실패했습니다.");
+            return result;
+        }
 
         // 섹터 정보 추출
         String sector = companyProfile.getSector();
         if(log.isDebugEnabled()) log.debug("섹터 정보: {}", sector);
 
         CompanySharePriceCalculator calParam = getCalParamDataV5(symbol, result, resultDetail); // 계산 정보
+        if(calParam == null) {
+            errorProcess(result, "재무정보 조회에 실패했습니다.");
+            return result;
+        }
         calParam.setUnit(UNIT);
         if(log.isDebugEnabled()) log.debug("계산 정보 = {}", calParam);
-        if(calParam == null) errorProcess(result, "재무정보 조회에 실패했습니다.");
 
 
         //@2. 계산 (섹터 정보 전달) ---------------------------------
