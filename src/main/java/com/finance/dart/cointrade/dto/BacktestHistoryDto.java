@@ -46,4 +46,7 @@ public class BacktestHistoryDto {
 
     @JsonProperty("coin_count")
     private Integer coinCount;
+
+    @JsonProperty("invested_return")
+    private Double investedReturn;
 }
