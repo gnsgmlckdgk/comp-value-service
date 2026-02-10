@@ -234,6 +234,17 @@ public class CointradeConfigController {
         return new ResponseEntity<>(new CommonResponse<>(result), HttpStatus.OK);
     }
 
-
+    /**
+     * 15. 업비트 KRW 잔액 조회
+     * GET /api/cointrade/account/balance
+     */
+    @EndPointConfig.RequireRole({RoleConstants.ROLE_SUPER_ADMIN})
+    @TransactionLogging
+    @GetMapping("/account/balance")
+    public ResponseEntity<CommonResponse<Map<String, Object>>> getAccountBalance() {
+        log.info("업비트 KRW 잔액 조회 요청");
+        Map<String, Object> result = cointradeConfigService.getAccountBalance();
+        return new ResponseEntity<>(new CommonResponse<>(result), HttpStatus.OK);
+    }
 
 }

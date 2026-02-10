@@ -397,6 +397,15 @@ public class CointradeConfigService {
     }
 
     /**
+     * 업비트 KRW 잔액 조회
+     */
+    public Map<String, Object> getAccountBalance() {
+        String url = buildUrl(CoinTraderProgramConfig.API_URI_ACCOUNT_BALANCE);
+        log.info("업비트 KRW 잔액 조회 요청 - URL: {}", url);
+        return httpClientComponent.exchangeSync(url, HttpMethod.GET, new ParameterizedTypeReference<Map<String, Object>>() {}).getBody();
+    }
+
+    /**
      * 보유 종목 매도
      */
     public CointradeSellResponseDto sellHoldings(CointradeSellRequestDto request) {

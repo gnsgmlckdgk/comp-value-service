@@ -66,6 +66,9 @@ public class CoinTraderProgramConfig {
     /** 백테스트 작업 취소 **/
     public static final String API_URI_BACKTEST_CANCEL = "api/backtest/cancel";
 
+    /** 업비트 KRW 잔액 조회 **/
+    public static final String API_URI_ACCOUNT_BALANCE = "api/account/balance";
+
     /** 보유 종목 매도 **/
     public static final String API_URI_HOLDINGS_SELL = "api/holdings/sell";
 
