@@ -580,6 +580,262 @@ public class PerShareValueCalculationService {
     }
 
     /**
+     * <pre>
+     * V6: 주당가치 계산 개선
+     * - 개선1: 실제PER × 0.6 + 섹터PER × 0.4 블렌딩
+     * - 개선2: 분기 추세 할인 (STEP01 계산 후 적용)
+     * - 개선4: 영업이익 연간 추세 할인 (STEP01 계산 전 적용)
+     * </pre>
+     */
+    public String calPerValueV6(CompanySharePriceCalculator req, CompanySharePriceResultDetail resultDetail, String sector) {
+
+        if(log.isDebugEnabled()) log.debug("[V6] CompanySharePriceCalculator = {}", req);
+        if(log.isDebugEnabled()) log.debug("[V6] Sector = {}", sector);
+
+        // 섹터별 파라미터 조회
+        SectorCalculationParameters sectorParams =
+                SectorParameterFactory.getParameters(sector);
+
+        final String per = req.getPer();                                    // PER
+        final String incomGrowth = req.getOperatingIncomeGrowth();          // 영업이익 성장율
+        final String epsGrowth = req.getEpsgrowth();                        // EPS 성장율
+        final String assetsTotal = req.getCurrentAssetsTotal();             // 유동자산합계
+        final String liabilitiesTotal = req.getCurrentLiabilitiesTotal();   // 유동부채합계
+        final String intangibleAssets = req.getIntangibleAssets();          // 무형자산
+        final String totalDebt = req.getTotalDebt();                        // 총부채
+        final String cash = req.getCashAndCashEquivalents();                // 현금성 자산
+        final String currentRatio = req.getCurrentRatio();                  // 유동비율
+        final String investmentAssets = req.getInvestmentAssets();          // 투자자산 (비유동자산 내)
+        final String issuedShares = req.getIssuedShares();                  // 발행주식수
+
+        // 유동부채 차감 비율 (섹터별 적용 여부 반영)
+        final String K;
+        if (sectorParams.isApplyCurrentRatio()) {
+            K = StringUtil.defaultString(getLiabilityFactor(Double.parseDouble(currentRatio)));
+        } else {
+            K = "0";  // 금융업 등은 유동비율 적용 안함
+        }
+
+        // =====================================================================
+        // 개선4: 영업이익 연간 추세 팩터 계산
+        // =====================================================================
+        BigDecimal annualTrendFactor = BigDecimal.ONE;
+        BigDecimal curProfit = new BigDecimal(req.getOperatingProfitCurrent());
+        BigDecimal preProfit = new BigDecimal(req.getOperatingProfitPre());
+        BigDecimal prePreProfit = new BigDecimal(req.getOperatingProfitPrePre());
+
+        if (curProfit.compareTo(preProfit) < 0 && preProfit.compareTo(prePreProfit) < 0) {
+            // 연속 하락: 당기 < 전기 < 전전기
+            annualTrendFactor = new BigDecimal("0.8");
+            resultDetail.set연속하락추세(true);
+        } else if (curProfit.compareTo(preProfit) < 0) {
+            // 단일 하락: 당기 < 전기
+            annualTrendFactor = new BigDecimal("0.9");
+            resultDetail.set단일하락추세(true);
+        } else if (curProfit.compareTo(preProfit) > 0 && preProfit.compareTo(prePreProfit) > 0) {
+            // 연속 상승: 당기 > 전기 > 전전기
+            resultDetail.set연속상승추세(true);
+        }
+        resultDetail.set영업이익추세팩터(annualTrendFactor.toPlainString());
+
+        // STEP01 ------------------------------------------------------------------------------------------------------
+        // (영업이익 3년 평균 × 추세팩터 × 성장률 보정 PER)
+        String operatingProfitAvg = calOperatingProfitAvg(
+                req.getOperatingProfitPrePre(),
+                req.getOperatingProfitPre(),
+                req.getOperatingProfitCurrent()
+        );
+
+        // 개선4: 영업이익 평균에 연간 추세팩터 적용
+        operatingProfitAvg = CalUtil.multi(operatingProfitAvg, annualTrendFactor.toPlainString());
+
+        String adjustedPER;
+        String STEP01;
+
+        BigDecimal perVal = new BigDecimal(per);
+        BigDecimal sectorPER = sectorParams.getBasePER();
+
+        if (perVal.signum() <= 0 || perVal.compareTo(new BigDecimal("100")) > 0) {
+            // PER 이상 또는 적자기업 → 매출 기반 평가
+
+            BigDecimal revenueGrowthVal = new BigDecimal(req.getRevenueGrowth());
+
+            if(perVal.signum() <= 0) {
+                resultDetail.set적자기업(true);
+            }
+
+            // 조건: 매출성장률 > 20% (0.2)
+            if (revenueGrowthVal.compareTo(new BigDecimal("0.2")) > 0) {
+                // PSR 기반 계산
+
+                String revenue = req.getRevenue();
+                String psr = req.getPsr();
+                BigDecimal psrVal = new BigDecimal(psr);
+
+                // 섹터별 PSR 상한 적용
+                BigDecimal maxPsr = sectorParams.getMaxPSR();
+                if(psrVal.compareTo(maxPsr) > 0) {
+                    psr = maxPsr.toPlainString();
+                }
+
+                String growthFactor = getRevenueGrowthFactor(revenueGrowthVal);
+
+                adjustedPER = "0";
+                STEP01 = CalUtil.multi(CalUtil.multi(revenue, psr), growthFactor);
+
+                resultDetail.set매출기반평가(true);
+                resultDetail.set매출액(revenue);
+                resultDetail.setPSR(psr);
+                resultDetail.set매출성장률(revenueGrowthVal.toPlainString());
+                resultDetail.set매출성장률보정계수(growthFactor);
+
+                // V6: 블렌딩PER 미적용 (PSR 경로)
+                resultDetail.set실제PER(per);
+                resultDetail.set섹터PER(sectorPER.toPlainString());
+                resultDetail.set블렌딩PER("N/A (PSR경로)");
+
+            } else {
+                // 자산가치만 계산
+                adjustedPER = "0";
+                STEP01 = "0";
+                resultDetail.set수익가치계산불가(true);
+
+                resultDetail.set실제PER(per);
+                resultDetail.set섹터PER(sectorPER.toPlainString());
+                resultDetail.set블렌딩PER("N/A (자산가치경로)");
+            }
+
+        } else {
+            // 정상 PER 범위 → 영업이익 기반 평가
+
+            BigDecimal preProfitVal = new BigDecimal(req.getOperatingProfitPre());
+            BigDecimal curProfitVal = new BigDecimal(req.getOperatingProfitCurrent());
+            BigDecimal g = new BigDecimal(incomGrowth);
+
+            if (preProfitVal.signum() < 0 && curProfitVal.signum() > 0) {
+                // 흑자전환 기업
+                resultDetail.set흑자전환기업(true);
+
+                // 개선1: 흑자전환이어도 PER이 정상범위면 블렌딩 적용
+                BigDecimal blendedPER = perVal.multiply(new BigDecimal("0.6"))
+                        .add(sectorPER.multiply(new BigDecimal("0.4")));
+                BigDecimal gCapped = g.min(sectorParams.getGrowthRateCap());
+                adjustedPER = CalUtil.multi(blendedPER.toPlainString(), CalUtil.add("1", gCapped.toPlainString()));
+
+                resultDetail.set실제PER(per);
+                resultDetail.set섹터PER(sectorPER.toPlainString());
+                resultDetail.set블렌딩PER(blendedPER.setScale(4, RoundingMode.HALF_UP).toPlainString());
+
+            } else if (preProfitVal.signum() < 0 && curProfitVal.signum() < 0) {
+                // 연속 적자: 섹터 기준 PER만 적용 (블렌딩 미적용)
+                adjustedPER = sectorPER.toPlainString();
+
+                resultDetail.set실제PER(per);
+                resultDetail.set섹터PER(sectorPER.toPlainString());
+                resultDetail.set블렌딩PER("N/A (연속적자)");
+
+            } else {
+                // 정상 케이스: 개선1 - 실제PER × 0.6 + 섹터PER × 0.4
+                BigDecimal gCapped = g.min(sectorParams.getGrowthRateCap());
+                BigDecimal blendedPER = perVal.multiply(new BigDecimal("0.6"))
+                        .add(sectorPER.multiply(new BigDecimal("0.4")));
+                adjustedPER = CalUtil.multi(blendedPER.toPlainString(), CalUtil.add("1", gCapped.toPlainString()));
+
+                resultDetail.set실제PER(per);
+                resultDetail.set섹터PER(sectorPER.toPlainString());
+                resultDetail.set블렌딩PER(blendedPER.setScale(4, RoundingMode.HALF_UP).toPlainString());
+            }
+
+            // 최종 안전장치: adjustedPER 상한 (섹터 기준 PER의 2.5배)
+            BigDecimal adjustedPERVal = new BigDecimal(adjustedPER);
+            BigDecimal maxAdjustedPER = sectorPER.multiply(new BigDecimal("2.5"));
+            if (adjustedPERVal.compareTo(maxAdjustedPER) > 0) {
+                adjustedPER = maxAdjustedPER.setScale(4, RoundingMode.HALF_UP).toPlainString();
+            }
+
+            STEP01 = CalUtil.multi(operatingProfitAvg, adjustedPER);
+        }
+
+        // =====================================================================
+        // 개선2: 분기 추세 할인 (STEP01 계산 후 적용)
+        // =====================================================================
+        BigDecimal quarterlyTrendFactor = BigDecimal.ONE;
+        String q1Str = req.getQuarterlyOpIncomeQ1();
+        String q2Str = req.getQuarterlyOpIncomeQ2();
+        String q3Str = req.getQuarterlyOpIncomeQ3();
+        String q4Str = req.getQuarterlyOpIncomeQ4();
+
+        if (!StringUtil.isStringEmpty(q1Str) && !StringUtil.isStringEmpty(q2Str)
+                && !StringUtil.isStringEmpty(q3Str) && !StringUtil.isStringEmpty(q4Str)) {
+
+            BigDecimal q1 = new BigDecimal(q1Str);
+            BigDecimal q2 = new BigDecimal(q2Str);
+            BigDecimal q3 = new BigDecimal(q3Str);
+            BigDecimal q4 = new BigDecimal(q4Str);
+
+            BigDecimal recentHalf = q1.add(q2);
+            BigDecimal olderHalf = q3.add(q4);
+
+            if (q1.compareTo(q2) < 0 && recentHalf.compareTo(olderHalf) < 0) {
+                // 연속 분기 악화: Q1 < Q2 AND (Q1+Q2) < (Q3+Q4)
+                quarterlyTrendFactor = new BigDecimal("0.7");
+                resultDetail.set분기실적악화(true);
+            } else if (q1.compareTo(q2) < 0) {
+                // 단일 분기 악화: Q1 < Q2
+                quarterlyTrendFactor = new BigDecimal("0.85");
+                resultDetail.set분기실적악화(true);
+            }
+
+            resultDetail.set분기영업이익_Q1(q1Str);
+            resultDetail.set분기영업이익_Q2(q2Str);
+            resultDetail.set분기영업이익_Q3(q3Str);
+            resultDetail.set분기영업이익_Q4(q4Str);
+        }
+        resultDetail.set분기추세팩터(quarterlyTrendFactor.toPlainString());
+
+        // STEP01에 분기 추세팩터 적용
+        STEP01 = CalUtil.multi(STEP01, quarterlyTrendFactor.toPlainString());
+
+        resultDetail.setPER(per);
+        resultDetail.set영업이익성장률(incomGrowth);
+        resultDetail.set성장률보정PER(adjustedPER);
+        resultDetail.setPEG(calPeg(per, epsGrowth));
+
+        // STEP02 ------------------------------------------------------------------------------------------------------
+        // (유동자산 − (유동부채 × 비율) + 투자자산)
+        final String STEP02 = CalUtil.add(CalUtil.sub(assetsTotal, CalUtil.multi(liabilitiesTotal, K)), investmentAssets);
+
+        // STEP03 ------------------------------------------------------------------------------------------------------
+        // (무형자산 × 섹터별 가중치)
+        BigDecimal intangibleWeight = sectorParams.getIntangibleAssetWeight();
+        final String STEP03 = CalUtil.multi(intangibleAssets, intangibleWeight.toPlainString());
+
+        // STEP04 (계산에서 제외됨) ------------------------------------------------------------------------------------------------------
+        // (최근 3년 평균 R&D) - 참고용
+        String rndAvg = calRnDAvg(req.getRndPrePre(), req.getRndPre(), req.getRndCurrent());
+        resultDetail.set연구개발비_평균(rndAvg);
+
+        // STEP05 ------------------------------------------------------------------------------------------------------
+        // (순부채)
+        String netDebt = CalUtil.sub(totalDebt, cash);
+        final String STEP05 = netDebt;
+        resultDetail.set순부채(netDebt);
+
+        // 계산
+        String rst01 = CalUtil.add(STEP01, STEP02);
+        String rst02 = CalUtil.add(rst01, STEP03);
+        String rst04 = CalUtil.sub(rst02, STEP05);
+        String result = CalUtil.divide(rst04, issuedShares, RoundingMode.HALF_EVEN);
+
+        if(log.isDebugEnabled()) {
+            log.debug("[V6 계산] 섹터:{}, 연간추세:{}, 분기추세:{}, STEP01:{}, STEP02:{}, STEP03:{}, STEP05:{}, 결과:{}",
+                    sector, annualTrendFactor, quarterlyTrendFactor, STEP01, STEP02, STEP03, STEP05, result);
+        }
+
+        return result;
+    }
+
+    /**
      * 한 주당 가치를 계산한다.
      *
      * @param req 계산에 필요한 데이터가 담긴 StockValueManualReqDTO

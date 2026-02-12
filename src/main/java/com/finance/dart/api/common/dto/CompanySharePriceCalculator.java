@@ -165,6 +165,28 @@ public class CompanySharePriceCalculator {
     @SerializedName("cashAndCashEquivalents")
     private String cashAndCashEquivalents;
 
+    // 분기 영업이익 (V6 추가) ====================================
+    /**
+     * 최근 1분기 영업이익
+     */
+    @SerializedName("quarterlyOpIncomeQ1")
+    private String quarterlyOpIncomeQ1;
+    /**
+     * 최근 2분기 영업이익
+     */
+    @SerializedName("quarterlyOpIncomeQ2")
+    private String quarterlyOpIncomeQ2;
+    /**
+     * 최근 3분기 영업이익
+     */
+    @SerializedName("quarterlyOpIncomeQ3")
+    private String quarterlyOpIncomeQ3;
+    /**
+     * 최근 4분기 영업이익
+     */
+    @SerializedName("quarterlyOpIncomeQ4")
+    private String quarterlyOpIncomeQ4;
+
     // ---------------------- 필수값 아님
 
     /**

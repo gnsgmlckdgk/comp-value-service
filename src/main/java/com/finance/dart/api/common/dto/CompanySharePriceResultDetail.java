@@ -68,6 +68,25 @@ public class CompanySharePriceResultDetail {
     private String PSR = "N/A";
 
 
+    /** V6 추가: PER 블렌딩 **/
+    private String 실제PER = "N/A";
+    private String 섹터PER = "N/A";
+    private String 블렌딩PER = "N/A";
+
+    /** V6 추가: 분기 추세 **/
+    private String 분기영업이익_Q1 = "N/A";
+    private String 분기영업이익_Q2 = "N/A";
+    private String 분기영업이익_Q3 = "N/A";
+    private String 분기영업이익_Q4 = "N/A";
+    private String 분기추세팩터 = "N/A";
+    private boolean 분기실적악화 = false;
+
+    /** V6 추가: 연간 영업이익 추세 **/
+    private String 영업이익추세팩터 = "N/A";
+    private boolean 연속하락추세 = false;
+    private boolean 단일하락추세 = false;
+    private boolean 연속상승추세 = false;
+
     public CompanySharePriceResultDetail(String unit) {
         this.단위 = unit;
     }
