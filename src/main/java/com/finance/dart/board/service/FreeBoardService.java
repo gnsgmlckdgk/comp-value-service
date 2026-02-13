@@ -18,6 +18,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -32,6 +33,7 @@ public class FreeBoardService {
     private final FreeBoardRepository freeBoardRepository;
     private final MemberService memberService;
     private final SessionService sessionService;
+    private final FreeBoardAttachmentService attachmentService;
 
     /**
      * Entity -> DTO 변환
@@ -70,13 +72,16 @@ public class FreeBoardService {
         dto.setCreatedAt(board.getCreatedAt().format(formatter));
         dto.setUpdatedAt(board.getUpdatedAt().format(formatter));
 
+        // 첨부파일 목록
+        dto.setAttachments(attachmentService.getAttachments(board.getId()));
+
         return dto;
     }
 
     /**
      * 게시글 생성
      */
-    public FreeBoardDto createBoard(HttpServletRequest request, FreeBoardDto boardDto) {
+    public FreeBoardDto createBoard(HttpServletRequest request, FreeBoardDto boardDto, List<MultipartFile> files) {
         // 로그인 회원 정보
         Member member = memberService.getLoginMember(request);
         if (member == null) {
@@ -112,6 +117,11 @@ public class FreeBoardService {
         board.setUpdatedAt(LocalDateTime.now());
 
         FreeBoard savedBoard = freeBoardRepository.save(board);
+
+        // 첨부파일 저장
+        if (files != null && !files.isEmpty()) {
+            attachmentService.saveAttachments(savedBoard, files);
+        }
 
         // Entity -> DTO 변환하여 반환
         return convertToDto(savedBoard, member.getId());
@@ -219,7 +229,8 @@ public class FreeBoardService {
      * 게시글 수정
      */
     @Transactional
-    public FreeBoardDto updateBoard(HttpServletRequest request, Long id, FreeBoardDto boardDto) {
+    public FreeBoardDto updateBoard(HttpServletRequest request, Long id, FreeBoardDto boardDto,
+                                        List<MultipartFile> files, List<Long> deleteAttachmentIds) {
         Optional<FreeBoard> boardOpt = freeBoardRepository.findById(id);
         FreeBoard board = boardOpt.orElseThrow(() ->
                 new BizException("게시글을 찾을 수 없습니다."));
@@ -242,6 +253,11 @@ public class FreeBoardService {
             }
         }
 
+        // 삭제 대상 첨부파일 처리
+        if (deleteAttachmentIds != null && !deleteAttachmentIds.isEmpty()) {
+            attachmentService.deleteAttachmentsByIds(deleteAttachmentIds);
+        }
+
         // 수정
         board.setTitle(boardDto.getTitle());
         board.setContent(boardDto.getContent());
@@ -250,6 +266,11 @@ public class FreeBoardService {
         board.setUpdatedAt(LocalDateTime.now());
 
         FreeBoard savedBoard = freeBoardRepository.save(board);
+
+        // 새 첨부파일 저장
+        if (files != null && !files.isEmpty()) {
+            attachmentService.saveAttachments(savedBoard, files);
+        }
 
         return convertToDto(savedBoard, loginMember.getId());
     }
@@ -267,6 +288,9 @@ public class FreeBoardService {
 
         // 권한 체크
         validateDeletePermission(request, loginMember, board);
+
+        // 물리파일 삭제
+        attachmentService.deleteAllAttachments(id);
 
         freeBoardRepository.delete(board);
     }

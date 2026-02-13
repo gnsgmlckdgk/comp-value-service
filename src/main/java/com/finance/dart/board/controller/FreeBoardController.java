@@ -12,8 +12,12 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
+
+import java.util.List;
 
 
 @Slf4j
@@ -53,23 +57,26 @@ public class FreeBoardController {
     }
 
     @TransactionLogging
-    @PostMapping("/regi")
+    @PostMapping(value = "/regi", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<CommonResponse<FreeBoardDto>> regiFreeBoard(
             HttpServletRequest request,
-            @RequestBody FreeBoardDto freeBoard) {
+            @RequestPart("board") FreeBoardDto freeBoard,
+            @RequestPart(value = "files", required = false) List<MultipartFile> files) {
 
-        FreeBoardDto registedBoard = freeBoardService.createBoard(request, freeBoard);
+        FreeBoardDto registedBoard = freeBoardService.createBoard(request, freeBoard, files);
 
         return new ResponseEntity<>(new CommonResponse<>(registedBoard), HttpStatus.CREATED);
     }
 
     @TransactionLogging
-    @PutMapping("/modi")
+    @PutMapping(value = "/modi", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<CommonResponse<FreeBoardDto>> modiFreeBoard(
             HttpServletRequest request,
-            @RequestBody FreeBoardDto freeBoard) {
+            @RequestPart("board") FreeBoardDto freeBoard,
+            @RequestPart(value = "files", required = false) List<MultipartFile> files,
+            @RequestPart(value = "deleteAttachmentIds", required = false) List<Long> deleteAttachmentIds) {
 
-        FreeBoardDto updateBoard = freeBoardService.updateBoard(request, freeBoard.getId(), freeBoard);
+        FreeBoardDto updateBoard = freeBoardService.updateBoard(request, freeBoard.getId(), freeBoard, files, deleteAttachmentIds);
 
         return new ResponseEntity<>(new CommonResponse<>(updateBoard), HttpStatus.OK);
     }

@@ -2,6 +2,8 @@ package com.finance.dart.board.dto;
 
 import lombok.Data;
 
+import java.util.List;
+
 /**
  * 자유게시판 DTO
  */
@@ -22,4 +24,6 @@ public class FreeBoardDto {
 
     private String createdAt;       // 작성일
     private String updatedAt;       // 수정일
+
+    private List<FreeBoardAttachmentDto> attachments;  // 첨부파일 목록
 }
