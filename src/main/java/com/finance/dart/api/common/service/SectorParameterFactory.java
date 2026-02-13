@@ -25,6 +25,9 @@ public class SectorParameterFactory {
                 .growthRateCap(new BigDecimal("1.5"))
                 .applyCurrentRatio(true)
                 .rndWeight(new BigDecimal("1.0"))
+                .maxPER(new BigDecimal("35"))
+                .maxPBR(new BigDecimal("10"))
+                .maxPERxPBR(new BigDecimal("200"))
                 .build());
 
         // Communication Services (통신 서비스)
@@ -36,6 +39,9 @@ public class SectorParameterFactory {
                 .growthRateCap(new BigDecimal("1.2"))
                 .applyCurrentRatio(true)
                 .rndWeight(new BigDecimal("0.8"))
+                .maxPER(new BigDecimal("28"))
+                .maxPBR(new BigDecimal("6"))
+                .maxPERxPBR(new BigDecimal("120"))
                 .build());
 
         // Healthcare (헬스케어)
@@ -47,6 +53,9 @@ public class SectorParameterFactory {
                 .growthRateCap(new BigDecimal("1.0"))
                 .applyCurrentRatio(true)
                 .rndWeight(new BigDecimal("1.2"))
+                .maxPER(new BigDecimal("28"))
+                .maxPBR(new BigDecimal("6"))
+                .maxPERxPBR(new BigDecimal("120"))
                 .build());
 
         // Consumer Cyclical (임의 소비재)
@@ -58,6 +67,9 @@ public class SectorParameterFactory {
                 .growthRateCap(new BigDecimal("0.8"))
                 .applyCurrentRatio(true)
                 .rndWeight(new BigDecimal("0.5"))
+                .maxPER(new BigDecimal("22"))
+                .maxPBR(new BigDecimal("4"))
+                .maxPERxPBR(new BigDecimal("66"))
                 .build());
 
         // Consumer Defensive (필수 소비재)
@@ -69,6 +81,9 @@ public class SectorParameterFactory {
                 .growthRateCap(new BigDecimal("0.3"))
                 .applyCurrentRatio(true)
                 .rndWeight(new BigDecimal("0.3"))
+                .maxPER(new BigDecimal("22"))
+                .maxPBR(new BigDecimal("4"))
+                .maxPERxPBR(new BigDecimal("66"))
                 .build());
 
         // Industrials (산업재)
@@ -80,6 +95,9 @@ public class SectorParameterFactory {
                 .growthRateCap(new BigDecimal("0.5"))
                 .applyCurrentRatio(true)
                 .rndWeight(new BigDecimal("0.6"))
+                .maxPER(new BigDecimal("20"))
+                .maxPBR(new BigDecimal("3"))
+                .maxPERxPBR(new BigDecimal("45"))
                 .build());
 
         // Financial Services (금융)
@@ -91,6 +109,9 @@ public class SectorParameterFactory {
                 .growthRateCap(new BigDecimal("0.4"))
                 .applyCurrentRatio(false)  // 금융업은 유동비율 적용 안함
                 .rndWeight(new BigDecimal("0.1"))
+                .maxPER(new BigDecimal("15"))
+                .maxPBR(new BigDecimal("2"))
+                .maxPERxPBR(new BigDecimal("22.5"))
                 .build());
 
         // Real Estate (부동산)
@@ -102,6 +123,9 @@ public class SectorParameterFactory {
                 .growthRateCap(new BigDecimal("0.4"))
                 .applyCurrentRatio(true)
                 .rndWeight(new BigDecimal("0.1"))
+                .maxPER(new BigDecimal("22"))
+                .maxPBR(new BigDecimal("3"))
+                .maxPERxPBR(new BigDecimal("50"))
                 .build());
 
         // Energy (에너지)
@@ -113,6 +137,9 @@ public class SectorParameterFactory {
                 .growthRateCap(new BigDecimal("0.6"))
                 .applyCurrentRatio(true)
                 .rndWeight(new BigDecimal("0.4"))
+                .maxPER(new BigDecimal("18"))
+                .maxPBR(new BigDecimal("2.5"))
+                .maxPERxPBR(new BigDecimal("33"))
                 .build());
 
         // Basic Materials (기초 소재)
@@ -124,6 +151,9 @@ public class SectorParameterFactory {
                 .growthRateCap(new BigDecimal("0.5"))
                 .applyCurrentRatio(true)
                 .rndWeight(new BigDecimal("0.5"))
+                .maxPER(new BigDecimal("18"))
+                .maxPBR(new BigDecimal("2.5"))
+                .maxPERxPBR(new BigDecimal("33"))
                 .build());
 
         // Utilities (유틸리티)
@@ -135,6 +165,9 @@ public class SectorParameterFactory {
                 .growthRateCap(new BigDecimal("0.2"))
                 .applyCurrentRatio(true)
                 .rndWeight(new BigDecimal("0.2"))
+                .maxPER(new BigDecimal("18"))
+                .maxPBR(new BigDecimal("2.5"))
+                .maxPERxPBR(new BigDecimal("33"))
                 .build());
     }
 
@@ -149,6 +182,9 @@ public class SectorParameterFactory {
             .growthRateCap(new BigDecimal("1.0"))
             .applyCurrentRatio(true)
             .rndWeight(new BigDecimal("0.5"))
+            .maxPER(new BigDecimal("20"))
+            .maxPBR(new BigDecimal("3"))
+            .maxPERxPBR(new BigDecimal("45"))
             .build();
 
     /**

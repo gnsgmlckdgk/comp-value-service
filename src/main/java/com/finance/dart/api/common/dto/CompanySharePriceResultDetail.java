@@ -87,6 +87,20 @@ public class CompanySharePriceResultDetail {
     private boolean 단일하락추세 = false;
     private boolean 연속상승추세 = false;
 
+    /** V7 추가 **/
+    private boolean 급락종목할인 = false;
+    private boolean 분기적자전환 = false;
+    private String PBR = "N/A";
+
+    /** V7 그레이엄 스크리닝 **/
+    private boolean 그레이엄_PER통과 = false;
+    private boolean 그레이엄_PBR통과 = false;
+    private boolean 그레이엄_복합통과 = false;   // PER×PBR 체크
+    private boolean 그레이엄_유동비율통과 = false;
+    private boolean 그레이엄_연속흑자통과 = false;
+    private int 그레이엄_통과수 = 0;            // 0~5
+    private String 그레이엄_등급 = "N/A";       // "강력매수"/"매수"/"관망"/"위험"
+
     public CompanySharePriceResultDetail(String unit) {
         this.단위 = unit;
     }

@@ -28,7 +28,9 @@ import com.finance.dart.api.common.context.RequestContext;
 import com.finance.dart.api.common.dto.CompanySharePriceCalculator;
 import com.finance.dart.api.common.dto.CompanySharePriceResult;
 import com.finance.dart.api.common.dto.CompanySharePriceResultDetail;
+import com.finance.dart.api.common.dto.SectorCalculationParameters;
 import com.finance.dart.api.common.service.PerShareValueCalculationService;
+import com.finance.dart.api.common.service.SectorParameterFactory;
 import com.finance.dart.common.component.RedisComponent;
 import com.finance.dart.common.component.RedisKeyGenerator;
 import com.finance.dart.common.exception.BizException;
@@ -84,7 +86,7 @@ public class US_StockCalFromFpmService {
      * @throws Exception
      */
     public CompanySharePriceResult calPerValue(String symbol) throws Exception {
-        return calPerValueV6(symbol);
+        return calPerValueV7(symbol);
     }
 
     /**
@@ -95,7 +97,7 @@ public class US_StockCalFromFpmService {
      * @throws Exception
      */
     public List<CompanySharePriceResult> calPerValueList(String symbols, String detail) throws Exception {
-        return calPerValueListV6(symbols, detail);
+        return calPerValueListV7(symbols, detail);
     }
 
 
@@ -1609,6 +1611,228 @@ public class US_StockCalFromFpmService {
                 resultList.add(result);
             } catch (Exception e) {
                 log.error("[V6 대량조회] {} 처리 중 오류: {}", symbol, e.getMessage());
+                CompanySharePriceResult errorResult = new CompanySharePriceResult();
+                errorResult.set기업심볼(symbol);
+                errorProcess(errorResult, "처리 중 오류가 발생했습니다.");
+                resultList.add(errorResult);
+            }
+            Thread.sleep(TRSC_DELAY);
+        }
+
+        return resultList;
+    }
+
+    // ============================================================== V7
+
+    /**
+     * V7: 가중평균 + PER상한강화 + 급락할인 + 분기적자감지 + 안전마진 + 그레이엄스크리닝
+     * @param symbol
+     * @return
+     * @throws Exception
+     */
+    public CompanySharePriceResult calPerValueV7(String symbol)
+            throws Exception {
+
+        final String VERSION = "v7";
+        final String UNIT = "1";
+        final String resultDataRedisKey = RedisKeyGenerator.genAbroadCompValueRstData(symbol, VERSION);
+
+        //@ Redis 저장값 확인(캐시 역할)
+        String saveData = redisComponent.getValue(resultDataRedisKey);
+        if(!StringUtil.isStringEmpty(saveData)) {
+            return new Gson().fromJson(saveData, CompanySharePriceResult.class);
+        }
+
+        CompanySharePriceResult result = new CompanySharePriceResult();
+        result.set기업심볼(symbol);
+        CompanySharePriceResultDetail resultDetail = new CompanySharePriceResultDetail(UNIT);
+
+        //@1. 정보 조회 ---------------------------------
+        CompanyProfileDataResDto companyProfile = getCompanyProfile(symbol, result);
+        if(log.isDebugEnabled()) log.debug("[V7] 기업 정보 = {}", companyProfile);
+        if(companyProfile == null) {
+            errorProcess(result, "기업 정보 조회에 실패했습니다.");
+            return result;
+        }
+
+        // 섹터 정보 추출
+        String sector = companyProfile.getSector();
+        if(log.isDebugEnabled()) log.debug("[V7] 섹터 정보: {}", sector);
+
+        CompanySharePriceCalculator calParam = getCalParamDataV6(symbol, result, resultDetail);
+        if(calParam == null) {
+            errorProcess(result, "재무정보 조회에 실패했습니다.");
+            return result;
+        }
+        calParam.setUnit(UNIT);
+        if(log.isDebugEnabled()) log.debug("[V7] 계산 정보 = {}", calParam);
+
+        //@2. PBR 데이터 수집 ---------------------------------
+        FinancialRatiosTTM_ReqDto financialRatiosTTM_ReqDto = new FinancialRatiosTTM_ReqDto(symbol);
+        List<FinancialRatiosTTM_ResDto> financialRatios = financialRatiosService.findFinancialRatiosTTM(financialRatiosTTM_ReqDto);
+        Double pbrTTM = null;
+        if (financialRatios != null && !financialRatios.isEmpty()) {
+            pbrTTM = financialRatios.get(0).getPriceToBookRatioTTM();
+        }
+        if (pbrTTM != null) {
+            resultDetail.setPBR(String.valueOf(pbrTTM));
+        }
+
+        //@3. 계산 (V7 로직) ---------------------------------
+        String 계산된주당가치 = sharePriceCalculatorService.calPerValueV7(calParam, resultDetail, sector);
+
+        //@3-1. 52주 최고가 조회 및 적정가 조정 (캡 비율 0.7) ---------------------------------
+        String 조정된주당가치;
+        Double historicalHigh52W = get52WeekHighPrice(symbol);
+
+        if (historicalHigh52W != null) {
+            BigDecimal 계산값 = new BigDecimal(계산된주당가치);
+            BigDecimal 최고가 = BigDecimal.valueOf(historicalHigh52W);
+
+            if (계산값.compareTo(최고가) > 0) {
+                조정된주당가치 = 최고가.multiply(new BigDecimal("0.7"))
+                        .setScale(2, RoundingMode.HALF_UP)
+                        .toPlainString();
+                if(log.isDebugEnabled()) {
+                    log.debug("[V7 적정가 조정] {} - 계산값({}) > 52주최고가({}) → 조정값({})",
+                            symbol, 계산값, 최고가, 조정된주당가치);
+                }
+            } else {
+                조정된주당가치 = 계산된주당가치;
+            }
+
+            // 개선D: 52주 고점 대비 30%+ 급락 → 추가 20% 할인
+            BigDecimal currentPriceVal = new BigDecimal(StringUtil.defaultString(companyProfile.getPrice(), "0"));
+            if (currentPriceVal.compareTo(BigDecimal.ZERO) > 0 && 최고가.compareTo(BigDecimal.ZERO) > 0) {
+                BigDecimal dropRate = BigDecimal.ONE.subtract(currentPriceVal.divide(최고가, 4, RoundingMode.HALF_UP));
+                if (dropRate.compareTo(new BigDecimal("0.3")) >= 0) {
+                    조정된주당가치 = new BigDecimal(조정된주당가치)
+                            .multiply(new BigDecimal("0.8"))
+                            .setScale(2, RoundingMode.HALF_UP)
+                            .toPlainString();
+                    resultDetail.set급락종목할인(true);
+                    if(log.isDebugEnabled()) {
+                        log.debug("[V7 급락할인] {} - 현재가({}) 52주최고가({}) 대비 {:.1f}% 하락 → 추가 20% 할인",
+                                symbol, currentPriceVal, 최고가, dropRate.multiply(new BigDecimal("100")));
+                    }
+                }
+            }
+        } else {
+            조정된주당가치 = 계산된주당가치;
+            if(log.isDebugEnabled()) {
+                log.debug("[V7 적정가 조정] {} - 52주 최고가 데이터 없음, 원본값 사용", symbol);
+            }
+        }
+
+        //@4. 개선A: 매수적정가 = 조정된주당가치 × 0.7 (안전마진 30%) ---------------------------------
+        String 매수적정가 = new BigDecimal(조정된주당가치)
+                .multiply(new BigDecimal("0.7"))
+                .setScale(2, RoundingMode.HALF_UP)
+                .toPlainString();
+
+        //@5. 목표매도가 = 조정된주당가치 (적정가 도달 시 매도) ---------------------------------
+        String 목표매도가 = new BigDecimal(조정된주당가치)
+                .setScale(2, RoundingMode.HALF_UP)
+                .toPlainString();
+
+        //@6. 그레이엄 스크리닝 ---------------------------------
+        SectorCalculationParameters sectorParams = SectorParameterFactory.getParameters(sector);
+        try {
+            BigDecimal perVal = new BigDecimal(calParam.getPer());
+
+            // PER 체크
+            boolean perPass = perVal.compareTo(BigDecimal.ZERO) > 0 && perVal.compareTo(sectorParams.getMaxPER()) <= 0;
+            resultDetail.set그레이엄_PER통과(perPass);
+
+            // PBR 체크
+            boolean pbrPass = false;
+            BigDecimal pbrVal = BigDecimal.ZERO;
+            if (pbrTTM != null) {
+                pbrVal = BigDecimal.valueOf(pbrTTM);
+                pbrPass = pbrVal.compareTo(BigDecimal.ZERO) > 0 && pbrVal.compareTo(sectorParams.getMaxPBR()) <= 0;
+            }
+            resultDetail.set그레이엄_PBR통과(pbrPass);
+
+            // PER × PBR 복합 체크
+            boolean compositePass = false;
+            if (perVal.compareTo(BigDecimal.ZERO) > 0 && pbrVal.compareTo(BigDecimal.ZERO) > 0) {
+                compositePass = perVal.multiply(pbrVal).compareTo(sectorParams.getMaxPERxPBR()) <= 0;
+            }
+            resultDetail.set그레이엄_복합통과(compositePass);
+
+            // 유동비율 체크 (금융 제외)
+            BigDecimal currentRatioVal = new BigDecimal(calParam.getCurrentRatio());
+            boolean crPass = !sectorParams.isApplyCurrentRatio() || currentRatioVal.compareTo(new BigDecimal("1.5")) >= 0;
+            resultDetail.set그레이엄_유동비율통과(crPass);
+
+            // 3년 연속 흑자 체크
+            boolean profitPass = new BigDecimal(calParam.getOperatingProfitPrePre()).signum() > 0
+                    && new BigDecimal(calParam.getOperatingProfitPre()).signum() > 0
+                    && new BigDecimal(calParam.getOperatingProfitCurrent()).signum() > 0;
+            resultDetail.set그레이엄_연속흑자통과(profitPass);
+
+            // 통과 수 및 등급
+            int passCount = (perPass?1:0) + (pbrPass?1:0) + (compositePass?1:0) + (crPass?1:0) + (profitPass?1:0);
+            resultDetail.set그레이엄_통과수(passCount);
+            resultDetail.set그레이엄_등급(passCount >= 5 ? "강력매수" : passCount >= 4 ? "매수" : passCount >= 3 ? "관망" : "위험");
+        } catch (Exception e) {
+            log.warn("[V7 그레이엄 스크리닝] {} - 스크리닝 실패: {}", symbol, e.getMessage());
+        }
+
+        //@7. AI 예측값 조회 ---------------------------------
+        PredictionResponseDto predictionResponseDto = predictWeeklyHigh(symbol);
+
+        //@8. 결과 조립 ---------------------------------
+        result.set버전(VERSION.toUpperCase());
+        result.set섹터(sector);
+        if(StringUtil.isStringEmpty(result.get결과메시지())) result.set결과메시지("정상 처리되었습니다.");
+        result.set주당가치(조정된주당가치);
+        result.set계산된주당가치(계산된주당가치);
+        result.set매수적정가(매수적정가);
+        result.set목표매도가(목표매도가);
+        result.set현재가격(StringUtil.defaultString(companyProfile.getPrice()));
+        result.set확인시간(DateUtil.getToday("yyyy-MM-dd HH:mm:ss"));
+        result.set예측데이터(predictionResponseDto);
+        setRstDetailContextData(resultDetail);
+
+        result.set상세정보(resultDetail);
+
+        //@ Redis에 결과값 저장(캐시 역할)
+        redisComponent.saveValueWithTtl(resultDataRedisKey, new Gson().toJson(result), 6, TimeUnit.HOURS);
+
+        return result;
+    }
+
+    /**
+     * 주당 가치 계산(다건) V7
+     * @param symbols
+     * @param detail
+     * @return
+     * @throws Exception
+     */
+    public List<CompanySharePriceResult> calPerValueListV7(String symbols, String detail) throws Exception {
+
+        final int MAX_CAL_SYMBOL_SIZE = 30;
+
+        List<CompanySharePriceResult> resultList = new LinkedList<>();
+
+        if(symbols == null) return null;
+        List<String> symbolList = Arrays.stream(symbols.split(","))
+                .map(String::trim)
+                .filter(s -> !s.isEmpty())
+                .toList();
+
+        if(symbolList.size() > MAX_CAL_SYMBOL_SIZE) {
+            throw new BizException("동시 조회는 " + MAX_CAL_SYMBOL_SIZE + "건 까지만 가능합니다.");
+        }
+
+        for(String symbol : symbolList) {
+            try {
+                CompanySharePriceResult result = calPerValueV7(symbol);
+                if("F".equals(StringUtil.defaultString(detail))) result.set상세정보(null);
+                resultList.add(result);
+            } catch (Exception e) {
+                log.error("[V7 대량조회] {} 처리 중 오류: {}", symbol, e.getMessage());
                 CompanySharePriceResult errorResult = new CompanySharePriceResult();
                 errorResult.set기업심볼(symbol);
                 errorProcess(errorResult, "처리 중 오류가 발생했습니다.");

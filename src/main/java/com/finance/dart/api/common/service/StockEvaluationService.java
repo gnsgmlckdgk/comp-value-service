@@ -209,28 +209,29 @@ public class StockEvaluationService {
 
     /**
      * Step 2: 신뢰도 확인 (25점)
-     * - PER 정상 범위 (5~30): +10점
-     * - 순부채 건전 (음수 또는 낮음): +10점
+     * - PER 정상 범위 (5~30): +7점
+     * - 순부채 건전 (음수 또는 낮음): +8점
      * - 영업이익 안정성: +5점
+     * - 그레이엄 기준 통과: +5점
      */
     private double evaluateStep2(CompanySharePriceResultDetail detail, List<StepEvaluationDetail> stepDetails) {
         double score = 0;
         StringBuilder details = new StringBuilder();
 
-        // PER 평가 (10점)
+        // PER 평가 (7점)
         String perStr = detail.getPER();
         if (!StringUtil.isStringEmpty(perStr) && !"N/A".equals(perStr)) {
             try {
                 double per = Double.parseDouble(perStr);
                 if (per >= EvaluationConst.PER_MIN_NORMAL && per <= EvaluationConst.PER_MAX_NORMAL) {
-                    score += 10;
-                    details.append(String.format("✅ PER %.2f (정상 범위 5~30, +10점). ", per));
+                    score += 7;
+                    details.append(String.format("✅ PER %.2f (정상 범위 5~30, +7점). ", per));
                 } else if (per < EvaluationConst.PER_HIGH_RISK) {
-                    score += 6;
-                    details.append(String.format("⚠️ PER %.2f (보통, +6점). ", per));
+                    score += 4;
+                    details.append(String.format("⚠️ PER %.2f (보통, +4점). ", per));
                 } else {
-                    score += 2;
-                    details.append(String.format("❌ PER %.2f (고평가 가능성, +2점). ", per));
+                    score += 1;
+                    details.append(String.format("❌ PER %.2f (고평가 가능성, +1점). ", per));
                 }
             } catch (Exception e) {
                 details.append("PER 정보 없음 (+0점). ");
@@ -239,17 +240,17 @@ public class StockEvaluationService {
             details.append("PER 정보 없음 (+0점). ");
         }
 
-        // 순부채 평가 (10점)
+        // 순부채 평가 (8점)
         String netDebtStr = detail.get순부채();
         if (!StringUtil.isStringEmpty(netDebtStr) && !"N/A".equals(netDebtStr)) {
             try {
                 double netDebt = Double.parseDouble(netDebtStr);
                 if (netDebt < 0) {
-                    score += 10;
-                    details.append("✅ 순부채 음수 (현금이 부채보다 많음, 매우 건전, +10점). ");
+                    score += 8;
+                    details.append("✅ 순부채 음수 (현금이 부채보다 많음, 매우 건전, +8점). ");
                 } else if (netDebt < 100000000000.0) {  // 1000억 미만
-                    score += 6;
-                    details.append("✅ 순부채 건전 (+6점). ");
+                    score += 5;
+                    details.append("✅ 순부채 건전 (+5점). ");
                 } else {
                     score += 2;
                     details.append("⚠️ 순부채 높음 (+2점). ");
@@ -288,6 +289,21 @@ public class StockEvaluationService {
             }
         } else {
             details.append("영업이익 정보 없음 (+0점). ");
+        }
+
+        // 그레이엄 기준 통과 (5점)
+        int grahamPassCount = detail.get그레이엄_통과수();
+        if (grahamPassCount >= 5) {
+            score += 5;
+            details.append("🌟 그레이엄 5/5 통과 (+5점). ");
+        } else if (grahamPassCount >= 4) {
+            score += 3;
+            details.append("✅ 그레이엄 " + grahamPassCount + "/5 통과 (+3점). ");
+        } else if (grahamPassCount >= 3) {
+            score += 2;
+            details.append("⚠️ 그레이엄 " + grahamPassCount + "/5 통과 (+2점). ");
+        } else {
+            details.append("❌ 그레이엄 " + grahamPassCount + "/5 통과 (+0점). ");
         }
 
         stepDetails.add(StepEvaluationDetail.builder()

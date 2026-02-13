@@ -46,4 +46,19 @@ public class SectorCalculationParameters {
      * 섹터명
      */
     private String sectorName;
+
+    /**
+     * 그레이엄 PER 상한 (V7)
+     */
+    private BigDecimal maxPER;
+
+    /**
+     * 그레이엄 PBR 상한 (V7)
+     */
+    private BigDecimal maxPBR;
+
+    /**
+     * 그레이엄 PER×PBR 상한 (V7)
+     */
+    private BigDecimal maxPERxPBR;
 }

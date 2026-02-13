@@ -29,6 +29,9 @@ public class CompanySharePriceResult {
     private String 버전 = "";
     private String 섹터 = "";             // 섹터명 (V4 이후 추가됨)
 
+    private String 매수적정가 = "";         // 안전마진 30% 적용 매수가 (V7~)
+    private String 목표매도가 = "";         // 적정가 = 매도 목표가 (V7~)
+
     private PredictionResponseDto 예측데이터;    // 예측데이터 (V5 이후 추가됨)
 
     @JsonInclude(JsonInclude.Include.NON_NULL)
