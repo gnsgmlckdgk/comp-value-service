@@ -13,6 +13,15 @@ public class RedisKeyGenerator {
     }
 
     /**
+     * 해외기업 프로필 데이터
+     * @param symbol 기업티커
+     * @return compvalue:abroad:profile:{symbol}
+     */
+    public static String genAbroadCompanyProfile(String symbol) {
+        return "compvalue:abroad:profile:" + symbol;
+    }
+
+    /**
      * 추천 종목 전체 목록 (프로파일별)
      * @param profileName 프로파일명
      * @return compvalue:abroad:recommended:{profileName}

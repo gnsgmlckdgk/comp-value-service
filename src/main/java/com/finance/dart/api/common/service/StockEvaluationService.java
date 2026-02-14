@@ -100,6 +100,7 @@ public class StockEvaluationService {
             // Redis에 데이터 없음 -> calPerValue 최신버전 실행
             result = stockCalFromFpmService.calPerValue(symbol);
             log.debug("Calculated new value: {}", symbol);
+            Thread.sleep(1500); // FMP API rate limit 방지 (300건/분, 종목당 ~11건 호출)
         }
 
         // 2. 기업 정보 조회
@@ -694,15 +695,25 @@ public class StockEvaluationService {
     }
 
     /**
-     * 기업 프로필 조회
+     * 기업 프로필 조회 (Redis 캐시 적용, TTL 24시간)
      * @param symbol 심볼
      * @return 기업 프로필
      */
     private CompanyProfileDataResDto getCompanyProfile(String symbol) {
         try {
+            // Redis 캐시 조회
+            String redisKey = RedisKeyGenerator.genAbroadCompanyProfile(symbol);
+            String cachedProfile = redisComponent.getValue(redisKey);
+            if (!StringUtil.isStringEmpty(cachedProfile)) {
+                return new Gson().fromJson(cachedProfile, CompanyProfileDataResDto.class);
+            }
+
+            // 캐시 miss → FMP API 호출
             List<CompanyProfileDataResDto> profiles = profileSearchService.findProfileListBySymbol(symbol);
             if (profiles != null && !profiles.isEmpty()) {
-                return profiles.get(0);
+                CompanyProfileDataResDto profile = profiles.get(0);
+                redisComponent.saveValueWithTtl(redisKey, new Gson().toJson(profile), 86400); // 24시간
+                return profile;
             }
         } catch (Exception e) {
             log.warn("Failed to get company profile for {}", symbol, e);
