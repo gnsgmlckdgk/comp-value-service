@@ -19,7 +19,7 @@ import java.util.List;
     "symbol", "companyName", "currentPrice", "fairValue", "priceDifference",
     "priceGapPercent", "totalScore", "grade", "recommendation",
     "peg", "per", "sector", "industry", "beta", "exchange", "country", "marketCap",
-    "step1Score", "step2Score", "step3Score", "step4Score",
+    "step1Score", "step2Score", "step3Score", "step4Score", "step5Score",
     "stepDetails", "resultDetail"
 })
 public class StockEvaluationResponse {
@@ -136,6 +136,11 @@ public class StockEvaluationResponse {
      * Step 4 점수
      */
     private double step4Score;
+
+    /**
+     * Step 5 점수
+     */
+    private double step5Score;
 
     /**
      * 각 Step별 상세 평가 정보
