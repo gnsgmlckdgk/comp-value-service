@@ -29,8 +29,10 @@ public class CompanySharePriceResult {
     private String 버전 = "";
     private String 섹터 = "";             // 섹터명 (V4 이후 추가됨)
 
-    private String 매수적정가 = "";         // 안전마진 30% 적용 매수가 (V7~)
+    private String 매수적정가 = "";         // 안전마진 적용 매수가 (V7~)
     private String 목표매도가 = "";         // 적정가 = 매도 목표가 (V7~)
+    private String 손절매가 = "";           // 하드 스탑 가격 (V8~)
+    private String 안전마진율 = "";         // 실제 적용된 안전마진 비율 (V8~)
 
     private PredictionResponseDto 예측데이터;    // 예측데이터 (V5 이후 추가됨)
 

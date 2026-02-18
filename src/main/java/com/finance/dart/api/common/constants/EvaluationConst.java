@@ -8,7 +8,7 @@ public class EvaluationConst {
     /**
      * Redis 키 버전
      */
-    public static final String CAL_VALUE_VERSION = "v7";
+    public static final String CAL_VALUE_VERSION = "v8";
 
     /**
      * 각 Step별 가중치 (총 100점)
@@ -17,19 +17,21 @@ public class EvaluationConst {
      * Step 3: 밸류에이션 평가 - PEG, 과대평가 위험
      * Step 4: 영업이익 추세 - 성장 지속가능성
      * Step 5: 투자 적합성 - 매수적정가, PEG/PSR 이진, 그레이엄
+     * Step 6: 모멘텀/기술적 분석 - 이동평균, RSI, 거래량 추세
      */
-    public static final int STEP1_WEIGHT = 15;  // 위험 신호 확인 (치명적 결함 필터)
-    public static final int STEP2_WEIGHT = 20;  // 신뢰도 확인
-    public static final int STEP3_WEIGHT = 30;  // 밸류에이션 평가
+    public static final int STEP1_WEIGHT = 12;  // 위험 신호 확인 (치명적 결함 필터)
+    public static final int STEP2_WEIGHT = 18;  // 신뢰도 확인
+    public static final int STEP3_WEIGHT = 20;  // 밸류에이션 평가
     public static final int STEP4_WEIGHT = 15;  // 영업이익 추세 확인
-    public static final int STEP5_WEIGHT = 20;  // 투자 적합성 (NEW)
+    public static final int STEP5_WEIGHT = 17;  // 투자 적합성
+    public static final int STEP6_WEIGHT = 18;  // 모멘텀/기술적 분석
 
     /**
      * Step 5 서브점수
      */
-    public static final int STEP5_PURCHASE_PRICE = 8;  // 매수적정가 vs 현재가
-    public static final int STEP5_PEG_PSR_BINARY = 7;  // PEG/PSR 이진 판단
-    public static final int STEP5_GRAHAM = 5;           // 그레이엄 기준
+    public static final int STEP5_PURCHASE_PRICE = 7;  // 매수적정가 vs 현재가
+    public static final int STEP5_PEG_PSR_BINARY = 6;  // PEG/PSR 이진 판단
+    public static final int STEP5_GRAHAM = 4;           // 그레이엄 기준
 
     /**
      * Step 설명
@@ -39,6 +41,12 @@ public class EvaluationConst {
     public static final String STEP3_DESC = "밸류에이션 평가: PEG, 가격 차이, 성장률 등을 분석하여 현재 주가가 적정한지 또는 저평가/고평가 되었는지 판단합니다.";
     public static final String STEP4_DESC = "영업이익 추세: 최근 3년간 영업이익 추세를 분석하여 성장의 지속가능성을 평가합니다.";
     public static final String STEP5_DESC = "투자 적합성: 매수적정가 대비 현재가, PEG/PSR 이진 판단, 그레이엄 스크리닝 결과를 종합하여 최종 투자 적합성을 판단합니다.";
+    public static final String STEP6_DESC = "모멘텀/기술적 분석: 이동평균선(SMA50/200), RSI, 거래량 추세를 분석하여 매수 타이밍의 적절성을 판단합니다. 데스크로스 등 강한 하락 신호 시 총점 상한이 제한됩니다.";
+
+    /**
+     * 모멘텀 게이트 상한 점수 (게이트 실패 시)
+     */
+    public static final double MOMENTUM_GATE_MAX_SCORE = 45.0;
 
     /**
      * PER 기준값

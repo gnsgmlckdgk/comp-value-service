@@ -101,6 +101,23 @@ public class CompanySharePriceResultDetail {
     private int 그레이엄_통과수 = 0;            // 0~5
     private String 그레이엄_등급 = "N/A";       // "강력매수"/"매수"/"관망"/"위험"
 
+    /** V8 모멘텀/기술적 분석 **/
+    private String SMA50 = "N/A";
+    private String SMA200 = "N/A";
+    private String RSI = "N/A";
+    private String 거래량비율 = "N/A";        // 최근10일평균/이전10일평균
+    private int 모멘텀_MA점수 = 0;             // 0~6
+    private int 모멘텀_RSI점수 = 0;            // 0~5
+    private int 모멘텀_거래량점수 = 0;          // 0~4
+    private boolean 모멘텀게이트통과 = true;    // 하드 게이트 통과 여부
+    private String 모멘텀게이트사유 = "N/A";
+
+    /** V8 동적 안전마진 **/
+    private String 안전마진율 = "N/A";          // 실제 적용된 안전마진 비율
+
+    /** V8 과대평가 의심 할인 **/
+    private boolean 과대평가의심할인 = false;
+
     public CompanySharePriceResultDetail(String unit) {
         this.단위 = unit;
     }

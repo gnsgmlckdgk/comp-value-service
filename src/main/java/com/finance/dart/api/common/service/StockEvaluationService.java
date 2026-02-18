@@ -1,8 +1,14 @@
 package com.finance.dart.api.common.service;
 
+import com.finance.dart.api.abroad.dto.fmp.chart.StockPriceVolumeReqDto;
+import com.finance.dart.api.abroad.dto.fmp.chart.StockPriceVolumeResDto;
 import com.finance.dart.api.abroad.dto.fmp.company.CompanyProfileDataResDto;
+import com.finance.dart.api.abroad.dto.fmp.quote.StockQuoteReqDto;
+import com.finance.dart.api.abroad.dto.fmp.quote.StockQuoteResDto;
 import com.finance.dart.api.abroad.service.US_StockCalFromFpmService;
 import com.finance.dart.api.abroad.service.fmp.CompanyProfileSearchService;
+import com.finance.dart.api.abroad.service.fmp.StockPriceVolumeService;
+import com.finance.dart.api.abroad.service.fmp.StockQuoteService;
 import com.finance.dart.api.common.constants.EvaluationConst;
 import com.finance.dart.api.common.dto.CompanySharePriceResult;
 import com.finance.dart.api.common.dto.CompanySharePriceResultDetail;
@@ -19,6 +25,8 @@ import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -36,6 +44,9 @@ public class StockEvaluationService {
     private final RedisComponent redisComponent;
     private final US_StockCalFromFpmService stockCalFromFpmService;
     private final CompanyProfileSearchService profileSearchService;
+    private final TechnicalAnalysisService technicalAnalysisService;
+    private final StockQuoteService stockQuoteService;
+    private final StockPriceVolumeService stockPriceVolumeService;
 
     /**
      * 종목 평가 (다건)
@@ -119,8 +130,17 @@ public class StockEvaluationService {
         double step4Score = evaluateStep4(detail, stepDetails);
         double step5Score = evaluateStep5(detail, result, currentPrice, stepDetails);
 
+        // 3-1. Step 6: 모멘텀/기술적 분석
+        double step6Score = evaluateStep6(symbol, detail, stepDetails);
+
         // 4. 총점 계산
-        double totalScore = step1Score + step2Score + step3Score + step4Score + step5Score;
+        double totalScore = step1Score + step2Score + step3Score + step4Score + step5Score + step6Score;
+
+        // 4-1. 모멘텀 게이트 적용 (게이트 실패 시 총점 상한 45점)
+        boolean momentumGatePass = detail.is모멘텀게이트통과();
+        if (!momentumGatePass && totalScore > EvaluationConst.MOMENTUM_GATE_MAX_SCORE) {
+            totalScore = EvaluationConst.MOMENTUM_GATE_MAX_SCORE;
+        }
 
         // 5. 가격 차이 계산
         String priceDifference = calculatePriceDifference(currentPrice, fairValue);
@@ -156,6 +176,8 @@ public class StockEvaluationService {
                 .step3Score(step3Score)
                 .step4Score(step4Score)
                 .step5Score(step5Score)
+                .step6Score(step6Score)
+                .momentumGatePass(momentumGatePass)
                 .stepDetails(stepDetails)
                 .resultDetail(detail)
                 .calVersion(result.get버전())
@@ -163,12 +185,12 @@ public class StockEvaluationService {
     }
 
     /**
-     * Step 1: 위험 신호 확인 (15점) - 치명적 결함 필터
+     * Step 1: 위험 신호 확인 (12점) - 치명적 결함 필터
      * - 수익가치계산불가: 0점
-     * - 적자기업 + 매출기반평가: 6점
-     * - 적자기업: 7.5점
-     * - 매출기반평가: 9점
-     * - 정상 기업: 15점
+     * - 적자기업 + 매출기반평가: 5점
+     * - 적자기업: 6점
+     * - 매출기반평가: 7점
+     * - 정상 기업: 12점
      */
     private double evaluateStep1(CompanySharePriceResultDetail detail, List<StepEvaluationDetail> stepDetails) {
         double score = EvaluationConst.STEP1_WEIGHT;
@@ -178,15 +200,15 @@ public class StockEvaluationService {
             score = 0;
             details.append("❌ 수익가치 계산 불가 (적정가 신뢰도 매우 낮음, 0점). ");
         } else if (detail.is적자기업() && detail.is매출기반평가()) {
-            score = 6;
+            score = 5;
             details.append("⚠️ 적자기업이며 매출 기반 평가 (리스크 높음, ")
                     .append(String.format("%.1f", score)).append("점). ");
         } else if (detail.is적자기업()) {
-            score = 7.5;
+            score = 6;
             details.append("⚠️ 적자기업 (투자 위험, ")
                     .append(String.format("%.1f", score)).append("점). ");
         } else if (detail.is매출기반평가()) {
-            score = 9;
+            score = 7;
             details.append("⚠️ 매출 기반 평가 (이익 없이 매출만 큰 기업, 과대평가 가능성, ")
                     .append(String.format("%.1f", score)).append("점). ");
         } else {
@@ -211,26 +233,26 @@ public class StockEvaluationService {
     }
 
     /**
-     * Step 2: 신뢰도 확인 (20점)
-     * - PER 정상 범위 (5~30): +7점
-     * - 순부채 건전 (음수 또는 낮음): +8점
+     * Step 2: 신뢰도 확인 (18점)
+     * - PER 정상 범위 (5~30): +6점
+     * - 순부채 건전 (음수 또는 낮음): +7점
      * - 영업이익 안정성: +5점
      */
     private double evaluateStep2(CompanySharePriceResultDetail detail, List<StepEvaluationDetail> stepDetails) {
         double score = 0;
         StringBuilder details = new StringBuilder();
 
-        // PER 평가 (7점)
+        // PER 평가 (6점)
         String perStr = detail.getPER();
         if (!StringUtil.isStringEmpty(perStr) && !"N/A".equals(perStr)) {
             try {
                 double per = Double.parseDouble(perStr);
                 if (per >= EvaluationConst.PER_MIN_NORMAL && per <= EvaluationConst.PER_MAX_NORMAL) {
-                    score += 7;
-                    details.append(String.format("✅ PER %.2f (정상 범위 5~30, +7점). ", per));
+                    score += 6;
+                    details.append(String.format("✅ PER %.2f (정상 범위 5~30, +6점). ", per));
                 } else if (per < EvaluationConst.PER_HIGH_RISK) {
-                    score += 4;
-                    details.append(String.format("⚠️ PER %.2f (보통, +4점). ", per));
+                    score += 3;
+                    details.append(String.format("⚠️ PER %.2f (보통, +3점). ", per));
                 } else {
                     score += 1;
                     details.append(String.format("❌ PER %.2f (고평가 가능성, +1점). ", per));
@@ -242,17 +264,17 @@ public class StockEvaluationService {
             details.append("PER 정보 없음 (+0점). ");
         }
 
-        // 순부채 평가 (8점)
+        // 순부채 평가 (7점)
         String netDebtStr = detail.get순부채();
         if (!StringUtil.isStringEmpty(netDebtStr) && !"N/A".equals(netDebtStr)) {
             try {
                 double netDebt = Double.parseDouble(netDebtStr);
                 if (netDebt < 0) {
-                    score += 8;
-                    details.append("✅ 순부채 음수 (현금이 부채보다 많음, 매우 건전, +8점). ");
+                    score += 7;
+                    details.append("✅ 순부채 음수 (현금이 부채보다 많음, 매우 건전, +7점). ");
                 } else if (netDebt < 100000000000.0) {  // 1000억 미만
-                    score += 5;
-                    details.append("✅ 순부채 건전 (+5점). ");
+                    score += 4;
+                    details.append("✅ 순부채 건전 (+4점). ");
                 } else {
                     score += 2;
                     details.append("⚠️ 순부채 높음 (+2점). ");
@@ -306,36 +328,36 @@ public class StockEvaluationService {
     }
 
     /**
-     * Step 3: 밸류에이션 평가 (30점)
-     * - PEG 평가: 최대 12점
-     * - 가격 차이(저평가 여부): 최대 10점
-     * - 성장률 지속가능성: 최대 8점
+     * Step 3: 밸류에이션 평가 (20점)
+     * - PEG 평가: 최대 8점
+     * - 가격 차이(저평가 여부): 최대 6점 (V8: 과신 방지)
+     * - 성장률 지속가능성: 최대 6점
      */
     private double evaluateStep3(CompanySharePriceResultDetail detail, List<StepEvaluationDetail> stepDetails,
                                   String currentPrice, String fairValue) {
         double score = 0;
         StringBuilder details = new StringBuilder();
 
-        // 1. PEG 평가 (12점)
+        // 1. PEG 평가 (8점)
         String pegStr = detail.getPEG();
         if (!StringUtil.isStringEmpty(pegStr) && !"N/A".equals(pegStr) && !"999".equals(pegStr)) {
             try {
                 double peg = Double.parseDouble(pegStr);
                 if (peg < 0.5) {
-                    score += 12;
-                    details.append(String.format("🌟 PEG %.2f (매우 저평가, +12점). ", peg));
-                } else if (peg < 0.8) {
-                    score += 10;
-                    details.append(String.format("✅ PEG %.2f (저평가, +10점). ", peg));
-                } else if (peg < 1.0) {
                     score += 8;
-                    details.append(String.format("✅ PEG %.2f (양호, +8점). ", peg));
-                } else if (peg < 1.2) {
+                    details.append(String.format("🌟 PEG %.2f (매우 저평가, +8점). ", peg));
+                } else if (peg < 0.8) {
+                    score += 7;
+                    details.append(String.format("✅ PEG %.2f (저평가, +7점). ", peg));
+                } else if (peg < 1.0) {
                     score += 5;
-                    details.append(String.format("⚠️ PEG %.2f (적정, +5점). ", peg));
-                } else if (peg < 1.5) {
+                    details.append(String.format("✅ PEG %.2f (양호, +5점). ", peg));
+                } else if (peg < 1.2) {
                     score += 3;
-                    details.append(String.format("⚠️ PEG %.2f (보통, +3점). ", peg));
+                    details.append(String.format("⚠️ PEG %.2f (적정, +3점). ", peg));
+                } else if (peg < 1.5) {
+                    score += 2;
+                    details.append(String.format("⚠️ PEG %.2f (보통, +2점). ", peg));
                 } else if (peg < 2.0) {
                     score += 1;
                     details.append(String.format("⚠️ PEG %.2f (고평가 위험, +1점). ", peg));
@@ -350,7 +372,7 @@ public class StockEvaluationService {
             details.append("PEG 정보 없음 (+0점). ");
         }
 
-        // 2. 가격 차이 평가 (10점) - 저평가 여부
+        // 2. 가격 차이 평가 (6점) - V8: 과신 방지 (극단적 저평가는 오히려 의심)
         if (!StringUtil.isStringEmpty(currentPrice) && !StringUtil.isStringEmpty(fairValue)) {
             try {
                 BigDecimal current = new BigDecimal(currentPrice);
@@ -362,18 +384,21 @@ public class StockEvaluationService {
                             .multiply(new BigDecimal("100"));
                     double gap = gapPercent.doubleValue();
 
-                    if (gap >= 30) {
-                        score += 10;
-                        details.append(String.format("🌟 가격차이 %.1f%% (크게 저평가, +10점). ", gap));
-                    } else if (gap >= 20) {
-                        score += 8;
-                        details.append(String.format("✅ 가격차이 %.1f%% (저평가, +8점). ", gap));
-                    } else if (gap >= 10) {
-                        score += 6;
-                        details.append(String.format("✅ 가격차이 %.1f%% (약간 저평가, +6점). ", gap));
-                    } else if (gap >= 0) {
+                    if (gap >= 50) {
                         score += 3;
-                        details.append(String.format("⚠️ 가격차이 %.1f%% (적정가 수준, +3점). ", gap));
+                        details.append(String.format("⚠️ 가격차이 %.1f%% (극단적 저평가, 적정가 과대산출 의심, +3점). ", gap));
+                    } else if (gap >= 30) {
+                        score += 6;
+                        details.append(String.format("✅ 가격차이 %.1f%% (저평가, +6점). ", gap));
+                    } else if (gap >= 20) {
+                        score += 5;
+                        details.append(String.format("✅ 가격차이 %.1f%% (약간 저평가, +5점). ", gap));
+                    } else if (gap >= 10) {
+                        score += 4;
+                        details.append(String.format("✅ 가격차이 %.1f%% (소폭 저평가, +4점). ", gap));
+                    } else if (gap >= 0) {
+                        score += 2;
+                        details.append(String.format("⚠️ 가격차이 %.1f%% (적정가 수준, +2점). ", gap));
                     } else if (gap >= -10) {
                         score += 1;
                         details.append(String.format("⚠️ 가격차이 %.1f%% (약간 고평가, +1점). ", gap));
@@ -389,7 +414,7 @@ public class StockEvaluationService {
             details.append("가격 정보 없음 (+0점). ");
         }
 
-        // 3. 성장률 지속가능성 평가 (8점)
+        // 3. 성장률 지속가능성 평가 (6점)
         String growthStr = detail.get영업이익성장률();
         if (!StringUtil.isStringEmpty(growthStr) && !"N/A".equals(growthStr)) {
             try {
@@ -399,17 +424,17 @@ public class StockEvaluationService {
                     score += 1;
                     details.append(String.format("❌ 영업이익 성장률 %.1f%% (역성장, +1점). ", growthPct));
                 } else if (growthPct <= 5) {
-                    score += 3;
-                    details.append(String.format("⚠️ 영업이익 성장률 %.1f%% (저성장, +3점). ", growthPct));
+                    score += 2;
+                    details.append(String.format("⚠️ 영업이익 성장률 %.1f%% (저성장, +2점). ", growthPct));
                 } else if (growthPct <= 15) {
-                    score += 6;
-                    details.append(String.format("✅ 영업이익 성장률 %.1f%% (안정 성장, +6점). ", growthPct));
-                } else if (growthPct <= 50) {
-                    score += 8;
-                    details.append(String.format("🌟 영업이익 성장률 %.1f%% (고성장, +8점). ", growthPct));
-                } else if (growthPct <= 80) {
                     score += 4;
-                    details.append(String.format("⚠️ 영업이익 성장률 %.1f%% (과도 성장, 지속 어려울 수 있음, +4점). ", growthPct));
+                    details.append(String.format("✅ 영업이익 성장률 %.1f%% (안정 성장, +4점). ", growthPct));
+                } else if (growthPct <= 50) {
+                    score += 6;
+                    details.append(String.format("🌟 영업이익 성장률 %.1f%% (고성장, +6점). ", growthPct));
+                } else if (growthPct <= 80) {
+                    score += 3;
+                    details.append(String.format("⚠️ 영업이익 성장률 %.1f%% (과도 성장, 지속 어려울 수 있음, +3점). ", growthPct));
                 } else {
                     score += 1;
                     details.append(String.format("❌ 영업이익 성장률 %.1f%% (매우 높음, 일시적 급증 가능성, +1점). ", growthPct));
@@ -506,10 +531,10 @@ public class StockEvaluationService {
     }
 
     /**
-     * Step 5: 투자 적합성 (20점) - NEW
-     * - 매수적정가 vs 현재가: 최대 8점
-     * - PEG/PSR 이진 판단: 최대 7점
-     * - 그레이엄 기준: 최대 5점
+     * Step 5: 투자 적합성 (17점)
+     * - 매수적정가 vs 현재가: 최대 7점
+     * - PEG/PSR 이진 판단: 최대 6점
+     * - 그레이엄 기준: 최대 4점
      */
     private double evaluateStep5(CompanySharePriceResultDetail detail, CompanySharePriceResult result,
                                   String currentPrice, List<StepEvaluationDetail> stepDetails) {
@@ -649,6 +674,91 @@ public class StockEvaluationService {
                 .maxScore(EvaluationConst.STEP5_WEIGHT)
                 .description(EvaluationConst.STEP5_DESC)
                 .details(details.toString())
+                .build());
+
+        return score;
+    }
+
+    /**
+     * Step 6: 모멘텀/기술적 분석 (18점)
+     * - 이동평균선 분석 (MA): 최대 6점
+     * - RSI 14일: 최대 5점
+     * - 거래량 추세: 최대 4점
+     * - (+3점 여유 = 게이트 통과 보너스)
+     * - 하드 게이트: 데스크로스+주가<SMA200, RSI<20+주가<SMA50 → 총점 45점 상한
+     */
+    private double evaluateStep6(String symbol, CompanySharePriceResultDetail detail,
+                                  List<StepEvaluationDetail> stepDetails) {
+        double score = 0;
+        StringBuilder detailsStr = new StringBuilder();
+
+        try {
+            // StockQuote 조회 (SMA50, SMA200)
+            StockQuoteResDto stockQuote = null;
+            try {
+                StockQuoteReqDto quoteReq = new StockQuoteReqDto(symbol);
+                List<StockQuoteResDto> quotes = stockQuoteService.findStockQuote(quoteReq);
+                if (quotes != null && !quotes.isEmpty()) {
+                    stockQuote = quotes.get(0);
+                }
+            } catch (Exception e) {
+                log.warn("[Step6] {} - StockQuote 조회 실패: {}", symbol, e.getMessage());
+            }
+
+            // 52주 가격 히스토리 (RSI, 거래량)
+            List<StockPriceVolumeResDto> priceHistory = null;
+            try {
+                LocalDate today = LocalDate.now();
+                LocalDate oneYearAgo = today.minusYears(1);
+                StockPriceVolumeReqDto priceReqDto = new StockPriceVolumeReqDto(
+                    symbol,
+                    oneYearAgo.format(DateTimeFormatter.ISO_LOCAL_DATE),
+                    today.format(DateTimeFormatter.ISO_LOCAL_DATE)
+                );
+                priceHistory = stockPriceVolumeService.findStockPriceVolume(priceReqDto);
+            } catch (Exception e) {
+                log.warn("[Step6] {} - 가격 히스토리 조회 실패: {}", symbol, e.getMessage());
+            }
+
+            // 기술적 분석 수행
+            TechnicalAnalysisService.TechnicalAnalysisResult result =
+                    technicalAnalysisService.analyze(stockQuote, priceHistory, detail);
+
+            int maScore = result.getMaScore();
+            int rsiScore = result.getRsiScore();
+            int volumeScore = result.getVolumeScore();
+            boolean gatePass = result.isGatePass();
+
+            score = maScore + rsiScore + volumeScore;
+
+            // 게이트 통과 보너스 (+3점)
+            if (gatePass) {
+                score += 3;
+            }
+
+            // 최대 18점 캡
+            score = Math.min(score, EvaluationConst.STEP6_WEIGHT);
+
+            detailsStr.append(String.format("MA 점수: %d/6, RSI 점수: %d/5, 거래량 점수: %d/4. ", maScore, rsiScore, volumeScore));
+            if (!gatePass) {
+                detailsStr.append("⛔ 모멘텀 게이트 실패 (").append(result.getGateReason()).append(") → 총점 상한 45점 적용. ");
+            } else {
+                detailsStr.append("✅ 모멘텀 게이트 통과 (+3점 보너스). ");
+            }
+
+        } catch (Exception e) {
+            log.warn("[Step6] {} - 기술적 분석 실패: {}", symbol, e.getMessage());
+            score = 9;  // 실패 시 중간 점수
+            detailsStr.append("기술적 분석 데이터 조회 실패 (중립 처리). ");
+        }
+
+        stepDetails.add(StepEvaluationDetail.builder()
+                .stepNumber(6)
+                .stepName("모멘텀/기술적 분석")
+                .score(score)
+                .maxScore(EvaluationConst.STEP6_WEIGHT)
+                .description(EvaluationConst.STEP6_DESC)
+                .details(detailsStr.toString())
                 .build());
 
         return score;

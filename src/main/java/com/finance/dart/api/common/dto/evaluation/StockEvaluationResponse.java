@@ -19,8 +19,8 @@ import java.util.List;
     "symbol", "companyName", "currentPrice", "fairValue", "priceDifference",
     "priceGapPercent", "totalScore", "grade", "recommendation",
     "peg", "per", "sector", "industry", "beta", "exchange", "country", "marketCap",
-    "step1Score", "step2Score", "step3Score", "step4Score", "step5Score",
-    "stepDetails", "resultDetail"
+    "step1Score", "step2Score", "step3Score", "step4Score", "step5Score", "step6Score",
+    "momentumGatePass", "stepDetails", "resultDetail"
 })
 public class StockEvaluationResponse {
 
@@ -141,6 +141,17 @@ public class StockEvaluationResponse {
      * Step 5 점수
      */
     private double step5Score;
+
+    /**
+     * Step 6 점수 (모멘텀/기술적 분석)
+     */
+    private double step6Score;
+
+    /**
+     * 모멘텀 게이트 통과 여부
+     */
+    @Builder.Default
+    private boolean momentumGatePass = true;
 
     /**
      * 각 Step별 상세 평가 정보
