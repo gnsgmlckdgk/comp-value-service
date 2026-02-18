@@ -1487,6 +1487,203 @@ public class US_StockCalFromFpmService {
     }
 
     /**
+     * 계산정보 조회(V7) - V6 기반 독립 버전 + PBR 추출
+     * V7 전용 데이터 수집 메서드 (V6 의존 제거)
+     * @param symbol
+     * @param result
+     * @param resultDetail
+     * @return
+     */
+    private CompanySharePriceCalculator getCalParamDataV7(String symbol, CompanySharePriceResult result, CompanySharePriceResultDetail resultDetail)
+            throws InterruptedException {
+
+        if(log.isDebugEnabled()) log.debug("[V7 계산 로그] [{}] {} 계산 시작", symbol, result.get기업명());
+
+        CompanySharePriceCalculator calParam = new CompanySharePriceCalculator();
+
+        //@ 필요데이터 조회 (연간 영업이익 3년)
+        Thread.sleep(TRSC_DELAY);
+        IncomeStatReqDto incomeStatReqDto = new IncomeStatReqDto(symbol, 3, FmpPeriod.annual);
+        List<IncomeStatResDto> income = incomeStatementService.findIncomeStat(incomeStatReqDto);
+        if(income == null || income.size() < 3) {
+            result.set결과메시지("영업이익 조회에 실패했습니다.");
+            return null;
+        } else {
+            // 환율 반영
+            for(IncomeStatResDto ic : income) {
+                if(!ic.getReportedCurrency().equals(CurrencyConst.USA)) {
+                    double rate = getForexQuotePriceUSD(ic.getReportedCurrency());
+                    if(log.isDebugEnabled()) log.debug("[영업이익 환율 반영] {} -> USD / rate = {} / 변경전 = {}", ic.getReportedCurrency(), rate, ic);
+                    if(rate != -1) ic.applyExchangeRate(rate);
+                    if(log.isDebugEnabled()) log.debug("[영업이익 환율 반영] {} -> USD / rate = {} / 변경후 = {}", ic.getReportedCurrency(), rate, ic);
+                }
+            }
+        }
+
+        //@ 분기 영업이익 4개 조회
+        Thread.sleep(TRSC_DELAY);
+        IncomeStatReqDto quarterlyIncomeReqDto = new IncomeStatReqDto(symbol, 4, FmpPeriod.quarter);
+        List<IncomeStatResDto> quarterlyIncome = incomeStatementService.findIncomeStat(quarterlyIncomeReqDto);
+        if(quarterlyIncome != null && quarterlyIncome.size() >= 4) {
+            // 환율 반영
+            for(IncomeStatResDto qi : quarterlyIncome) {
+                if(!qi.getReportedCurrency().equals(CurrencyConst.USA)) {
+                    double rate = getForexQuotePriceUSD(qi.getReportedCurrency());
+                    if(rate != -1) qi.applyExchangeRate(rate);
+                }
+            }
+            calParam.setQuarterlyOpIncomeQ1(StringUtil.defaultString(quarterlyIncome.get(0).getOperatingIncome()));
+            calParam.setQuarterlyOpIncomeQ2(StringUtil.defaultString(quarterlyIncome.get(1).getOperatingIncome()));
+            calParam.setQuarterlyOpIncomeQ3(StringUtil.defaultString(quarterlyIncome.get(2).getOperatingIncome()));
+            calParam.setQuarterlyOpIncomeQ4(StringUtil.defaultString(quarterlyIncome.get(3).getOperatingIncome()));
+        } else {
+            if(log.isDebugEnabled()) log.debug("[V7] {} - 분기 영업이익 데이터 부족 ({}건), 분기 추세 할인 미적용",
+                    symbol, quarterlyIncome != null ? quarterlyIncome.size() : 0);
+        }
+
+        Thread.sleep(TRSC_DELAY);
+        BalanceSheetReqDto balanceSheetReqDto = new BalanceSheetReqDto(symbol, 1, FmpPeriod.quarter);
+        List<BalanceSheetResDto> balance = balanceSheetStatementService.findBalanceSheet(balanceSheetReqDto);
+        if(balance == null || balance.size() < 1) {
+            result.set결과메시지("재무상태표 조회에 실패했습니다.");
+            return null;
+        } else {
+            // 환율 반영
+            for(BalanceSheetResDto bs : balance) {
+                if(!bs.getReportedCurrency().equals(CurrencyConst.USA)) {
+                    double rate = getForexQuotePriceUSD(bs.getReportedCurrency());
+                    if(log.isDebugEnabled()) log.debug("[재무상태표 환율 반영] {} -> USD / rate = {} / 변경전 = {}", bs.getReportedCurrency(), rate, bs);
+                    if(rate != -1) bs.applyExchangeRate(rate);
+                    if(log.isDebugEnabled()) log.debug("[재무상태표 환율 반영] {} -> USD / rate = {} / 변경후 = {}", bs.getReportedCurrency(), rate, bs);
+                }
+            }
+        }
+
+        Thread.sleep(TRSC_DELAY);
+        EnterpriseValuesReqDto enterpriseValuesReqDto = new EnterpriseValuesReqDto(symbol, 1, FmpPeriod.quarter);
+        List<EnterpriseValuesResDto> enterpriseValues = enterpriseValueService.findEnterpriseValue(enterpriseValuesReqDto);
+        if(enterpriseValues == null || enterpriseValues.size() < 1) {
+            result.set결과메시지("기업가치 조회에 실패했습니다.");
+            return null;
+        }
+
+        Thread.sleep(TRSC_DELAY);
+        FinancialRatiosTTM_ReqDto financialRatiosTTM_ReqDto = new FinancialRatiosTTM_ReqDto(symbol);
+        List<FinancialRatiosTTM_ResDto> financialRatios = financialRatiosService.findFinancialRatiosTTM(financialRatiosTTM_ReqDto);
+        if(financialRatios == null || financialRatios.size() < 1) {
+            result.set결과메시지("재무비율지표(TTM) 조회에 실패했습니다.");
+            return null;
+        }
+
+        Thread.sleep(TRSC_DELAY);
+        FinancialGrowthReqDto financialGrowthReqDto = new FinancialGrowthReqDto(symbol, 1, FmpPeriod.fiscalYear);
+        List<FinancialGrowthResDto> financialGrowth = financialGrowthService.financialStatementsGrowth(financialGrowthReqDto);
+        if(financialGrowth == null || financialGrowth.size() < 1) {
+            result.set결과메시지("성장률 조회에 실패했습니다.");
+            return null;
+        }
+
+        Thread.sleep(TRSC_DELAY);
+        IncomeStatGrowthReqDto incomeStatGrowthReqDto = new IncomeStatGrowthReqDto(symbol, 1, FmpPeriod.annual);
+        List<IncomeStatGrowthResDto> incomeStatGrowth = incomeStatGrowthService.findIncomeStatGrowth(incomeStatGrowthReqDto);
+        if(incomeStatGrowth == null || incomeStatGrowth.size() < 1) {
+            result.set결과메시지("영업이익 성장률 조회에 실패했습니다.");
+            return null;
+        }
+
+        // ----------------------------------------------------------------
+
+        //@ 영업이익
+        setIncomeStat(calParam, income, resultDetail);
+
+        //@ 매출정보
+        setPsr(calParam, income, incomeStatGrowth, financialRatios);
+
+        //@ 유동자산 합계
+        String assetsCurrent = StringUtil.defaultString(balance.get(0).getTotalCurrentAssets());
+        calParam.setCurrentAssetsTotal(assetsCurrent);
+        resultDetail.set유동자산합계(assetsCurrent);
+
+        //@ 유동부채 합계
+        String liabilitiesCurrent = StringUtil.defaultString(balance.get(0).getTotalCurrentLiabilities());
+        calParam.setCurrentLiabilitiesTotal(liabilitiesCurrent);
+        resultDetail.set유동부채합계(liabilitiesCurrent);
+
+        //@ 유동비율
+        String ratio;
+        if("0".equals(liabilitiesCurrent) && "0".equals(assetsCurrent)) {
+            ratio = "1.0";
+        } else if("0".equals(liabilitiesCurrent)) {
+            ratio = "2.0";
+        } else if("0".equals(assetsCurrent)) {
+            ratio = "0.0";
+        } else {
+            ratio = CalUtil.divide(assetsCurrent, liabilitiesCurrent, 2, RoundingMode.HALF_UP);
+        }
+
+        calParam.setCurrentRatio(ratio);
+        resultDetail.set유동비율(ratio);
+
+        //@ 투자자산
+        String longTermInvestments = StringUtil.defaultString(balance.get(0).getLongTermInvestments());
+        calParam.setInvestmentAssets(longTermInvestments);
+        resultDetail.set투자자산_비유동자산내(longTermInvestments);
+
+        //@ 무형자산 + 영업권 합산
+        String intangibleAssets = StringUtil.defaultString(balance.get(0).getGoodwillAndIntangibleAssets());
+        calParam.setIntangibleAssets(intangibleAssets);
+        resultDetail.set무형자산(intangibleAssets);
+
+        //@ 발행주식수
+        String numberOfShares = StringUtil.defaultString(enterpriseValues.get(0).getNumberOfShares());
+        calParam.setIssuedShares(numberOfShares);
+        resultDetail.set발행주식수(numberOfShares);
+
+        //@ PER
+        String per = StringUtil.defaultString(financialRatios.get(0).getPriceToEarningsRatioTTM());
+        calParam.setPer(per);
+        resultDetail.setPER(per);
+
+        //@ PBR (V7: 그레이엄 스크리닝용)
+        Double pbrTTM = financialRatios.get(0).getPriceToBookRatioTTM();
+        if (pbrTTM != null) {
+            resultDetail.setPBR(String.valueOf(pbrTTM));
+        }
+
+        //@ 성장률(연간)
+        String epsGrowth = StringUtil.defaultString(financialGrowth.get(0).getEpsgrowth());
+        calParam.setEpsgrowth(epsGrowth);
+        resultDetail.setEPS성장률(epsGrowth);
+
+        String incomeGrowth = StringUtil.defaultString(incomeStatGrowth.get(0).getGrowthOperatingIncome());
+        calParam.setOperatingIncomeGrowth(incomeGrowth);
+        resultDetail.set영업이익성장률(incomeGrowth);
+
+        //@ 최근 3년 R&D
+        setRnDStat(calParam, income, resultDetail);
+
+        //@ 순부채
+        Long totalDebtVal = balance.get(0).getTotalDebt();
+        Long capitalLease = balance.get(0).getCapitalLeaseObligations();
+        String totalDebt = StringUtil.defaultString(
+                (totalDebtVal != null ? totalDebtVal : 0L) +
+                        (capitalLease != null ? capitalLease : 0L)
+        );
+
+        String cash = StringUtil.defaultString(balance.get(0).getCashAndCashEquivalents());
+        if(StringUtil.isStringEmpty(cash) || "0".equals(cash))
+            cash = StringUtil.defaultString(balance.get(0).getCashAndShortTermInvestments());
+
+        calParam.setTotalDebt(totalDebt);
+        calParam.setCashAndCashEquivalents(cash);
+
+        resultDetail.set총부채(totalDebt);
+        resultDetail.set현금성자산(cash);
+
+        return calParam;
+    }
+
+    /**
      * V6: PER블렌딩 + 추세할인 + 52주최고가캡 + AI예측
      * @param symbol
      * @return
@@ -1659,7 +1856,7 @@ public class US_StockCalFromFpmService {
         String sector = companyProfile.getSector();
         if(log.isDebugEnabled()) log.debug("[V7] 섹터 정보: {}", sector);
 
-        CompanySharePriceCalculator calParam = getCalParamDataV6(symbol, result, resultDetail);
+        CompanySharePriceCalculator calParam = getCalParamDataV7(symbol, result, resultDetail);
         if(calParam == null) {
             errorProcess(result, "재무정보 조회에 실패했습니다.");
             return result;
@@ -1667,15 +1864,11 @@ public class US_StockCalFromFpmService {
         calParam.setUnit(UNIT);
         if(log.isDebugEnabled()) log.debug("[V7] 계산 정보 = {}", calParam);
 
-        //@2. PBR 데이터 수집 ---------------------------------
-        FinancialRatiosTTM_ReqDto financialRatiosTTM_ReqDto = new FinancialRatiosTTM_ReqDto(symbol);
-        List<FinancialRatiosTTM_ResDto> financialRatios = financialRatiosService.findFinancialRatiosTTM(financialRatiosTTM_ReqDto);
+        //@2. PBR 데이터 (getCalParamDataV7에서 이미 조회 및 설정됨) ---------------------------------
         Double pbrTTM = null;
-        if (financialRatios != null && !financialRatios.isEmpty()) {
-            pbrTTM = financialRatios.get(0).getPriceToBookRatioTTM();
-        }
-        if (pbrTTM != null) {
-            resultDetail.setPBR(String.valueOf(pbrTTM));
+        String pbrStr = resultDetail.getPBR();
+        if (pbrStr != null && !pbrStr.isEmpty()) {
+            try { pbrTTM = Double.parseDouble(pbrStr); } catch (NumberFormatException ignored) {}
         }
 
         //@3. 계산 (V7 로직) ---------------------------------
