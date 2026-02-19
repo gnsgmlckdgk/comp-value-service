@@ -49,6 +49,11 @@ public class EvaluationConst {
     public static final double MOMENTUM_GATE_MAX_SCORE = 45.0;
 
     /**
+     * 음수 적정가 게이트 상한 점수 (적정가 ≤ 0일 때)
+     */
+    public static final double NEGATIVE_FAIR_VALUE_MAX_SCORE = 50.0;
+
+    /**
      * PER 기준값
      */
     public static final double PER_MIN_NORMAL = 5.0;

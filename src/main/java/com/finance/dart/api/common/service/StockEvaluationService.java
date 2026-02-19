@@ -142,6 +142,16 @@ public class StockEvaluationService {
             totalScore = EvaluationConst.MOMENTUM_GATE_MAX_SCORE;
         }
 
+        // 4-2. 음수 적정가 게이트 적용 (적정가 ≤ 0이면 총점 상한 50점)
+        if (!StringUtil.isStringEmpty(fairValue)) {
+            try {
+                double fv = Double.parseDouble(fairValue);
+                if (fv <= 0 && totalScore > EvaluationConst.NEGATIVE_FAIR_VALUE_MAX_SCORE) {
+                    totalScore = EvaluationConst.NEGATIVE_FAIR_VALUE_MAX_SCORE;
+                }
+            } catch (Exception ignored) {}
+        }
+
         // 5. 가격 차이 계산
         String priceDifference = calculatePriceDifference(currentPrice, fairValue);
         String priceGapPercent = calculatePriceGapPercent(currentPrice, fairValue);
@@ -549,14 +559,19 @@ public class StockEvaluationService {
             try {
                 double fair = Double.parseDouble(fairValueStr);
                 double current = Double.parseDouble(currentPrice);
-                if (fair > 0 && current > 0) {
-                    double gapPct = (fair - current) / current * 100;
-                    if (gapPct < -30) {
+                if (current > 0) {
+                    if (fair <= 0) {
+                        // 적정가 음수 = 주당가치가 마이너스 → 최대 패널티
                         overvaluedPenalty = 1.0;
-                    } else if (gapPct < -20) {
-                        overvaluedPenalty = 0.75;
-                    } else if (gapPct < -10) {
-                        overvaluedPenalty = 0.5;
+                    } else {
+                        double gapPct = (fair - current) / current * 100;
+                        if (gapPct < -30) {
+                            overvaluedPenalty = 1.0;
+                        } else if (gapPct < -20) {
+                            overvaluedPenalty = 0.75;
+                        } else if (gapPct < -10) {
+                            overvaluedPenalty = 0.5;
+                        }
                     }
                 }
             } catch (Exception ignored) {}
