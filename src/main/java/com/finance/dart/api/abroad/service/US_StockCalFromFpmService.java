@@ -2408,8 +2408,9 @@ public class US_StockCalFromFpmService {
 
         resultDetail.set안전마진율(String.format("%.0f%%", totalMargin * 100));
 
-        //@5. 목표매도가 = 조정된주당가치 ---------------------------------
+        //@5. 목표매도가 = 조정된주당가치 × 0.95 (적정가 대비 5% 버퍼) ---------------------------------
         String 목표매도가 = new BigDecimal(조정된주당가치)
+                .multiply(new BigDecimal("0.95"))
                 .setScale(2, RoundingMode.HALF_UP)
                 .toPlainString();
 
