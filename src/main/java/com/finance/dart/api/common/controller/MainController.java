@@ -35,7 +35,7 @@ import java.util.Map;
 public class MainController {
 
     private final DomesticStockCalculationService domesticStockCalculationService;  // 국내주식계산 서비스
-    private final US_StockCalFromSecService US_StockCalFromSecService;              // 미국주식계산 서비스(SEC)
+    //private final US_StockCalFromSecService US_StockCalFromSecService;              // 미국주식계산 서비스(SEC)
     private final US_StockCalFromFpmService US_StockCalFromFmpService;              // 미국주식계산 서비스(FMP)
     private final PerShareValueCalculationService perShareValueCalculationService;  // 가치계산 서비스
     private final RecommendedCompanyService recommendedCompanyService;              // 기업추천 서비스
