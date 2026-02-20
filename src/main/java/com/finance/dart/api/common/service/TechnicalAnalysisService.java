@@ -330,6 +330,40 @@ public class TechnicalAnalysisService {
                 score += 10;
             }
 
+            // ── 반전 리스크 감점 ──
+
+            // ① RSI > 70: 과매수 감점
+            if (rsi > 70) {
+                score -= 10;
+            }
+
+            // ② 연속 상승일수 체크 (5일 이상이면 과열)
+            int consecutiveUp = 0;
+            for (int i = 0; i < closes.size() - 1 && i < 10; i++) {
+                if (closes.get(i) > closes.get(i + 1)) {
+                    consecutiveUp++;
+                } else {
+                    break;
+                }
+            }
+            if (consecutiveUp >= 5) {
+                score -= 10;
+            }
+
+            // ③ SMA5-SMA20 괴리도 > 3%: 평균 회귀 압력
+            if (sma20 > 0) {
+                double divergence = Math.abs(sma5 - sma20) / sma20;
+                if (divergence > 0.03 && sma5 > sma20) {
+                    score -= 10;
+                }
+            }
+
+            // ④ 현재가가 20일 고점의 97% 이상: 상승 여력 제한
+            double high20 = closes.stream().limit(20).mapToDouble(Double::doubleValue).max().orElse(0);
+            if (high20 > 0 && currentPrice >= high20 * 0.97) {
+                score -= 5;
+            }
+
             // 범위 제한
             score = Math.max(0, Math.min(100, score));
 
@@ -387,6 +421,12 @@ public class TechnicalAnalysisService {
                 if (lowerProximity < 0.10) {
                     desc.append("볼린저밴드 하단 근접(지지 기대). ");
                 }
+            }
+            if (rsi > 70) {
+                desc.append("RSI 과매수 구간(조정 가능). ");
+            }
+            if (consecutiveUp >= 5) {
+                desc.append(String.format("연속 %d일 상승(단기 과열). ", consecutiveUp));
             }
             desc.append(String.format("ATR $%.2f (일일 예상 변동폭).", atr));
 
