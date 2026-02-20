@@ -13,6 +13,9 @@ import java.util.List;
 /**
  * 모니터링 데이터 집계 오케스트레이터
  * 각 소스를 주기적으로 폴링하여 MonitoringEventBuffer로 publish
+ *
+ * snapshot publish는 aggregateSnapshot() 한 곳에서만 수행.
+ * resources/trades는 별도 주기로 캐시만 갱신하고, 다음 snapshot에 포함됨.
  */
 @Slf4j
 @Service
@@ -24,8 +27,11 @@ public class MonitoringAggregatorService {
     private final PrometheusQueryService prometheusQueryService;
     private final MonitoringEventBuffer eventBuffer;
 
+    /** 리소스 메트릭 캐시 — aggregateResources()에서 갱신, aggregateSnapshot()에서 읽기 */
+    private volatile ResourceMetricsDto cachedResources = null;
+
     /**
-     * 3초 주기: 서비스 상태 + 프로세스 상태 snapshot 생성
+     * 3초 주기: 전체 snapshot 생성 및 publish (유일한 publish 포인트)
      */
     @Scheduled(fixedDelay = 3000)
     public void aggregateSnapshot() {
@@ -42,16 +48,12 @@ public class MonitoringAggregatorService {
             // 오늘 거래 건수
             int todayTradeCount = tradeEventDetectorService.getTodayTradeCount();
 
-            // 이전 snapshot의 resources를 보존 (10초 주기로만 갱신되므로)
-            MonitoringSnapshotDto prev = eventBuffer.getLatestSnapshot();
-            ResourceMetricsDto prevResources = prev != null ? prev.getResources() : null;
-
             MonitoringSnapshotDto snapshot = MonitoringSnapshotDto.builder()
                     .services(services)
                     .buyProcess(buyProcess)
                     .sellProcess(sellProcess)
-                    .resources(prevResources)
-                    .holdingsCount(0) // TODO: 보유량 서비스 연동
+                    .resources(cachedResources)
+                    .holdingsCount(0)
                     .todayTradeCount(todayTradeCount)
                     .timestamp(System.currentTimeMillis())
                     .build();
@@ -64,17 +66,12 @@ public class MonitoringAggregatorService {
     }
 
     /**
-     * 10초 주기: Prometheus 리소스 메트릭 수집 → snapshot에 포함
+     * 10초 주기: Prometheus 리소스 메트릭 수집 → 캐시만 갱신 (publish하지 않음)
      */
     @Scheduled(fixedDelay = 10000)
     public void aggregateResources() {
         try {
-            ResourceMetricsDto metrics = prometheusQueryService.queryMetrics();
-            MonitoringSnapshotDto latest = eventBuffer.getLatestSnapshot();
-            if (latest != null) {
-                latest.setResources(metrics);
-                eventBuffer.publishSnapshot(latest);
-            }
+            cachedResources = prometheusQueryService.queryMetrics();
         } catch (Exception e) {
             log.debug("Prometheus 메트릭 수집 실패: {}", e.getMessage());
         }
