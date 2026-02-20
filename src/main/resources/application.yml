@@ -97,3 +97,10 @@ file:
 app:
   local: true
 
+monitoring:
+  prometheus:
+    url: ${PROMETHEUS_URL:http://prometheus.monitoring.svc.cluster.local:9090}
+    enabled: ${MONITORING_PROMETHEUS_ENABLED:false}
+  cointrader:
+    url: ${COINTRADER_URL:http://localhost:18082}
+

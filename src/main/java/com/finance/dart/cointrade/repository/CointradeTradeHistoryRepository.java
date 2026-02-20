@@ -87,4 +87,11 @@ public interface CointradeTradeHistoryRepository extends JpaRepository<Cointrade
      * @return 거래 기록 Entity 페이지
      */
     Page<CointradeTradeHistoryEntity> findByCoinCodeOrderByCreatedAtDesc(String coinCode, Pageable pageable);
+
+    /**
+     * 특정 시점 이후 거래 기록 조회 (watermark 방식 신규 거래 감지용)
+     * @param createdAt 기준 시점
+     * @return 신규 거래 기록 (시간순)
+     */
+    List<CointradeTradeHistoryEntity> findByCreatedAtAfterOrderByCreatedAtAsc(LocalDateTime createdAt);
 }
