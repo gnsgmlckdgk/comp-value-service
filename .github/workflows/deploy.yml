@@ -1,5 +1,7 @@
 name: Commit Stage  # 워크플로의 이름
-on: push            # 새 코드를 저장소로 푸시하면 워크플로를 시작한다.
+on:
+  push:
+    branches: [main]
 
 env:
   REGISTRY: ghcr.io
