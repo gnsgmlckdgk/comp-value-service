@@ -2,9 +2,8 @@ name: Commit Stage  # 워크플로의 이름
 on: push            # 새 코드를 저장소로 푸시하면 워크플로를 시작한다.
 
 env:
-  REGISTRY: ghcr.io                         # 깃허브 컨테이너 저장소를 사용한다
-  IMAGE_NAME: gnsgmlckdgk/comp-value-service # 이미지의 이름. 자신의 깃허브 유저명을 소문자로 추가한다.
-  VERSION: latest                           # 지금은 새 이미지를 latest로 태깅한다.
+  REGISTRY: ghcr.io
+  IMAGE_NAME: gnsgmlckdgk/comp-value-service
 
 jobs:
   # 작업의 고유 식별자
@@ -110,18 +109,55 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Build and push multi-arch Docker image
+      - name: Extract metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          tags: |
+            type=sha,prefix=sha-,format=short
+            type=raw,value=latest
+
+      - name: Build and push Docker image
         uses: docker/build-push-action@v5
         with:
           context: .
           push: true
-          # 도커 환경 변경되면 조정 필요(현재 M1 Mac 미니큐브라 arm임)
-          # platforms: linux/amd64,linux/arm64
-#          platforms: linux/arm64
           platforms: linux/amd64
-          tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ env.VERSION }}
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
 
-#      - name: Publish container image
-#        run: docker push ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ env.VERSION }} # 릴리스 후보를 저장소로 푸쉬
+  update-manifest:
+    name: Update GitOps Manifest
+    if: ${{ github.ref == 'refs/heads/main' }}
+    needs: [package]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout infra repo
+        uses: actions/checkout@v4
+        with:
+          repository: gnsgmlckdgk/comp-value-gos
+          token: ${{ secrets.GOS_DEPLOY_PAT }}
+          ref: main
 
+      - name: Setup Kustomize
+        uses: imranismail/setup-kustomize@v2
 
+      - name: Update image tag
+        run: |
+          cd ncloud/backend/app
+          kustomize edit set image ghcr.io/gnsgmlckdgk/comp-value-service=ghcr.io/gnsgmlckdgk/comp-value-service:sha-${GITHUB_SHA::7}
+
+      - name: Commit and push
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add ncloud/backend/app/kustomization.yaml
+          git diff --staged --quiet && echo "No changes" && exit 0
+          MAX_RETRIES=3
+          for i in $(seq 1 $MAX_RETRIES); do
+            git commit -m "deploy(service): update image to sha-${GITHUB_SHA::7}"
+            git push && exit 0
+            git pull --rebase
+          done
+          exit 1
