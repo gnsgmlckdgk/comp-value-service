@@ -18,9 +18,10 @@ import java.util.List;
 @JsonPropertyOrder({
     "symbol", "companyName", "currentPrice", "fairValue", "priceDifference",
     "priceGapPercent", "totalScore", "grade", "recommendation",
+    "purchasePrice", "sellTarget", "stopLossPrice",
     "peg", "per", "sector", "industry", "beta", "exchange", "country", "marketCap",
     "step1Score", "step2Score", "step3Score", "step4Score", "step5Score", "step6Score",
-    "momentumGatePass", "stepDetails", "resultDetail"
+    "momentumGatePass", "entryTiming", "stepDetails", "resultDetail"
 })
 public class StockEvaluationResponse {
 
@@ -118,6 +119,21 @@ public class StockEvaluationResponse {
     private String marketCap;
 
     /**
+     * 매수적정가 (안전마진 적용)
+     */
+    private String purchasePrice;
+
+    /**
+     * 목표매도가
+     */
+    private String sellTarget;
+
+    /**
+     * 손절매가
+     */
+    private String stopLossPrice;
+
+    /**
      * Step 1 점수
      */
     private double step1Score;
@@ -152,6 +168,11 @@ public class StockEvaluationResponse {
      */
     @Builder.Default
     private boolean momentumGatePass = true;
+
+    /**
+     * 진입 타이밍 분석 결과
+     */
+    private EntryTimingAnalysis entryTiming;
 
     /**
      * 각 Step별 상세 평가 정보

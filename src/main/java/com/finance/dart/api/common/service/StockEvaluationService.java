@@ -12,6 +12,7 @@ import com.finance.dart.api.abroad.service.fmp.StockQuoteService;
 import com.finance.dart.api.common.constants.EvaluationConst;
 import com.finance.dart.api.common.dto.CompanySharePriceResult;
 import com.finance.dart.api.common.dto.CompanySharePriceResultDetail;
+import com.finance.dart.api.common.dto.evaluation.EntryTimingAnalysis;
 import com.finance.dart.api.common.dto.evaluation.StepEvaluationDetail;
 import com.finance.dart.api.common.dto.evaluation.StockEvaluationRequest;
 import com.finance.dart.api.common.dto.evaluation.StockEvaluationResponse;
@@ -130,8 +131,19 @@ public class StockEvaluationService {
         double step4Score = evaluateStep4(detail, stepDetails);
         double step5Score = evaluateStep5(detail, result, currentPrice, stepDetails);
 
-        // 3-1. Step 6: 모멘텀/기술적 분석
-        double step6Score = evaluateStep6(symbol, detail, stepDetails);
+        // 3-1. Step 6: 모멘텀/기술적 분석 (데이터 조회를 여기서 수행하여 타이밍 분석과 공유)
+        StockQuoteResDto stockQuote = fetchStockQuote(symbol);
+        List<StockPriceVolumeResDto> priceHistory = fetchPriceHistory(symbol);
+
+        double step6Score = evaluateStep6(symbol, detail, stepDetails, stockQuote, priceHistory);
+
+        // 3-2. 진입 타이밍 분석 (동일 데이터 재사용)
+        EntryTimingAnalysis entryTiming = null;
+        try {
+            entryTiming = technicalAnalysisService.analyzeEntryTiming(stockQuote, priceHistory);
+        } catch (Exception e) {
+            log.warn("[EntryTiming] {} - 진입 타이밍 분석 실패: {}", symbol, e.getMessage());
+        }
 
         // 4. 총점 계산
         double totalScore = step1Score + step2Score + step3Score + step4Score + step5Score + step6Score;
@@ -172,6 +184,9 @@ public class StockEvaluationService {
                 .totalScore(totalScore)
                 .grade(grade)
                 .recommendation(recommendation)
+                .purchasePrice(result.get매수적정가())
+                .sellTarget(result.get목표매도가())
+                .stopLossPrice(result.get손절매가())
                 .peg(detail.getPEG())
                 .per(detail.getPER())
                 .sector(profile != null ? profile.getSector() : "N/A")
@@ -188,6 +203,7 @@ public class StockEvaluationService {
                 .step5Score(step5Score)
                 .step6Score(step6Score)
                 .momentumGatePass(momentumGatePass)
+                .entryTiming(entryTiming)
                 .stepDetails(stepDetails)
                 .resultDetail(detail)
                 .calVersion(result.get버전())
@@ -703,38 +719,13 @@ public class StockEvaluationService {
      * - 하드 게이트: 데스크로스+주가<SMA200, RSI<20+주가<SMA50 → 총점 45점 상한
      */
     private double evaluateStep6(String symbol, CompanySharePriceResultDetail detail,
-                                  List<StepEvaluationDetail> stepDetails) {
+                                  List<StepEvaluationDetail> stepDetails,
+                                  StockQuoteResDto stockQuote,
+                                  List<StockPriceVolumeResDto> priceHistory) {
         double score = 0;
         StringBuilder detailsStr = new StringBuilder();
 
         try {
-            // StockQuote 조회 (SMA50, SMA200)
-            StockQuoteResDto stockQuote = null;
-            try {
-                StockQuoteReqDto quoteReq = new StockQuoteReqDto(symbol);
-                List<StockQuoteResDto> quotes = stockQuoteService.findStockQuote(quoteReq);
-                if (quotes != null && !quotes.isEmpty()) {
-                    stockQuote = quotes.get(0);
-                }
-            } catch (Exception e) {
-                log.warn("[Step6] {} - StockQuote 조회 실패: {}", symbol, e.getMessage());
-            }
-
-            // 52주 가격 히스토리 (RSI, 거래량)
-            List<StockPriceVolumeResDto> priceHistory = null;
-            try {
-                LocalDate today = LocalDate.now();
-                LocalDate oneYearAgo = today.minusYears(1);
-                StockPriceVolumeReqDto priceReqDto = new StockPriceVolumeReqDto(
-                    symbol,
-                    oneYearAgo.format(DateTimeFormatter.ISO_LOCAL_DATE),
-                    today.format(DateTimeFormatter.ISO_LOCAL_DATE)
-                );
-                priceHistory = stockPriceVolumeService.findStockPriceVolume(priceReqDto);
-            } catch (Exception e) {
-                log.warn("[Step6] {} - 가격 히스토리 조회 실패: {}", symbol, e.getMessage());
-            }
-
             // 기술적 분석 수행
             TechnicalAnalysisService.TechnicalAnalysisResult result =
                     technicalAnalysisService.analyze(stockQuote, priceHistory, detail);
@@ -777,6 +768,41 @@ public class StockEvaluationService {
                 .build());
 
         return score;
+    }
+
+    /**
+     * StockQuote 조회 (SMA50, SMA200 포함)
+     */
+    private StockQuoteResDto fetchStockQuote(String symbol) {
+        try {
+            StockQuoteReqDto quoteReq = new StockQuoteReqDto(symbol);
+            List<StockQuoteResDto> quotes = stockQuoteService.findStockQuote(quoteReq);
+            if (quotes != null && !quotes.isEmpty()) {
+                return quotes.get(0);
+            }
+        } catch (Exception e) {
+            log.warn("[Step6] {} - StockQuote 조회 실패: {}", symbol, e.getMessage());
+        }
+        return null;
+    }
+
+    /**
+     * 52주 가격 히스토리 조회 (RSI, 거래량, 진입 타이밍 분석용)
+     */
+    private List<StockPriceVolumeResDto> fetchPriceHistory(String symbol) {
+        try {
+            LocalDate today = LocalDate.now();
+            LocalDate oneYearAgo = today.minusYears(1);
+            StockPriceVolumeReqDto priceReqDto = new StockPriceVolumeReqDto(
+                    symbol,
+                    oneYearAgo.format(DateTimeFormatter.ISO_LOCAL_DATE),
+                    today.format(DateTimeFormatter.ISO_LOCAL_DATE)
+            );
+            return stockPriceVolumeService.findStockPriceVolume(priceReqDto);
+        } catch (Exception e) {
+            log.warn("[Step6] {} - 가격 히스토리 조회 실패: {}", symbol, e.getMessage());
+        }
+        return null;
     }
 
     /**

@@ -3,11 +3,13 @@ package com.finance.dart.api.common.service;
 import com.finance.dart.api.abroad.dto.fmp.chart.StockPriceVolumeResDto;
 import com.finance.dart.api.abroad.dto.fmp.quote.StockQuoteResDto;
 import com.finance.dart.api.common.dto.CompanySharePriceResultDetail;
+import com.finance.dart.api.common.dto.evaluation.EntryTimingAnalysis;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -218,5 +220,381 @@ public class TechnicalAnalysisService {
         if (olderAvg == 0) return -1;
 
         return recentAvg / olderAvg;
+    }
+
+    // ============================================================
+    //  진입 타이밍 분석 (Entry Timing Analysis)
+    // ============================================================
+
+    /**
+     * 진입 타이밍 분석
+     * SMA5/20, MACD(12,26,9), 볼린저밴드(20,2), 스토캐스틱(14,3), ATR(14) 기반
+     *
+     * @param stockQuote 현재 시세 정보
+     * @param priceHistory 52주 일별 가격 (최신 → 과거 순서)
+     * @return 진입 타이밍 분석 결과 (데이터 부족 시 null)
+     */
+    public EntryTimingAnalysis analyzeEntryTiming(StockQuoteResDto stockQuote,
+                                                   List<StockPriceVolumeResDto> priceHistory) {
+        if (priceHistory == null || priceHistory.size() < 30) {
+            log.debug("진입 타이밍 분석 불가: 데이터 부족 ({}일)", priceHistory == null ? 0 : priceHistory.size());
+            return null;
+        }
+
+        try {
+            // 종가 리스트 추출 (최신→과거)
+            List<Double> closes = extractCloses(priceHistory);
+            if (closes.size() < 26) return null;
+
+            double currentPrice = closes.get(0);
+
+            // 1. SMA5, SMA20
+            double sma5 = calculateSMA(closes, 5);
+            double sma20 = calculateSMA(closes, 20);
+
+            // 2. MACD (12, 26, 9)
+            double[] macd = calculateMACD(closes, 12, 26, 9);
+            double macdLine = macd[0];
+            double macdSignal = macd[1];
+            double macdHistogram = macd[2];
+
+            // 어제 MACD 히스토그램 (증가 추세 판단용)
+            List<Double> closesYesterday = closes.subList(1, closes.size());
+            double[] macdYesterday = calculateMACD(closesYesterday, 12, 26, 9);
+            double prevHistogram = macdYesterday[2];
+
+            // 3. 볼린저밴드 (20, 2)
+            double[] bollinger = calculateBollingerBands(closes, 20, 2.0);
+            double bollingerUpper = bollinger[0];
+            double bollingerMiddle = bollinger[1];
+            double bollingerLower = bollinger[2];
+
+            // 4. 스토캐스틱 (14, 3)
+            double[] stochastic = calculateStochastic(priceHistory, 14, 3);
+            double stochasticK = stochastic[0];
+            double stochasticD = stochastic[1];
+
+            // 5. ATR (14)
+            double atr = calculateATR(priceHistory, 14);
+
+            // 6. RSI (기존 메서드 활용)
+            double rsi = calculateRSI(priceHistory, 14);
+            // 어제 RSI (상승 추세 판단용)
+            double prevRsi = priceHistory.size() > 15 ?
+                    calculateRSI(priceHistory.subList(1, priceHistory.size()), 14) : rsi;
+
+            // ── 종합 점수 계산 ──
+            int score = 50; // 기준점
+
+            // SMA5 > SMA20: +20 (단기 상승), SMA5 < SMA20: -10
+            if (sma5 > sma20) {
+                score += 20;
+            } else {
+                score -= 10;
+            }
+
+            // MACD > Signal: +20 (모멘텀 양전환), MACD < Signal: -10
+            if (macdLine > macdSignal) {
+                score += 20;
+            } else {
+                score -= 10;
+            }
+
+            // MACD Histogram 증가중: +10
+            if (macdHistogram > prevHistogram) {
+                score += 10;
+            }
+
+            // Stochastic K < 20: +15 (과매도 = 반등 가능)
+            // Stochastic K > 80: -15 (과매수 = 조정 가능)
+            if (stochasticK < 20) {
+                score += 15;
+            } else if (stochasticK > 80) {
+                score -= 15;
+            }
+
+            // 볼린저 하단 근접(<10%): +15, 상단 근접(<10%): -10
+            double bollingerRange = bollingerUpper - bollingerLower;
+            if (bollingerRange > 0) {
+                double lowerProximity = (currentPrice - bollingerLower) / bollingerRange;
+                double upperProximity = (bollingerUpper - currentPrice) / bollingerRange;
+                if (lowerProximity < 0.10) {
+                    score += 15;
+                } else if (upperProximity < 0.10) {
+                    score -= 10;
+                }
+            }
+
+            // RSI 30~50 + 상승중: +10 (회복 구간)
+            if (rsi >= 30 && rsi <= 50 && rsi > prevRsi) {
+                score += 10;
+            }
+
+            // 범위 제한
+            score = Math.max(0, Math.min(100, score));
+
+            // ── 시그널 결정 ──
+            String signal;
+            String signalColor;
+            if (score >= 70) {
+                signal = "매수 적기";
+                signalColor = "green";
+            } else if (score >= 50) {
+                signal = "관망";
+                signalColor = "gray";
+            } else if (score >= 30) {
+                signal = "대기 권장";
+                signalColor = "yellow";
+            } else {
+                signal = "하락 구간";
+                signalColor = "red";
+            }
+
+            // ── 단기 추세 판단 ──
+            String shortTermTrend;
+            StringBuilder trendDetailSb = new StringBuilder();
+            if (sma5 > sma20) {
+                shortTermTrend = "상승";
+                trendDetailSb.append("SMA5가 SMA20 위");
+            } else if (Math.abs(sma5 - sma20) / sma20 < 0.005) {
+                shortTermTrend = "횡보";
+                trendDetailSb.append("SMA5와 SMA20 근접");
+            } else {
+                shortTermTrend = "하락";
+                trendDetailSb.append("SMA5가 SMA20 아래");
+            }
+
+            if (macdLine > macdSignal) {
+                trendDetailSb.append(", MACD 양전환");
+            } else {
+                trendDetailSb.append(", MACD 음전환");
+            }
+
+            if (macdHistogram > prevHistogram) {
+                trendDetailSb.append("(히스토그램 증가중)");
+            }
+
+            // ── 상세 설명 ──
+            StringBuilder desc = new StringBuilder();
+            desc.append(String.format("단기추세 %s. ", shortTermTrend));
+            if (stochasticK < 20) {
+                desc.append("스토캐스틱 과매도 구간(반등 가능). ");
+            } else if (stochasticK > 80) {
+                desc.append("스토캐스틱 과매수 구간(조정 가능). ");
+            }
+            if (bollingerRange > 0) {
+                double lowerProximity = (currentPrice - bollingerLower) / bollingerRange;
+                if (lowerProximity < 0.10) {
+                    desc.append("볼린저밴드 하단 근접(지지 기대). ");
+                }
+            }
+            desc.append(String.format("ATR $%.2f (일일 예상 변동폭).", atr));
+
+            return EntryTimingAnalysis.builder()
+                    .signal(signal)
+                    .signalColor(signalColor)
+                    .timingScore(score)
+                    .description(desc.toString())
+                    .shortTermTrend(shortTermTrend)
+                    .trendDetail(trendDetailSb.toString())
+                    .estimatedSupport(round2(bollingerLower))
+                    .estimatedResistance(round2(bollingerUpper))
+                    .sma5(round2(sma5))
+                    .sma20(round2(sma20))
+                    .macdLine(round2(macdLine))
+                    .macdSignal(round2(macdSignal))
+                    .macdHistogram(round2(macdHistogram))
+                    .bollingerUpper(round2(bollingerUpper))
+                    .bollingerMiddle(round2(bollingerMiddle))
+                    .bollingerLower(round2(bollingerLower))
+                    .stochasticK(round2(stochasticK))
+                    .stochasticD(round2(stochasticD))
+                    .atr(round2(atr))
+                    .build();
+
+        } catch (Exception e) {
+            log.warn("진입 타이밍 분석 중 오류: {}", e.getMessage());
+            return null;
+        }
+    }
+
+    // ── 헬퍼 메서드 ──
+
+    /**
+     * 종가 리스트 추출 (null 제거)
+     */
+    private List<Double> extractCloses(List<StockPriceVolumeResDto> priceHistory) {
+        List<Double> closes = new ArrayList<>();
+        for (StockPriceVolumeResDto dto : priceHistory) {
+            if (dto.getClose() != null) {
+                closes.add(dto.getClose());
+            }
+        }
+        return closes;
+    }
+
+    /**
+     * SMA 계산
+     */
+    private double calculateSMA(List<Double> values, int period) {
+        if (values.size() < period) return values.get(0);
+        double sum = 0;
+        for (int i = 0; i < period; i++) {
+            sum += values.get(i);
+        }
+        return sum / period;
+    }
+
+    /**
+     * EMA 계산
+     * @param values 값 리스트 (최신→과거)
+     * @param period EMA 기간
+     * @return EMA 값
+     */
+    private double calculateEMA(List<Double> values, int period) {
+        if (values.size() < period) return calculateSMA(values, values.size());
+
+        double multiplier = 2.0 / (period + 1);
+
+        // 역순으로 진행 (과거→최신)
+        // 초기 SMA로 시작
+        double ema = 0;
+        int startIdx = values.size() - 1;
+        int endIdx = Math.max(0, values.size() - period);
+
+        // 가장 오래된 period 개의 평균으로 시작
+        double sum = 0;
+        for (int i = startIdx; i > startIdx - period && i >= 0; i--) {
+            sum += values.get(i);
+        }
+        ema = sum / period;
+
+        // 과거에서 최신으로 진행
+        for (int i = startIdx - period; i >= 0; i--) {
+            ema = (values.get(i) - ema) * multiplier + ema;
+        }
+
+        return ema;
+    }
+
+    /**
+     * MACD 계산 (12, 26, 9)
+     * @return [macdLine, signalLine, histogram]
+     */
+    private double[] calculateMACD(List<Double> closes, int fast, int slow, int signal) {
+        double emaFast = calculateEMA(closes, fast);
+        double emaSlow = calculateEMA(closes, slow);
+        double macdLine = emaFast - emaSlow;
+
+        // MACD 히스토리 계산 (시그널 라인용)
+        List<Double> macdHistory = new ArrayList<>();
+        for (int i = 0; i < closes.size() && i < slow + signal; i++) {
+            List<Double> subCloses = closes.subList(i, closes.size());
+            if (subCloses.size() >= slow) {
+                double ef = calculateEMA(subCloses, fast);
+                double es = calculateEMA(subCloses, slow);
+                macdHistory.add(ef - es);
+            }
+        }
+
+        double signalLine = macdHistory.size() >= signal ?
+                calculateEMA(macdHistory, signal) : macdLine;
+
+        return new double[]{macdLine, signalLine, macdLine - signalLine};
+    }
+
+    /**
+     * 볼린저밴드 계산 (period, multiplier)
+     * @return [upper, middle, lower]
+     */
+    private double[] calculateBollingerBands(List<Double> closes, int period, double multiplier) {
+        double sma = calculateSMA(closes, period);
+        int len = Math.min(closes.size(), period);
+
+        double sumSq = 0;
+        for (int i = 0; i < len; i++) {
+            double diff = closes.get(i) - sma;
+            sumSq += diff * diff;
+        }
+        double stdDev = Math.sqrt(sumSq / len);
+
+        return new double[]{
+                sma + multiplier * stdDev,
+                sma,
+                sma - multiplier * stdDev
+        };
+    }
+
+    /**
+     * 스토캐스틱 계산 (%K, %D)
+     * @param priceHistory 일별 가격 (최신→과거, high/low/close 필요)
+     * @param kPeriod %K 기간 (14)
+     * @param dPeriod %D 기간 (3)
+     * @return [%K, %D]
+     */
+    private double[] calculateStochastic(List<StockPriceVolumeResDto> priceHistory, int kPeriod, int dPeriod) {
+        if (priceHistory.size() < kPeriod + dPeriod) return new double[]{50, 50};
+
+        List<Double> kValues = new ArrayList<>();
+        for (int i = 0; i < dPeriod + 1 && i + kPeriod <= priceHistory.size(); i++) {
+            double highMax = Double.MIN_VALUE;
+            double lowMin = Double.MAX_VALUE;
+            for (int j = i; j < i + kPeriod; j++) {
+                StockPriceVolumeResDto bar = priceHistory.get(j);
+                if (bar.getHigh() != null) highMax = Math.max(highMax, bar.getHigh());
+                if (bar.getLow() != null) lowMin = Math.min(lowMin, bar.getLow());
+            }
+            double close = priceHistory.get(i).getClose() != null ? priceHistory.get(i).getClose() : 0;
+            double range = highMax - lowMin;
+            double k = range > 0 ? ((close - lowMin) / range) * 100 : 50;
+            kValues.add(k);
+        }
+
+        double currentK = kValues.isEmpty() ? 50 : kValues.get(0);
+
+        // %D = %K의 dPeriod 이동평균
+        double dSum = 0;
+        int dCount = Math.min(dPeriod, kValues.size());
+        for (int i = 0; i < dCount; i++) {
+            dSum += kValues.get(i);
+        }
+        double currentD = dCount > 0 ? dSum / dCount : 50;
+
+        return new double[]{currentK, currentD};
+    }
+
+    /**
+     * ATR 계산 (Average True Range)
+     * @param priceHistory 일별 가격 (최신→과거)
+     * @param period ATR 기간 (14)
+     * @return ATR 값
+     */
+    private double calculateATR(List<StockPriceVolumeResDto> priceHistory, int period) {
+        if (priceHistory.size() < period + 1) return 0;
+
+        double sum = 0;
+        for (int i = 0; i < period; i++) {
+            StockPriceVolumeResDto current = priceHistory.get(i);
+            StockPriceVolumeResDto previous = priceHistory.get(i + 1);
+
+            double high = current.getHigh() != null ? current.getHigh() : 0;
+            double low = current.getLow() != null ? current.getLow() : 0;
+            double prevClose = previous.getClose() != null ? previous.getClose() : 0;
+
+            double tr = Math.max(
+                    high - low,
+                    Math.max(Math.abs(high - prevClose), Math.abs(low - prevClose))
+            );
+            sum += tr;
+        }
+
+        return sum / period;
+    }
+
+    /**
+     * 소수점 2자리 반올림
+     */
+    private double round2(double value) {
+        return Math.round(value * 100.0) / 100.0;
     }
 }
