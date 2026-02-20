@@ -36,10 +36,14 @@ public class MonitoringAggregatorService {
     @Scheduled(fixedDelay = 3000)
     public void aggregateSnapshot() {
         try {
-            // 서비스 상태 수집
+            // 서비스 상태 수집 (6개: web, backend, cointrader, stock-predictor, postgresql, redis)
             List<ServiceStatusDto> services = new ArrayList<>();
+            services.add(cointraderStatusService.getWebHealth());
             services.add(getBackendStatus());
-            services.add(cointraderStatusService.getHealth());
+            services.add(cointraderStatusService.getCointraderHealth());
+            services.add(cointraderStatusService.getStockPredictorHealth());
+            services.add(cointraderStatusService.getPostgresHealth());
+            services.add(cointraderStatusService.getRedisHealth());
 
             // 프로세스 상태
             ProcessStatusDto buyProcess = cointraderStatusService.getProcessStatus("buy");
