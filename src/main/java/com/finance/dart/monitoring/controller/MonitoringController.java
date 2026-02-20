@@ -15,7 +15,10 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
+import org.springframework.http.ResponseEntity;
+
 import java.io.IOException;
+import java.util.Map;
 import java.util.function.Consumer;
 
 /**
@@ -112,5 +115,19 @@ public class MonitoringController {
         }
 
         return emitter;
+    }
+
+    /**
+     * 디버그용: 현재 snapshot을 JSON으로 반환
+     * curl http://localhost:18080/dart/monitoring/snapshot
+     */
+    @EndPointConfig.PublicEndpoint
+    @GetMapping("/snapshot")
+    public ResponseEntity<?> snapshot() {
+        MonitoringSnapshotDto latest = eventBuffer.getLatestSnapshot();
+        if (latest == null) {
+            return ResponseEntity.ok(Map.of("status", "NO_DATA", "message", "아직 snapshot이 수집되지 않았습니다."));
+        }
+        return ResponseEntity.ok(latest);
     }
 }

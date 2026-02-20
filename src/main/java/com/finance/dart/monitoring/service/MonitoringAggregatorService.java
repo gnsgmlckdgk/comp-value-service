@@ -9,6 +9,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Supplier;
 
 /**
  * 모니터링 데이터 집계 오케스트레이터
@@ -32,25 +33,31 @@ public class MonitoringAggregatorService {
 
     /**
      * 3초 주기: 전체 snapshot 생성 및 publish (유일한 publish 포인트)
+     * 개별 서비스 헬스체크 실패가 전체 snapshot 발행을 막지 않도록 각각 try-catch
      */
     @Scheduled(fixedDelay = 3000)
     public void aggregateSnapshot() {
         try {
             // 서비스 상태 수집 (6개: web, backend, cointrader, stock-predictor, postgresql, redis)
             List<ServiceStatusDto> services = new ArrayList<>();
-            services.add(cointraderStatusService.getWebHealth());
+            services.add(safeGetHealth("comp-value-admin", () -> cointraderStatusService.getWebHealth()));
             services.add(getBackendStatus());
-            services.add(cointraderStatusService.getCointraderHealth());
-            services.add(cointraderStatusService.getStockPredictorHealth());
-            services.add(cointraderStatusService.getPostgresHealth());
-            services.add(cointraderStatusService.getRedisHealth());
+            services.add(safeGetHealth("cointrader", () -> cointraderStatusService.getCointraderHealth()));
+            services.add(safeGetHealth("stock-predictor", () -> cointraderStatusService.getStockPredictorHealth()));
+            services.add(safeGetHealth("postgresql", () -> cointraderStatusService.getPostgresHealth()));
+            services.add(safeGetHealth("redis", () -> cointraderStatusService.getRedisHealth()));
+
+            log.debug("모니터링 서비스 수집 완료: {}개 [{}]", services.size(),
+                    services.stream()
+                            .map(s -> s.getName() + "=" + s.getStatus())
+                            .reduce((a, b) -> a + ", " + b).orElse(""));
 
             // 프로세스 상태
-            ProcessStatusDto buyProcess = cointraderStatusService.getProcessStatus("buy");
-            ProcessStatusDto sellProcess = cointraderStatusService.getProcessStatus("sell");
+            ProcessStatusDto buyProcess = safeGetProcess("buy");
+            ProcessStatusDto sellProcess = safeGetProcess("sell");
 
             // 오늘 거래 건수
-            int todayTradeCount = tradeEventDetectorService.getTodayTradeCount();
+            int todayTradeCount = safeGetTodayTradeCount();
 
             MonitoringSnapshotDto snapshot = MonitoringSnapshotDto.builder()
                     .services(services)
@@ -65,7 +72,7 @@ public class MonitoringAggregatorService {
             eventBuffer.publishSnapshot(snapshot);
 
         } catch (Exception e) {
-            log.warn("모니터링 snapshot 수집 실패: {}", e.getMessage());
+            log.warn("모니터링 snapshot 수집 실패: {}", e.getMessage(), e);
         }
     }
 
@@ -93,6 +100,34 @@ public class MonitoringAggregatorService {
             }
         } catch (Exception e) {
             log.debug("거래 감지 실패: {}", e.getMessage());
+        }
+    }
+
+    /** 개별 헬스체크를 안전하게 호출 — 어떤 예외든 잡아서 DOWN 반환 */
+    private ServiceStatusDto safeGetHealth(String serviceName, Supplier<ServiceStatusDto> supplier) {
+        try {
+            return supplier.get();
+        } catch (Exception e) {
+            log.warn("헬스체크 실패 [{}]: {}", serviceName, e.getMessage());
+            return ServiceStatusDto.builder().name(serviceName).status("DOWN").build();
+        }
+    }
+
+    private ProcessStatusDto safeGetProcess(String processName) {
+        try {
+            return cointraderStatusService.getProcessStatus(processName);
+        } catch (Exception e) {
+            log.debug("프로세스 상태 조회 실패 [{}]: {}", processName, e.getMessage());
+            return ProcessStatusDto.builder().name(processName).status("IDLE").percent(0).message("").build();
+        }
+    }
+
+    private int safeGetTodayTradeCount() {
+        try {
+            return tradeEventDetectorService.getTodayTradeCount();
+        } catch (Exception e) {
+            log.debug("오늘 거래 건수 조회 실패: {}", e.getMessage());
+            return 0;
         }
     }
 

@@ -8,6 +8,9 @@ import org.springframework.data.redis.connection.RedisConnectionFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
 
+import org.springframework.http.HttpStatusCode;
+import reactor.core.publisher.Mono;
+
 import javax.sql.DataSource;
 import java.sql.Connection;
 import java.time.Duration;
@@ -111,13 +114,17 @@ public class CointraderStatusService {
 
     public ServiceStatusDto getStockPredictorHealth() {
         try {
+            // ML 서비스에는 / 경로가 없으므로 /logs 사용 (가볍고 항상 200 반환)
+            // 4xx/5xx도 서비스가 살아있다는 뜻이므로 onStatus로 에러 무시
             String response = webClient.get()
-                    .uri(stockPredictorUrl + "/")
+                    .uri(stockPredictorUrl + "/logs")
                     .retrieve()
+                    .onStatus(HttpStatusCode::isError, resp -> Mono.empty())
                     .bodyToMono(String.class)
                     .timeout(Duration.ofSeconds(3))
                     .block();
 
+            // response가 null이 아니면 서비스가 응답한 것 → UP
             if (response != null) {
                 return ServiceStatusDto.builder().name("stock-predictor").status("UP").build();
             }
@@ -128,13 +135,15 @@ public class CointraderStatusService {
         return ServiceStatusDto.builder().name("stock-predictor").status("DOWN").build();
     }
 
-    // === Web (Nginx) ===
+    // === Web (Nginx / Vite dev) ===
 
     public ServiceStatusDto getWebHealth() {
         try {
+            // 4xx도 서비스가 살아있다는 뜻이므로 에러 무시
             String response = webClient.get()
                     .uri(webUrl + "/")
                     .retrieve()
+                    .onStatus(HttpStatusCode::isError, resp -> Mono.empty())
                     .bodyToMono(String.class)
                     .timeout(Duration.ofSeconds(3))
                     .block();
