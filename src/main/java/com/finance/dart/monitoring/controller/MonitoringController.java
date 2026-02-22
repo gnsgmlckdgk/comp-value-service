@@ -18,6 +18,8 @@ import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 import org.springframework.http.ResponseEntity;
 
 import java.io.IOException;
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.Map;
 import java.util.function.Consumer;
 
@@ -33,6 +35,8 @@ public class MonitoringController {
 
     private final MonitoringEventBuffer eventBuffer;
     private final ObjectMapper objectMapper;
+    private final com.finance.dart.monitoring.tracker.DownstreamTrafficTracker downstreamTrafficTracker;
+    private final com.finance.dart.monitoring.tracker.RequestTrafficTracker requestTrafficTracker;
 
     /**
      * SSE 스트림 엔드포인트
@@ -84,13 +88,28 @@ public class MonitoringController {
                 }
             };
 
+            // 4. 실시간 traffic 구독 (1초 간격, 서비스별 개별 카운트)
+            Consumer<Map<String, Integer>> trafficSubscriber = trafficData -> {
+                try {
+                    emitter.send(SseEmitter.event()
+                            .name("traffic")
+                            .data(objectMapper.writeValueAsString(trafficData))
+                            .build());
+                } catch (IOException e) {
+                    log.debug("traffic 전송 실패 (클라이언트 연결 끊김)");
+                    emitter.completeWithError(e);
+                }
+            };
+
             eventBuffer.subscribeSnapshot(snapshotSubscriber);
             eventBuffer.subscribeTrade(tradeSubscriber);
+            eventBuffer.subscribeTraffic(trafficSubscriber);
 
-            // 4. 연결 종료 시 구독 해제
+            // 5. 연결 종료 시 구독 해제
             Runnable cleanup = () -> {
                 eventBuffer.unsubscribeSnapshot(snapshotSubscriber);
                 eventBuffer.unsubscribeTrade(tradeSubscriber);
+                eventBuffer.unsubscribeTraffic(trafficSubscriber);
             };
 
             emitter.onCompletion(() -> {
@@ -129,5 +148,45 @@ public class MonitoringController {
             return ResponseEntity.ok(Map.of("status", "NO_DATA", "message", "아직 snapshot이 수집되지 않았습니다."));
         }
         return ResponseEntity.ok(latest);
+    }
+
+    /**
+     * 디버그용: 현재 트래픽 카운터 조회 (리셋 없이)
+     * curl http://localhost:18080/dart/monitoring/traffic-debug
+     */
+    @EndPointConfig.PublicEndpoint
+    @GetMapping("/traffic-debug")
+    public ResponseEntity<?> trafficDebug() {
+        return ResponseEntity.ok(Map.of(
+                "http_pending", requestTrafficTracker.get(),
+                "downstream_pending", downstreamTrafficTracker.peekAll(),
+                "isInUserRequest", com.finance.dart.monitoring.tracker.RequestTrafficTracker.isInUserRequest()
+        ));
+    }
+
+    /**
+     * 테스트용: 가짜 거래 이벤트 발사 → SSE로 전송됨
+     * curl http://localhost:18080/dart/monitoring/test-trade
+     */
+    @EndPointConfig.PublicEndpoint
+    @GetMapping("/test-trade")
+    public ResponseEntity<?> testTrade() {
+        TradeEventDto fakeTrade = TradeEventDto.builder()
+                .id(System.currentTimeMillis())
+                .coinCode("BTC")
+                .tradeType("BUY")
+                .price(new BigDecimal("95000000"))
+                .quantity(new BigDecimal("0.001"))
+                .totalAmount(new BigDecimal("95000"))
+                .profitLoss(BigDecimal.ZERO)
+                .profitLossRate(BigDecimal.ZERO)
+                .reason("테스트 거래")
+                .timestamp(LocalDateTime.now())
+                .build();
+
+        eventBuffer.publishTrade(fakeTrade);
+        log.info("테스트 거래 이벤트 발사: {}", fakeTrade.getCoinCode());
+
+        return ResponseEntity.ok(Map.of("status", "OK", "message", "테스트 거래 이벤트 발사됨", "trade", fakeTrade));
     }
 }

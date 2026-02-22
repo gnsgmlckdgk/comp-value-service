@@ -2,13 +2,17 @@ package com.finance.dart.monitoring.service;
 
 import com.finance.dart.monitoring.buffer.MonitoringEventBuffer;
 import com.finance.dart.monitoring.dto.*;
+import com.finance.dart.monitoring.tracker.DownstreamTrafficTracker;
+import com.finance.dart.monitoring.tracker.RequestTrafficTracker;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.function.Supplier;
 
 /**
@@ -27,6 +31,8 @@ public class MonitoringAggregatorService {
     private final TradeEventDetectorService tradeEventDetectorService;
     private final PrometheusQueryService prometheusQueryService;
     private final MonitoringEventBuffer eventBuffer;
+    private final RequestTrafficTracker requestTrafficTracker;
+    private final DownstreamTrafficTracker downstreamTrafficTracker;
 
     /** 리소스 메트릭 캐시 — aggregateResources()에서 갱신, aggregateSnapshot()에서 읽기 */
     private volatile ResourceMetricsDto cachedResources = null;
@@ -85,6 +91,24 @@ public class MonitoringAggregatorService {
             cachedResources = prometheusQueryService.queryMetrics();
         } catch (Exception e) {
             log.debug("Prometheus 메트릭 수집 실패: {}", e.getMessage());
+        }
+    }
+
+    /**
+     * 1초 주기: HTTP 트래픽 카운트 publish (AtomicInteger 읽기 — 거의 무비용)
+     */
+    @Scheduled(fixedDelay = 1000)
+    public void publishTraffic() {
+        try {
+            int httpCount = requestTrafficTracker.getAndReset();
+            Map<String, Integer> downstream = downstreamTrafficTracker.getAndResetAll();
+
+            Map<String, Integer> trafficData = new HashMap<>(downstream);
+            trafficData.put("http", httpCount);
+
+            eventBuffer.publishTraffic(trafficData);
+        } catch (Exception e) {
+            log.debug("트래픽 publish 실패: {}", e.getMessage());
         }
     }
 

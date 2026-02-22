@@ -19,5 +19,6 @@ public class MonitoringSnapshotDto {
     private ResourceMetricsDto resources;
     private int holdingsCount;
     private int todayTradeCount;
+    private int requestRate;
     private long timestamp;
 }
