@@ -50,15 +50,15 @@ public class PrometheusQueryService {
         List<ResourceMetricsDto.ContainerMetric> containers = new ArrayList<>();
 
         try {
-            // CPU 사용률 (pod별 합산, container="" 제외 — POD cgroup 중복 방지)
+            // CPU 사용률 (pod별 합산)
             Map<String, Double> cpuMap = queryVector(
-                    "sum by (pod) (irate(container_cpu_usage_seconds_total{namespace=\"" + namespace + "\",pod!=\"\",container!=\"\"}[1m])) * 100",
+                    "sum by (pod) (irate(container_cpu_usage_seconds_total{namespace=\"" + namespace + "\",pod!=\"\"}[1m])) * 100",
                     "pod"
             );
 
             // Memory 사용량 (pod별 합산)
             Map<String, Double> memMap = queryVector(
-                    "sum by (pod) (container_memory_working_set_bytes{namespace=\"" + namespace + "\",pod!=\"\",container!=\"\"})",
+                    "sum by (pod) (container_memory_working_set_bytes{namespace=\"" + namespace + "\",pod!=\"\"})",
                     "pod"
             );
 
