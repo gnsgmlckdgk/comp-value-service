@@ -83,9 +83,9 @@ public class MonitoringAggregatorService {
     }
 
     /**
-     * 10초 주기: Prometheus 리소스 메트릭 수집 → 캐시만 갱신 (publish하지 않음)
+     * 5초 주기: Prometheus 리소스 메트릭 수집 → 캐시만 갱신 (publish하지 않음)
      */
-    @Scheduled(fixedDelay = 10000)
+    @Scheduled(fixedDelay = 5000)
     public void aggregateResources() {
         try {
             cachedResources = prometheusQueryService.queryMetrics();
