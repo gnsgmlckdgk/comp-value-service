@@ -5,6 +5,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
+import org.springframework.web.util.UriComponentsBuilder;
 
 import java.time.Duration;
 import java.util.ArrayList;
@@ -104,8 +105,14 @@ public class PrometheusQueryService {
 
     @SuppressWarnings("unchecked")
     private Map<String, Double> queryVector(String query) {
+        String uri = UriComponentsBuilder.fromHttpUrl(prometheusUrl)
+                .path("/api/v1/query")
+                .queryParam("query", query)
+                .build()
+                .toUriString();
+
         Map<String, Object> response = webClient.get()
-                .uri(prometheusUrl + "/api/v1/query?query={query}", query)
+                .uri(uri)
                 .retrieve()
                 .bodyToMono(Map.class)
                 .timeout(Duration.ofSeconds(5))
