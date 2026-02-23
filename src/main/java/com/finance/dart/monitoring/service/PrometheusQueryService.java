@@ -21,15 +21,18 @@ public class PrometheusQueryService {
     private final WebClient webClient;
     private final String prometheusUrl;
     private final boolean enabled;
+    private final String namespace;
 
     public PrometheusQueryService(
             WebClient webClient,
             @Value("${monitoring.prometheus.url:http://prometheus.monitoring.svc.cluster.local:9090}") String prometheusUrl,
-            @Value("${monitoring.prometheus.enabled:false}") boolean enabled
+            @Value("${monitoring.prometheus.enabled:false}") boolean enabled,
+            @Value("${monitoring.prometheus.namespace:comp-value}") String namespace
     ) {
         this.webClient = webClient;
         this.prometheusUrl = prometheusUrl;
         this.enabled = enabled;
+        this.namespace = namespace;
     }
 
     public ResourceMetricsDto queryMetrics() {
@@ -45,17 +48,17 @@ public class PrometheusQueryService {
         try {
             // CPU 사용률
             Map<String, Double> cpuMap = queryVector(
-                    "rate(container_cpu_usage_seconds_total{namespace=\"default\",container!=\"\"}[5m]) * 100"
+                    "rate(container_cpu_usage_seconds_total{namespace=\"" + namespace + "\",container!=\"\"}[5m]) * 100"
             );
 
             // Memory 사용량
             Map<String, Double> memMap = queryVector(
-                    "container_memory_working_set_bytes{namespace=\"default\",container!=\"\"}"
+                    "container_memory_working_set_bytes{namespace=\"" + namespace + "\",container!=\"\"}"
             );
 
             // Memory limit
             Map<String, Double> memLimitMap = queryVector(
-                    "container_spec_memory_limit_bytes{namespace=\"default\",container!=\"\"}"
+                    "container_spec_memory_limit_bytes{namespace=\"" + namespace + "\",container!=\"\"}"
             );
 
             // 컨테이너별로 합치기
