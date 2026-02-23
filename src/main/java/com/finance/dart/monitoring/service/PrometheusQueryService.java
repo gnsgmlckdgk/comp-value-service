@@ -47,44 +47,67 @@ public class PrometheusQueryService {
                     .build();
         }
 
-        List<ResourceMetricsDto.ContainerMetric> containers = new ArrayList<>();
-
+        // 각 쿼리를 개별 try-catch — 하나가 타임아웃/실패해도 나머지는 살림
+        Map<String, Double> cpuMap = Map.of();
         try {
-            // CPU 사용률 (pod별 합산)
-            Map<String, Double> cpuMap = queryVector(
+            cpuMap = queryVector(
                     "sum by (pod) (rate(container_cpu_usage_seconds_total{namespace=\"" + namespace + "\",pod!=\"\"}[1m])) * 100",
                     "pod"
             );
+        } catch (Exception e) {
+            log.debug("Prometheus CPU 메트릭 조회 실패: {}", e.getMessage());
+        }
 
-            // Memory 사용량 (pod별 합산)
-            Map<String, Double> memMap = queryVector(
+        Map<String, Double> memMap = Map.of();
+        try {
+            memMap = queryVector(
                     "sum by (pod) (container_memory_working_set_bytes{namespace=\"" + namespace + "\",pod!=\"\"})",
                     "pod"
             );
+        } catch (Exception e) {
+            log.debug("Prometheus Memory 메트릭 조회 실패: {}", e.getMessage());
+        }
 
-            // Memory limit (pod별 합산)
-            Map<String, Double> memLimitMap = queryVector(
+        Map<String, Double> memLimitMap = Map.of();
+        try {
+            memLimitMap = queryVector(
                     "sum by (pod) (kube_pod_container_resource_limits{namespace=\"" + namespace + "\",resource=\"memory\",pod!=\"\"})",
                     "pod"
             );
-
-            // 3개 쿼리 결과의 union — 어느 쿼리에서든 나타난 pod는 모두 포함
-            Set<String> allPods = new LinkedHashSet<>();
-            allPods.addAll(memLimitMap.keySet());
-            allPods.addAll(memMap.keySet());
-            allPods.addAll(cpuMap.keySet());
-
-            for (String pod : allPods) {
-                String name = podToServiceName(pod);
-                containers.add(ResourceMetricsDto.ContainerMetric.builder()
-                        .name(name)
-                        .cpuPercent(cpuMap.getOrDefault(pod, 0.0))
-                        .memoryMB(Math.round(memMap.getOrDefault(pod, 0.0) / 1024 / 1024))
-                        .memoryLimitMB(Math.round(memLimitMap.getOrDefault(pod, 0.0) / 1024 / 1024))
-                        .build());
-            }
         } catch (Exception e) {
-            log.warn("Prometheus 컨테이너 메트릭 조회 실패: {}", e.getMessage());
+            log.debug("Prometheus Memory Limit 메트릭 조회 실패: {}", e.getMessage());
+        }
+
+        // Running 상태 pod만 필터링 — 종료된 pod 찌꺼기 제거
+        Set<String> runningPods = Set.of();
+        try {
+            Map<String, Double> phaseMap = queryVector(
+                    "kube_pod_status_phase{namespace=\"" + namespace + "\",phase=\"Running\"} == 1",
+                    "pod"
+            );
+            runningPods = phaseMap.keySet();
+        } catch (Exception e) {
+            log.debug("Prometheus Running pods 조회 실패: {}", e.getMessage());
+        }
+
+        // 3개 쿼리 결과의 union → Running pod만 남기기
+        Set<String> allPods = new LinkedHashSet<>();
+        allPods.addAll(memLimitMap.keySet());
+        allPods.addAll(memMap.keySet());
+        allPods.addAll(cpuMap.keySet());
+        if (!runningPods.isEmpty()) {
+            allPods.retainAll(runningPods);
+        }
+
+        List<ResourceMetricsDto.ContainerMetric> containers = new ArrayList<>();
+        for (String pod : allPods) {
+            String name = podToServiceName(pod);
+            containers.add(ResourceMetricsDto.ContainerMetric.builder()
+                    .name(name)
+                    .cpuPercent(cpuMap.getOrDefault(pod, 0.0))
+                    .memoryMB(Math.round(memMap.getOrDefault(pod, 0.0) / 1024 / 1024))
+                    .memoryLimitMB(Math.round(memLimitMap.getOrDefault(pod, 0.0) / 1024 / 1024))
+                    .build());
         }
 
         // GPU 메트릭
