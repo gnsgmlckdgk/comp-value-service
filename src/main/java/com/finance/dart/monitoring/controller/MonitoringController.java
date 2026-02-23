@@ -4,6 +4,7 @@ import com.finance.dart.common.config.EndPointConfig;
 import com.finance.dart.common.logging.TransactionLogging;
 import com.finance.dart.member.enums.RoleConstants;
 import com.finance.dart.monitoring.buffer.MonitoringEventBuffer;
+import com.finance.dart.monitoring.dto.ApiRequestLogDto;
 import com.finance.dart.monitoring.dto.MonitoringSnapshotDto;
 import com.finance.dart.monitoring.dto.TradeEventDto;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -20,6 +21,7 @@ import org.springframework.http.ResponseEntity;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
 
@@ -101,15 +103,30 @@ public class MonitoringController {
                 }
             };
 
+            // 5. 실시간 api-log 구독 (1초 간격, 개별 API 요청 로그 배치)
+            Consumer<List<ApiRequestLogDto>> apiLogSubscriber = logs -> {
+                try {
+                    emitter.send(SseEmitter.event()
+                            .name("api-log")
+                            .data(objectMapper.writeValueAsString(logs))
+                            .build());
+                } catch (IOException e) {
+                    log.debug("api-log 전송 실패 (클라이언트 연결 끊김)");
+                    emitter.completeWithError(e);
+                }
+            };
+
             eventBuffer.subscribeSnapshot(snapshotSubscriber);
             eventBuffer.subscribeTrade(tradeSubscriber);
             eventBuffer.subscribeTraffic(trafficSubscriber);
+            eventBuffer.subscribeApiLog(apiLogSubscriber);
 
-            // 5. 연결 종료 시 구독 해제
+            // 6. 연결 종료 시 구독 해제
             Runnable cleanup = () -> {
                 eventBuffer.unsubscribeSnapshot(snapshotSubscriber);
                 eventBuffer.unsubscribeTrade(tradeSubscriber);
                 eventBuffer.unsubscribeTraffic(trafficSubscriber);
+                eventBuffer.unsubscribeApiLog(apiLogSubscriber);
             };
 
             emitter.onCompletion(() -> {

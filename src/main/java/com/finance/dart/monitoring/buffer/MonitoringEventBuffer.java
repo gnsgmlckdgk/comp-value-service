@@ -1,5 +1,6 @@
 package com.finance.dart.monitoring.buffer;
 
+import com.finance.dart.monitoring.dto.ApiRequestLogDto;
 import com.finance.dart.monitoring.dto.MonitoringSnapshotDto;
 import com.finance.dart.monitoring.dto.TradeEventDto;
 import org.springframework.stereotype.Component;
@@ -19,6 +20,7 @@ public class MonitoringEventBuffer {
     private final List<Consumer<MonitoringSnapshotDto>> snapshotSubscribers = new CopyOnWriteArrayList<>();
     private final List<Consumer<TradeEventDto>> tradeSubscribers = new CopyOnWriteArrayList<>();
     private final List<Consumer<Map<String, Integer>>> trafficSubscribers = new CopyOnWriteArrayList<>();
+    private final List<Consumer<List<ApiRequestLogDto>>> apiLogSubscribers = new CopyOnWriteArrayList<>();
 
     private volatile MonitoringSnapshotDto latestSnapshot;
 
@@ -85,5 +87,25 @@ public class MonitoringEventBuffer {
 
     public void unsubscribeTraffic(Consumer<Map<String, Integer>> subscriber) {
         trafficSubscribers.remove(subscriber);
+    }
+
+    // === API Log ===
+
+    public void publishApiLog(List<ApiRequestLogDto> logs) {
+        for (Consumer<List<ApiRequestLogDto>> subscriber : apiLogSubscribers) {
+            try {
+                subscriber.accept(logs);
+            } catch (Exception e) {
+                // 구독자 전송 실패 시 무시
+            }
+        }
+    }
+
+    public void subscribeApiLog(Consumer<List<ApiRequestLogDto>> subscriber) {
+        apiLogSubscribers.add(subscriber);
+    }
+
+    public void unsubscribeApiLog(Consumer<List<ApiRequestLogDto>> subscriber) {
+        apiLogSubscribers.remove(subscriber);
     }
 }

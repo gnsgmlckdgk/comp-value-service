@@ -107,6 +107,12 @@ public class MonitoringAggregatorService {
             trafficData.put("http", httpCount);
 
             eventBuffer.publishTraffic(trafficData);
+
+            // 개별 API 요청 로그 drain + publish (기존 1초 주기에 편승)
+            List<ApiRequestLogDto> requestLogs = requestTrafficTracker.drainRequestLogs();
+            if (!requestLogs.isEmpty()) {
+                eventBuffer.publishApiLog(requestLogs);
+            }
         } catch (Exception e) {
             log.debug("트래픽 publish 실패: {}", e.getMessage());
         }
