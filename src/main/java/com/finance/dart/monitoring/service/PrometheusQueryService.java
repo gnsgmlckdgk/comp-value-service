@@ -10,8 +10,10 @@ import org.springframework.web.util.UriComponentsBuilder;
 import java.net.URI;
 import java.time.Duration;
 import java.util.ArrayList;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * Prometheus HTTP API를 통해 컨테이너/GPU 리소스 메트릭 수집
@@ -66,8 +68,13 @@ public class PrometheusQueryService {
                     "pod"
             );
 
-            // pod별로 합치기 (pod 이름에서 deployment 접미사 제거)
-            for (String pod : cpuMap.keySet()) {
+            // 3개 쿼리 결과의 union — 어느 쿼리에서든 나타난 pod는 모두 포함
+            Set<String> allPods = new LinkedHashSet<>();
+            allPods.addAll(memLimitMap.keySet());
+            allPods.addAll(memMap.keySet());
+            allPods.addAll(cpuMap.keySet());
+
+            for (String pod : allPods) {
                 String name = podToServiceName(pod);
                 containers.add(ResourceMetricsDto.ContainerMetric.builder()
                         .name(name)
