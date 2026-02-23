@@ -48,21 +48,21 @@ public class PrometheusQueryService {
         List<ResourceMetricsDto.ContainerMetric> containers = new ArrayList<>();
 
         try {
-            // CPU 사용률 (pod 기준, irate 1m)
+            // CPU 사용률 (pod별 합산, container="" 제외 — POD cgroup 중복 방지)
             Map<String, Double> cpuMap = queryVector(
-                    "irate(container_cpu_usage_seconds_total{namespace=\"" + namespace + "\",pod!=\"\"}[1m]) * 100",
+                    "sum by (pod) (irate(container_cpu_usage_seconds_total{namespace=\"" + namespace + "\",pod!=\"\",container!=\"\"}[1m])) * 100",
                     "pod"
             );
 
-            // Memory 사용량 (pod 기준)
+            // Memory 사용량 (pod별 합산)
             Map<String, Double> memMap = queryVector(
-                    "container_memory_working_set_bytes{namespace=\"" + namespace + "\",pod!=\"\"}",
+                    "sum by (pod) (container_memory_working_set_bytes{namespace=\"" + namespace + "\",pod!=\"\",container!=\"\"})",
                     "pod"
             );
 
-            // Memory limit (kube-state-metrics, pod 기준)
+            // Memory limit (pod별 합산)
             Map<String, Double> memLimitMap = queryVector(
-                    "kube_pod_container_resource_limits{namespace=\"" + namespace + "\",resource=\"memory\"}",
+                    "sum by (pod) (kube_pod_container_resource_limits{namespace=\"" + namespace + "\",resource=\"memory\",pod!=\"\"})",
                     "pod"
             );
 
