@@ -7,6 +7,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.util.UriComponentsBuilder;
 
+import java.net.URI;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
@@ -76,7 +77,7 @@ public class PrometheusQueryService {
                         .build());
             }
         } catch (Exception e) {
-            log.debug("Prometheus 컨테이너 메트릭 조회 실패: {}", e.getMessage());
+            log.warn("Prometheus 컨테이너 메트릭 조회 실패: {}", e.getMessage());
         }
 
         // GPU 메트릭
@@ -109,11 +110,12 @@ public class PrometheusQueryService {
 
     @SuppressWarnings("unchecked")
     private Map<String, Double> queryVector(String query, String labelKey) {
-        String uri = UriComponentsBuilder.fromHttpUrl(prometheusUrl)
+        URI uri = UriComponentsBuilder.fromHttpUrl(prometheusUrl)
                 .path("/api/v1/query")
                 .queryParam("query", query)
                 .build()
-                .toUriString();
+                .encode()
+                .toUri();
 
         Map<String, Object> response = webClient.get()
                 .uri(uri)
