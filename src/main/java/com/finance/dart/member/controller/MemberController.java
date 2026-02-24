@@ -23,7 +23,9 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 
 @Slf4j
@@ -127,11 +129,16 @@ public class MemberController {
      * 세션 keep-alive (TTL 갱신 전용)
      * - SSE 전용 페이지 등에서 세션 만료를 방지하기 위한 경량 엔드포인트
      * - SessionCookieRefreshAdvice가 자동으로 Redis TTL + 쿠키를 갱신
+     * - 응답에 sessionTTL(초)을 포함하여 프론트엔드 세션 타이머 동기화
      */
     @TransactionLogging
     @GetMapping("/session/keepalive")
-    public ResponseEntity<CommonResponse> sessionKeepAlive() {
-        return new ResponseEntity<>(new CommonResponse(ResponseEnum.OK), HttpStatus.OK);
+    public ResponseEntity<CommonResponse> sessionKeepAlive(HttpServletRequest request) {
+        String sessionId = sessionService.getSessionId(request);
+        Long ttl = (sessionId != null) ? sessionService.getLoginSessionTTL(sessionId) : null;
+        Map<String, Object> body = new HashMap<>();
+        if (ttl != null && ttl > 0) body.put("sessionTTL", ttl);
+        return new ResponseEntity<>(new CommonResponse<>(body), HttpStatus.OK);
     }
 
     /**
