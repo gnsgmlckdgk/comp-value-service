@@ -124,6 +124,17 @@ public class MemberController {
     }
 
     /**
+     * 세션 keep-alive (TTL 갱신 전용)
+     * - SSE 전용 페이지 등에서 세션 만료를 방지하기 위한 경량 엔드포인트
+     * - SessionCookieRefreshAdvice가 자동으로 Redis TTL + 쿠키를 갱신
+     */
+    @TransactionLogging
+    @GetMapping("/session/keepalive")
+    public ResponseEntity<CommonResponse> sessionKeepAlive() {
+        return new ResponseEntity<>(new CommonResponse(ResponseEnum.OK), HttpStatus.OK);
+    }
+
+    /**
      * <pre>
      * 로그인 여부 체크
      * </pre>
