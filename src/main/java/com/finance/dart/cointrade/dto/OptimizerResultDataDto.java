@@ -53,4 +53,7 @@ public class OptimizerResultDataDto {
 
     @JsonProperty("all_trials")
     private List<OptimizerTrialDto> allTrials;
+
+    @JsonProperty("all_explored_trials")
+    private List<OptimizerTrialDto> allExploredTrials;
 }

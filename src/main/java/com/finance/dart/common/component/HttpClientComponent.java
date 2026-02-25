@@ -11,7 +11,7 @@ import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
-import org.springframework.http.client.SimpleClientHttpRequestFactory;
+import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Flux;
@@ -51,7 +51,7 @@ public class HttpClientComponent {
         if (httpHeaders == null) httpHeaders = new LinkedHashMap<>();
 
         // 임시 RestTemplate 생성 (커스텀 타임아웃)
-        SimpleClientHttpRequestFactory factory = new SimpleClientHttpRequestFactory();
+        HttpComponentsClientHttpRequestFactory factory = new HttpComponentsClientHttpRequestFactory();
         factory.setConnectTimeout(5000);
         factory.setReadTimeout(readTimeoutMs);
         RestTemplate customRestTemplate = new RestTemplate(factory);
