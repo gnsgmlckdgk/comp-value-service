@@ -167,6 +167,9 @@ public class CointradeBacktestService {
         if (request.getNumWorkers() != null) {
             requestParam.put("num_workers", request.getNumWorkers());
         }
+        if (request.getTitle() != null) {
+            requestParam.put("title", request.getTitle());
+        }
         if (request.getCustomParamRanges() != null) {
             requestParam.put("custom_param_ranges", request.getCustomParamRanges());
         }
@@ -247,6 +250,25 @@ public class CointradeBacktestService {
                 url,
                 HttpMethod.POST,
                 new ParameterizedTypeReference<BacktestDeleteResDto>() {}
+        ).getBody();
+    }
+
+    /**
+     * 백테스트 옵티마이저 제목 수정
+     */
+    public OptimizerUpdateTitleResDto updateOptimizerTitle(String taskId, OptimizerUpdateTitleReqDto request) {
+        String url = buildUrl(CoinTraderProgramConfig.API_URI_OPTIMIZER_UPDATE + "/" + taskId);
+        log.info("백테스트 옵티마이저 제목 수정 요청 - URL: {}, taskId: {}, title: {}", url, taskId, request.getTitle());
+
+        Map<String, Object> requestParam = new LinkedHashMap<>();
+        requestParam.put("title", request.getTitle());
+
+        return httpClientComponent.exchangeSync(
+                url,
+                HttpMethod.PATCH,
+                null,
+                requestParam,
+                new ParameterizedTypeReference<OptimizerUpdateTitleResDto>() {}
         ).getBody();
     }
 

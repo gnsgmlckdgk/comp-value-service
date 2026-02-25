@@ -27,6 +27,8 @@ public class OptimizerRunReqDto {
     @JsonProperty("end_date")
     private String endDate;
 
+    private String title;
+
     @JsonProperty("max_runs")
     private Integer maxRuns;
 
