@@ -1,14 +1,15 @@
 package com.finance.dart.api.service;
 
-import com.finance.dart.api.abroad.service.sec.SecFinStatementService;
 import com.finance.dart.api.common.context.RequestContext;
 import com.finance.dart.api.common.dto.CompanySharePriceCalculator;
 import com.finance.dart.api.common.dto.CompanySharePriceResultDetail;
+import com.finance.dart.api.common.service.PerShareValueCalcHelper;
 import com.finance.dart.api.common.service.PerShareValueCalculationService;
+import com.finance.dart.api.common.service.legacy.PerShareValueCalcLegacyService;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
@@ -22,11 +23,18 @@ class PerShareValueCalculationServiceV8Test {
     @Mock
     private RequestContext requestContext;
 
-    @Mock
-    private SecFinStatementService financialStatementService;
+    private PerShareValueCalcHelper calcHelper;
 
-    @InjectMocks
     private PerShareValueCalculationService service;
+
+    private PerShareValueCalcLegacyService legacyService;
+
+    @BeforeEach
+    void setUp() {
+        calcHelper = new PerShareValueCalcHelper(requestContext);
+        service = new PerShareValueCalculationService(requestContext, null, calcHelper);
+        legacyService = new PerShareValueCalcLegacyService(calcHelper);
+    }
 
     /**
      * 공통 테스트 데이터 생성
@@ -72,9 +80,9 @@ class PerShareValueCalculationServiceV8Test {
 
         String sector = "Technology";
 
-        // V7 계산
+        // V7 계산 (legacy)
         CompanySharePriceResultDetail detailV7 = new CompanySharePriceResultDetail("1");
-        String resultV7 = service.calPerValueV7(req, detailV7, sector);
+        String resultV7 = legacyService.calPerValueV7(req, detailV7, sector);
 
         // V8 계산
         CompanySharePriceResultDetail detailV8 = new CompanySharePriceResultDetail("1");
@@ -127,7 +135,7 @@ class PerShareValueCalculationServiceV8Test {
         String sector = "Technology";
 
         CompanySharePriceResultDetail detailV7 = new CompanySharePriceResultDetail("1");
-        String resultV7 = service.calPerValueV7(req, detailV7, sector);
+        String resultV7 = legacyService.calPerValueV7(req, detailV7, sector);
 
         CompanySharePriceResultDetail detailV8 = new CompanySharePriceResultDetail("1");
         String resultV8 = service.calPerValueV8(req, detailV8, sector);
@@ -181,7 +189,7 @@ class PerShareValueCalculationServiceV8Test {
         String sector = "Technology"; // sectorPER=30
 
         CompanySharePriceResultDetail detailV7 = new CompanySharePriceResultDetail("1");
-        String resultV7 = service.calPerValueV7(req, detailV7, sector);
+        String resultV7 = legacyService.calPerValueV7(req, detailV7, sector);
 
         CompanySharePriceResultDetail detailV8 = new CompanySharePriceResultDetail("1");
         String resultV8 = service.calPerValueV8(req, detailV8, sector);
@@ -242,7 +250,7 @@ class PerShareValueCalculationServiceV8Test {
         String sector = "Industrials"; // basePER=18
 
         CompanySharePriceResultDetail detailV7 = new CompanySharePriceResultDetail("1");
-        String resultV7 = service.calPerValueV7(req, detailV7, sector);
+        String resultV7 = legacyService.calPerValueV7(req, detailV7, sector);
 
         CompanySharePriceResultDetail detailV8 = new CompanySharePriceResultDetail("1");
         String resultV8 = service.calPerValueV8(req, detailV8, sector);
@@ -296,7 +304,7 @@ class PerShareValueCalculationServiceV8Test {
         String sector = "Technology";
 
         CompanySharePriceResultDetail detailV7 = new CompanySharePriceResultDetail("1");
-        String resultV7 = service.calPerValueV7(req, detailV7, sector);
+        String resultV7 = legacyService.calPerValueV7(req, detailV7, sector);
 
         CompanySharePriceResultDetail detailV8 = new CompanySharePriceResultDetail("1");
         String resultV8 = service.calPerValueV8(req, detailV8, sector);
@@ -346,7 +354,7 @@ class PerShareValueCalculationServiceV8Test {
         String sector = "Technology"; // sectorPER=30
 
         CompanySharePriceResultDetail detailV7 = new CompanySharePriceResultDetail("1");
-        String resultV7 = service.calPerValueV7(req, detailV7, sector);
+        String resultV7 = legacyService.calPerValueV7(req, detailV7, sector);
 
         CompanySharePriceResultDetail detailV8 = new CompanySharePriceResultDetail("1");
         String resultV8 = service.calPerValueV8(req, detailV8, sector);

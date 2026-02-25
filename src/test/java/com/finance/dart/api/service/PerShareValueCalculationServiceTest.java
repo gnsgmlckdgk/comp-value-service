@@ -2,10 +2,11 @@ package com.finance.dart.api.service;
 
 import com.finance.dart.api.common.context.RequestContext;
 import com.finance.dart.api.common.dto.CompanySharePriceCalculator;
+import com.finance.dart.api.common.service.PerShareValueCalcHelper;
 import com.finance.dart.api.common.service.PerShareValueCalculationService;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
@@ -17,8 +18,15 @@ class PerShareValueCalculationServiceTest {
     @Mock
     private RequestContext requestContext; // 의존성 목 객체
 
-    @InjectMocks
-    private PerShareValueCalculationService service; // 목 주입된 서비스
+    private PerShareValueCalcHelper calcHelper;
+
+    private PerShareValueCalculationService service;
+
+    @BeforeEach
+    void setUp() {
+        calcHelper = new PerShareValueCalcHelper(requestContext);
+        service = new PerShareValueCalculationService(requestContext, null, calcHelper);
+    }
 
 
     @Test

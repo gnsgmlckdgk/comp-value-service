@@ -1,14 +1,14 @@
 package com.finance.dart.api.service;
 
-import com.finance.dart.api.abroad.service.sec.SecFinStatementService;
 import com.finance.dart.api.common.context.RequestContext;
 import com.finance.dart.api.common.dto.CompanySharePriceCalculator;
 import com.finance.dart.api.common.dto.CompanySharePriceResultDetail;
-import com.finance.dart.api.common.service.PerShareValueCalculationService;
+import com.finance.dart.api.common.service.PerShareValueCalcHelper;
+import com.finance.dart.api.common.service.legacy.PerShareValueCalcLegacyService;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
@@ -22,11 +22,15 @@ class PerShareValueCalculationServiceV6Test {
     @Mock
     private RequestContext requestContext;
 
-    @Mock
-    private SecFinStatementService financialStatementService;
+    private PerShareValueCalcHelper calcHelper;
 
-    @InjectMocks
-    private PerShareValueCalculationService service;
+    private PerShareValueCalcLegacyService legacyService;
+
+    @BeforeEach
+    void setUp() {
+        calcHelper = new PerShareValueCalcHelper(requestContext);
+        legacyService = new PerShareValueCalcLegacyService(calcHelper);
+    }
 
     /**
      * 공통 테스트 데이터 생성 헬퍼
@@ -72,7 +76,7 @@ class PerShareValueCalculationServiceV6Test {
         String sector = "Technology"; // basePER=30
 
         // when
-        String result = service.calPerValueV6(req, detail, sector);
+        String result = legacyService.calPerValueV6(req, detail, sector);
 
         // then
         assertNotNull(result);
@@ -116,7 +120,7 @@ class PerShareValueCalculationServiceV6Test {
         String sector = "Industrials"; // basePER=18
 
         // when
-        String result = service.calPerValueV6(req, detail, sector);
+        String result = legacyService.calPerValueV6(req, detail, sector);
 
         // then
         assertNotNull(result);
@@ -151,7 +155,7 @@ class PerShareValueCalculationServiceV6Test {
         String sector = "Technology"; // basePER=30
 
         // when
-        String result = service.calPerValueV6(req, detail, sector);
+        String result = legacyService.calPerValueV6(req, detail, sector);
 
         // then
         assertNotNull(result);
@@ -192,7 +196,7 @@ class PerShareValueCalculationServiceV6Test {
         String sector = "Technology";
 
         // when
-        String result = service.calPerValueV6(req, detail, sector);
+        String result = legacyService.calPerValueV6(req, detail, sector);
 
         // then
         assertNotNull(result);
@@ -224,13 +228,13 @@ class PerShareValueCalculationServiceV6Test {
 
         String sector = "Technology"; // basePER=30
 
-        // V5 계산
+        // V5 계산 (legacy)
         CompanySharePriceResultDetail detailV5 = new CompanySharePriceResultDetail("1");
-        String resultV5 = service.calPerValueV5(req, detailV5, sector);
+        String resultV5 = legacyService.calPerValueV5(req, detailV5, sector);
 
-        // V6 계산
+        // V6 계산 (legacy)
         CompanySharePriceResultDetail detailV6 = new CompanySharePriceResultDetail("1");
-        String resultV6 = service.calPerValueV6(req, detailV6, sector);
+        String resultV6 = legacyService.calPerValueV6(req, detailV6, sector);
 
         // then
         assertNotNull(resultV5);

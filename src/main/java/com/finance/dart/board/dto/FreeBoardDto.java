@@ -26,4 +26,6 @@ public class FreeBoardDto {
     private String updatedAt;       // 수정일
 
     private List<FreeBoardAttachmentDto> attachments;  // 첨부파일 목록
+
+    private Integer commentCount;  // 댓글 수
 }

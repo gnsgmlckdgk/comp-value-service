@@ -50,4 +50,10 @@ public class FreeBoard {
 
     @OneToMany(mappedBy = "freeBoard", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<FreeBoardAttachment> attachments = new ArrayList<>();
+
+    @OneToMany(mappedBy = "freeBoard", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<FreeBoardComment> comments = new ArrayList<>();
+
+    @Column(name = "comment_count")
+    private Integer commentCount = 0;
 }

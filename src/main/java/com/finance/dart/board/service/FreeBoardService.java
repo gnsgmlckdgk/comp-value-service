@@ -75,6 +75,9 @@ public class FreeBoardService {
         // 첨부파일 목록
         dto.setAttachments(attachmentService.getAttachments(board.getId()));
 
+        // 댓글 수
+        dto.setCommentCount(board.getCommentCount() != null ? board.getCommentCount() : 0);
+
         return dto;
     }
 

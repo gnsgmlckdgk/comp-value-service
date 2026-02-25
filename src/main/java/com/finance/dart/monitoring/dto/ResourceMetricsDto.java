@@ -23,6 +23,7 @@ public class ResourceMetricsDto {
     public static class ContainerMetric {
         private String name;
         private double cpuPercent;
+        private double cpuLimitCores;
         private long memoryMB;
         private long memoryLimitMB;
     }
