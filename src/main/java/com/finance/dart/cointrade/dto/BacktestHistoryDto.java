@@ -20,6 +20,8 @@ public class BacktestHistoryDto {
     @JsonProperty("task_id")
     private String taskId;
 
+    private String status;
+
     @JsonProperty("coin_codes")
     private List<String> coinCodes;
 
@@ -49,4 +51,7 @@ public class BacktestHistoryDto {
 
     @JsonProperty("invested_return")
     private Double investedReturn;
+
+    @JsonProperty("created_at")
+    private String createdAt;
 }
