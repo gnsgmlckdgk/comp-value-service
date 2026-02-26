@@ -41,6 +41,10 @@ public class CointradeBacktestService {
         requestParam.put("start_date", request.getStartDate());
         requestParam.put("end_date", request.getEndDate());
 
+        if (request.getTitle() != null) {
+            requestParam.put("title", request.getTitle());
+        }
+
         if(request.getConfig() != null) {
             Map<String, Object> config = ConvertUtil.parseObject(request.getConfig(), Map.class);
             requestParam.putAll(config);
@@ -139,6 +143,25 @@ public class CointradeBacktestService {
                 url,
                 HttpMethod.POST,
                 new ParameterizedTypeReference<BacktestDeleteResDto>() {}
+        ).getBody();
+    }
+
+    /**
+     * 백테스트 제목 수정
+     */
+    public BacktestUpdateTitleResDto updateBacktestTitle(String taskId, BacktestUpdateTitleReqDto request) {
+        String url = buildUrl(CoinTraderProgramConfig.API_URI_BACKTEST_UPDATE + "/" + taskId);
+        log.info("백테스트 제목 수정 요청 - URL: {}, taskId: {}, title: {}", url, taskId, request.getTitle());
+
+        Map<String, Object> requestParam = new LinkedHashMap<>();
+        requestParam.put("title", request.getTitle());
+
+        return httpClientComponent.exchangeSync(
+                url,
+                HttpMethod.PATCH,
+                null,
+                requestParam,
+                new ParameterizedTypeReference<BacktestUpdateTitleResDto>() {}
         ).getBody();
     }
 

@@ -20,6 +20,8 @@ public class BacktestHistoryDto {
     @JsonProperty("task_id")
     private String taskId;
 
+    private String title;
+
     private String status;
 
     @JsonProperty("coin_codes")

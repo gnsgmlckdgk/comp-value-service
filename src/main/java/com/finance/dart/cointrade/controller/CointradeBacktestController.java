@@ -112,6 +112,21 @@ public class CointradeBacktestController {
     }
 
     /**
+     * 백테스트 제목 수정
+     * PATCH /api/backtest/result/{taskId}
+     */
+    @EndPointConfig.RequireRole({RoleConstants.ROLE_SUPER_ADMIN})
+    @TransactionLogging
+    @PatchMapping("/result/{taskId}")
+    public ResponseEntity<CommonResponse<BacktestUpdateTitleResDto>> updateBacktestResult(
+            @PathVariable(name = "taskId") String taskId,
+            @RequestBody BacktestUpdateTitleReqDto request) {
+        log.info("백테스트 제목 수정 요청 - taskId: {}, title: {}", taskId, request.getTitle());
+        BacktestUpdateTitleResDto result = backtestService.updateBacktestTitle(taskId, request);
+        return new ResponseEntity<>(new CommonResponse<>(result), HttpStatus.OK);
+    }
+
+    /**
      * 백테스트 옵티마이저 실행
      * POST /api/backtest/optimizer
      * 백테스트를 이용해 최적의 파라미터 값을 분석
