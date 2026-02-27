@@ -37,6 +37,9 @@ public class BacktestParamDto {
     @JsonProperty("prediction_days")
     private Integer predictionDays;
 
+    @JsonProperty("max_holding_days")
+    private Integer maxHoldingDays;
+
     @JsonProperty("sequence_length")
     private Integer sequenceLength;
 

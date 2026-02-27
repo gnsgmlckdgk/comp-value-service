@@ -59,6 +59,11 @@ public class BacktestRequestConfigDto {
     @SerializedName("prediction_days")
     private Integer predictionDays;
 
+    /** 최대 보유 기간 (일, 기본값: DB 또는 7) */
+    @JsonProperty("max_holding_days")
+    @SerializedName("max_holding_days")
+    private Integer maxHoldingDays;
+
     /** 매수 수수료율 (기본값: 0.0005 = 0.05%) */
     @JsonProperty("buy_fee_rate")
     @SerializedName("buy_fee_rate")
