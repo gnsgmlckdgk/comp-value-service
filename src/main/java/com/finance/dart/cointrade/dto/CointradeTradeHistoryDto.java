@@ -26,6 +26,8 @@ public class CointradeTradeHistoryDto {
     private String reason;  // SIGNAL/TAKE_PROFIT/STOP_LOSS/EXPIRED
     private BigDecimal profitLoss;
     private BigDecimal profitLossRate;
+    private BigDecimal predictedHigh;
+    private BigDecimal predictedLow;
     private BigDecimal upProbability;
     private BigDecimal downProbability;
     private BigDecimal expectedReturn;

@@ -201,6 +201,8 @@ public class CointradeConfigService {
                 .reason(entity.getReason())
                 .profitLoss(entity.getProfitLoss())
                 .profitLossRate(entity.getProfitLossRate())
+                .predictedHigh(entity.getPredictedHigh())
+                .predictedLow(entity.getPredictedLow())
                 .upProbability(entity.getUpProbability())
                 .downProbability(entity.getDownProbability())
                 .expectedReturn(entity.getExpectedReturn())
