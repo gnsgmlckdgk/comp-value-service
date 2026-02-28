@@ -79,4 +79,34 @@ public class BacktestRequestConfigDto {
     @SerializedName("sequence_length")
     private int sequenceLength = 60;
 
+    /** BTC 추세 필터 활성화 여부 (기본값: DB 또는 false) */
+    @JsonProperty("btc_filter_enabled")
+    @SerializedName("btc_filter_enabled")
+    private Boolean btcFilterEnabled;
+
+    /** BTC 추세 MA 기간 (일, 기본값: DB 또는 20) */
+    @JsonProperty("btc_trend_ma_period")
+    @SerializedName("btc_trend_ma_period")
+    private Integer btcTrendMaPeriod;
+
+    /** 트레일링 스탑 활성화 여부 (기본값: DB 또는 false) */
+    @JsonProperty("trailing_stop_enabled")
+    @SerializedName("trailing_stop_enabled")
+    private Boolean trailingStopEnabled;
+
+    /** 트레일링 스탑 하락률 (%, 기본값: DB 또는 3.0) */
+    @JsonProperty("trailing_stop_rate")
+    @SerializedName("trailing_stop_rate")
+    private Double trailingStopRate;
+
+    /** 트레일링 스탑 활성화 수익률 (%, 기본값: DB 또는 2.0) */
+    @JsonProperty("trailing_stop_activation")
+    @SerializedName("trailing_stop_activation")
+    private Double trailingStopActivation;
+
+    /** 앙상블 모델 일치도 최소값 (0~1, 기본값: DB 또는 0.5) */
+    @JsonProperty("min_model_agreement")
+    @SerializedName("min_model_agreement")
+    private Double minModelAgreement;
+
 }

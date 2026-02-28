@@ -51,4 +51,22 @@ public class BacktestParamDto {
 
     @JsonProperty("sell_fee_rate")
     private String selleeRate;
+
+    @JsonProperty("btc_filter_enabled")
+    private Boolean btcFilterEnabled;
+
+    @JsonProperty("btc_trend_ma_period")
+    private Integer btcTrendMaPeriod;
+
+    @JsonProperty("trailing_stop_enabled")
+    private Boolean trailingStopEnabled;
+
+    @JsonProperty("trailing_stop_rate")
+    private Double trailingStopRate;
+
+    @JsonProperty("trailing_stop_activation")
+    private Double trailingStopActivation;
+
+    @JsonProperty("min_model_agreement")
+    private Double minModelAgreement;
 }
