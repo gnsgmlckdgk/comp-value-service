@@ -2,6 +2,7 @@ package com.finance.dart.api.common.service;
 
 import com.finance.dart.api.common.constants.RequestContextConst;
 import com.finance.dart.api.common.context.RequestContext;
+import com.finance.dart.api.common.dto.CompanySharePriceResultDetail;
 import com.finance.dart.common.util.CalUtil;
 import com.finance.dart.common.util.StringUtil;
 import lombok.RequiredArgsConstructor;
@@ -164,6 +165,118 @@ public class PerShareValueCalcHelper {
         } catch (Exception ignore) {
             return null;
         }
+    }
+
+    // =====================================================================
+    // V8 후처리 로직 (52주 캡, 안전마진, 매매가)
+    // =====================================================================
+
+    /**
+     * V8: 52주 최고가 캡 + 급락 할인
+     * - 계산값 > 52주 최고가: 가중평균 (계산값×0.4 + 최고가×0.6)
+     * - 현재가가 52주 최고가 대비 30%+ 급락: 추가 20% 할인
+     *
+     * @param 계산된주당가치   PerShareValueCalculationService에서 산출한 적정가
+     * @param historicalHigh52W 52주 최고가 (null이면 캡 미적용)
+     * @param currentPrice     현재 주가
+     * @param resultDetail     결과 상세 (급락종목할인 플래그 설정용)
+     * @return 조정된 주당가치
+     */
+    public String adjust52WeekHighCap(String 계산된주당가치, Double historicalHigh52W,
+                                       String currentPrice, CompanySharePriceResultDetail resultDetail) {
+        if (historicalHigh52W == null) {
+            return 계산된주당가치;
+        }
+
+        BigDecimal 계산값 = new BigDecimal(계산된주당가치);
+        BigDecimal 최고가 = BigDecimal.valueOf(historicalHigh52W);
+        String 조정된주당가치;
+
+        if (계산값.compareTo(최고가) > 0) {
+            조정된주당가치 = 계산값.multiply(new BigDecimal("0.4"))
+                    .add(최고가.multiply(new BigDecimal("0.6")))
+                    .setScale(2, RoundingMode.HALF_UP)
+                    .toPlainString();
+        } else {
+            조정된주당가치 = 계산된주당가치;
+        }
+
+        // 급락 할인 (30%+ 급락 시 20% 할인)
+        BigDecimal currentPriceVal = new BigDecimal(StringUtil.defaultString(currentPrice, "0"));
+        if (currentPriceVal.compareTo(BigDecimal.ZERO) > 0 && 최고가.compareTo(BigDecimal.ZERO) > 0) {
+            BigDecimal dropRate = BigDecimal.ONE.subtract(currentPriceVal.divide(최고가, 4, RoundingMode.HALF_UP));
+            if (dropRate.compareTo(new BigDecimal("0.3")) >= 0) {
+                조정된주당가치 = new BigDecimal(조정된주당가치)
+                        .multiply(new BigDecimal("0.8"))
+                        .setScale(2, RoundingMode.HALF_UP)
+                        .toPlainString();
+                if (resultDetail != null) {
+                    resultDetail.set급락종목할인(true);
+                }
+            }
+        }
+
+        return 조정된주당가치;
+    }
+
+    /**
+     * V8: 동적 안전마진 계산
+     * - 기본: 30%
+     * - Beta 조정: +10%(>2.0), +7%(>1.5), +4%(>1.2), -5%(<0.5)
+     * - 그레이엄 신뢰도: +5%(≤2개), +3%(≤3개)
+     * - 범위: 25% ~ 45%
+     *
+     * @param beta            변동성 계수 (nullable)
+     * @param grahamPassCount 그레이엄 스크리닝 통과 수 (0~5)
+     * @return 안전마진율 (0.25 ~ 0.45)
+     */
+    public double calculateDynamicSafetyMargin(Double beta, int grahamPassCount) {
+        double baseMargin = 0.30;
+
+        double betaAdj = 0.0;
+        if (beta != null) {
+            if (beta > 2.0) betaAdj = 0.10;
+            else if (beta > 1.5) betaAdj = 0.07;
+            else if (beta > 1.2) betaAdj = 0.04;
+            else if (beta < 0.5) betaAdj = -0.05;
+        }
+
+        double confidenceAdj = 0.0;
+        if (grahamPassCount <= 2) confidenceAdj = 0.05;
+        else if (grahamPassCount <= 3) confidenceAdj = 0.03;
+
+        return Math.min(0.45, Math.max(0.25, baseMargin + betaAdj + confidenceAdj));
+    }
+
+    /**
+     * V8: 매수적정가 계산 = 조정된주당가치 × (1 - 안전마진율)
+     */
+    public String calculatePurchasePrice(String 조정된주당가치, double safetyMargin) {
+        String marginStr = String.format("%.2f", safetyMargin);
+        return new BigDecimal(조정된주당가치)
+                .multiply(BigDecimal.ONE.subtract(new BigDecimal(marginStr)))
+                .setScale(2, RoundingMode.HALF_UP)
+                .toPlainString();
+    }
+
+    /**
+     * V8: 목표매도가 계산 = 조정된주당가치 × 0.95
+     */
+    public String calculateSellTarget(String 조정된주당가치) {
+        return new BigDecimal(조정된주당가치)
+                .multiply(new BigDecimal("0.95"))
+                .setScale(2, RoundingMode.HALF_UP)
+                .toPlainString();
+    }
+
+    /**
+     * V8: 손절매가 계산 = 매수적정가 × 0.8
+     */
+    public String calculateStopLoss(String 매수적정가) {
+        return new BigDecimal(매수적정가)
+                .multiply(new BigDecimal("0.8"))
+                .setScale(2, RoundingMode.HALF_UP)
+                .toPlainString();
     }
 
     /**

@@ -27,6 +27,7 @@ import com.finance.dart.api.common.dto.CompanySharePriceCalculator;
 import com.finance.dart.api.common.dto.CompanySharePriceResult;
 import com.finance.dart.api.common.dto.CompanySharePriceResultDetail;
 import com.finance.dart.api.common.dto.SectorCalculationParameters;
+import com.finance.dart.api.common.service.PerShareValueCalcHelper;
 import com.finance.dart.api.common.service.PerShareValueCalculationService;
 import com.finance.dart.api.common.service.SectorParameterFactory;
 import com.finance.dart.common.component.RedisComponent;
@@ -73,6 +74,7 @@ public class US_StockCalFromFpmService {
     private final StockPriceVolumeService stockPriceVolumeService;
 
     private final PerShareValueCalculationService sharePriceCalculatorService;
+    private final PerShareValueCalcHelper calcHelper;
     private final US_StockCalHelper helper;
 
 
@@ -413,81 +415,23 @@ public class US_StockCalFromFpmService {
         if(log.isDebugEnabled()) log.debug("[V8] {} - 계산 입력: PER={}, 섹터={}", symbol, calParam.getPer(), sector);
         String 계산된주당가치 = sharePriceCalculatorService.calPerValueV8(calParam, resultDetail, sector);
 
-        //@3-1. 52주 최고가 캡 (V8: 0.6) ---------------------------------
-        String 조정된주당가치;
-        if (historicalHigh52W != null) {
-            BigDecimal 계산값 = new BigDecimal(계산된주당가치);
-            BigDecimal 최고가 = BigDecimal.valueOf(historicalHigh52W);
-
-            if (계산값.compareTo(최고가) > 0) {
-                // V8: 52주 최고가의 60%로 캡
-                조정된주당가치 = 최고가.multiply(new BigDecimal("0.6"))
-                        .setScale(2, RoundingMode.HALF_UP)
-                        .toPlainString();
-                if(log.isDebugEnabled()) {
-                    log.debug("[V8 적정가 조정] {} - 계산값({}) > 52주최고가({}) → 조정값({})",
-                            symbol, 계산값, 최고가, 조정된주당가치);
-                }
-            } else {
-                조정된주당가치 = 계산된주당가치;
-            }
-
-            // 급락 할인 (30%+ 급락 시 20% 할인)
-            BigDecimal currentPriceVal = new BigDecimal(StringUtil.defaultString(companyProfile.getPrice(), "0"));
-            if (currentPriceVal.compareTo(BigDecimal.ZERO) > 0 && 최고가.compareTo(BigDecimal.ZERO) > 0) {
-                BigDecimal dropRate = BigDecimal.ONE.subtract(currentPriceVal.divide(최고가, 4, RoundingMode.HALF_UP));
-                if (dropRate.compareTo(new BigDecimal("0.3")) >= 0) {
-                    조정된주당가치 = new BigDecimal(조정된주당가치)
-                            .multiply(new BigDecimal("0.8"))
-                            .setScale(2, RoundingMode.HALF_UP)
-                            .toPlainString();
-                    resultDetail.set급락종목할인(true);
-                }
-            }
-        } else {
-            조정된주당가치 = 계산된주당가치;
+        //@3-1. 52주 최고가 캡 + 급락 할인 ---------------------------------
+        String 조정된주당가치 = calcHelper.adjust52WeekHighCap(
+                계산된주당가치, historicalHigh52W,
+                StringUtil.defaultString(companyProfile.getPrice(), "0"), resultDetail);
+        if(log.isDebugEnabled() && !조정된주당가치.equals(계산된주당가치)) {
+            log.debug("[V8 적정가 조정] {} - 계산값({}) → 조정값({})", symbol, 계산된주당가치, 조정된주당가치);
         }
 
         //@4. V8: 동적 안전마진 ---------------------------------
-        double baseMargin = 0.30;
-
-        // 변동성 조정 (beta)
-        double betaAdj = 0.0;
-        Double beta = companyProfile.getBeta();
-        if (beta != null) {
-            if (beta > 2.0) betaAdj = 0.10;
-            else if (beta > 1.5) betaAdj = 0.07;
-            else if (beta > 1.2) betaAdj = 0.04;
-            else if (beta < 0.5) betaAdj = -0.05;
-        }
-
-        // 그레이엄 신뢰도 조정
-        double confidenceAdj = 0.0;
-        int grahamPassCount = resultDetail.get그레이엄_통과수();
-        if (grahamPassCount <= 2) confidenceAdj = 0.05;
-        else if (grahamPassCount <= 3) confidenceAdj = 0.03;
-
-        double totalMargin = Math.min(0.45, Math.max(0.25, baseMargin + betaAdj + confidenceAdj));
-        String totalMarginStr = String.format("%.2f", totalMargin);
-
-        String 매수적정가 = new BigDecimal(조정된주당가치)
-                .multiply(BigDecimal.ONE.subtract(new BigDecimal(totalMarginStr)))
-                .setScale(2, RoundingMode.HALF_UP)
-                .toPlainString();
-
+        double totalMargin = calcHelper.calculateDynamicSafetyMargin(
+                companyProfile.getBeta(), resultDetail.get그레이엄_통과수());
         resultDetail.set안전마진율(String.format("%.0f%%", totalMargin * 100));
 
-        //@5. 목표매도가 = 조정된주당가치 × 0.95 (적정가 대비 5% 버퍼) ---------------------------------
-        String 목표매도가 = new BigDecimal(조정된주당가치)
-                .multiply(new BigDecimal("0.95"))
-                .setScale(2, RoundingMode.HALF_UP)
-                .toPlainString();
-
-        //@5-1. V8: 손절매가 = 매수적정가 × 0.8 (하드 스탑 -20%) ---------------------------------
-        String 손절매가 = new BigDecimal(매수적정가)
-                .multiply(new BigDecimal("0.8"))
-                .setScale(2, RoundingMode.HALF_UP)
-                .toPlainString();
+        //@5. 매매가 산출 ---------------------------------
+        String 매수적정가 = calcHelper.calculatePurchasePrice(조정된주당가치, totalMargin);
+        String 목표매도가 = calcHelper.calculateSellTarget(조정된주당가치);
+        String 손절매가 = calcHelper.calculateStopLoss(매수적정가);
 
         //@6. 그레이엄 스크리닝 ---------------------------------
         SectorCalculationParameters sectorParams = SectorParameterFactory.getParameters(sector);

@@ -30,10 +30,10 @@ public class PerShareValueCalculationService {
     private final PerShareValueCalcHelper calcHelper;
 
     /**
-     * V8: 적정가 계산 보수화
-     * - PER 블렌딩 보수화: min(actualPER, sectorPER×1.2)×0.5 + sectorPER×0.5
-     * - 고성장률 지속가능성 할인: 30% 초과분은 50%만 인정
-     * - adjustedPER 상한: sectorPER × 1.5
+     * V8: 적정가 계산
+     * - PER 블렌딩: min(actualPER, sectorPER×1.5)×0.6 + sectorPER×0.4
+     * - 고성장률 지속가능성 할인: 50% 초과분은 50%만 인정
+     * - adjustedPER 상한: sectorPER × 2.0
      */
     public String calPerValueV8(CompanySharePriceCalculator req, CompanySharePriceResultDetail resultDetail, String sector) {
 
@@ -149,19 +149,19 @@ public class PerShareValueCalculationService {
             if (preProfitVal.signum() < 0 && curProfitVal.signum() > 0) {
                 resultDetail.set흑자전환기업(true);
 
-                // V8 보수화: cappedActualPER = min(actualPER, sectorPER×1.2)
-                BigDecimal cappedPER = perVal.min(sectorPER.multiply(new BigDecimal("1.2")));
-                BigDecimal blendedPER = cappedPER.multiply(new BigDecimal("0.5"))
-                        .add(sectorPER.multiply(new BigDecimal("0.5")));
+                // V8 보수화: cappedActualPER = min(actualPER, sectorPER×1.5)
+                BigDecimal cappedPER = perVal.min(sectorPER.multiply(new BigDecimal("1.5")));
+                BigDecimal blendedPER = cappedPER.multiply(new BigDecimal("0.6"))
+                        .add(sectorPER.multiply(new BigDecimal("0.4")));
 
-                log.debug("[V8] 흑자전환 PER 블렌딩: 실제PER={}, 섹터PER={}, 캡(×1.2)={}, 캡적용PER={}, 블렌딩PER={}",
+                log.debug("[V8] 흑자전환 PER 블렌딩: 실제PER={}, 섹터PER={}, 캡(×1.5)={}, 캡적용PER={}, 블렌딩PER={}",
                         perVal.setScale(4, RoundingMode.HALF_UP),
                         sectorPER,
-                        sectorPER.multiply(new BigDecimal("1.2")).setScale(2, RoundingMode.HALF_UP),
+                        sectorPER.multiply(new BigDecimal("1.5")).setScale(2, RoundingMode.HALF_UP),
                         cappedPER.setScale(4, RoundingMode.HALF_UP),
                         blendedPER.setScale(4, RoundingMode.HALF_UP));
 
-                // V8: 고성장률 할인 (30% 초과분은 50%만 인정)
+                // V8: 고성장률 할인 (50% 초과분은 50%만 인정)
                 BigDecimal gCapped = applyGrowthDiscount(g, sectorParams.getGrowthRateCap());
                 adjustedPER = CalUtil.multi(blendedPER.toPlainString(), CalUtil.add("1", gCapped.toPlainString()));
 
@@ -177,19 +177,19 @@ public class PerShareValueCalculationService {
                 resultDetail.set블렌딩PER("N/A (연속적자)");
 
             } else {
-                // V8 보수화: cappedActualPER = min(actualPER, sectorPER×1.2)
-                BigDecimal cappedPER = perVal.min(sectorPER.multiply(new BigDecimal("1.2")));
-                BigDecimal blendedPER = cappedPER.multiply(new BigDecimal("0.5"))
-                        .add(sectorPER.multiply(new BigDecimal("0.5")));
+                // V8 보수화: cappedActualPER = min(actualPER, sectorPER×1.5)
+                BigDecimal cappedPER = perVal.min(sectorPER.multiply(new BigDecimal("1.5")));
+                BigDecimal blendedPER = cappedPER.multiply(new BigDecimal("0.6"))
+                        .add(sectorPER.multiply(new BigDecimal("0.4")));
 
-                log.debug("[V8] PER 블렌딩: 실제PER={}, 섹터PER={}, 캡(×1.2)={}, 캡적용PER={}, 블렌딩PER={}",
+                log.debug("[V8] PER 블렌딩: 실제PER={}, 섹터PER={}, 캡(×1.5)={}, 캡적용PER={}, 블렌딩PER={}",
                         perVal.setScale(4, RoundingMode.HALF_UP),
                         sectorPER,
-                        sectorPER.multiply(new BigDecimal("1.2")).setScale(2, RoundingMode.HALF_UP),
+                        sectorPER.multiply(new BigDecimal("1.5")).setScale(2, RoundingMode.HALF_UP),
                         cappedPER.setScale(4, RoundingMode.HALF_UP),
                         blendedPER.setScale(4, RoundingMode.HALF_UP));
 
-                // V8: 고성장률 할인 (30% 초과분은 50%만 인정)
+                // V8: 고성장률 할인 (50% 초과분은 50%만 인정)
                 BigDecimal gCapped = applyGrowthDiscount(g, sectorParams.getGrowthRateCap());
                 adjustedPER = CalUtil.multi(blendedPER.toPlainString(), CalUtil.add("1", gCapped.toPlainString()));
 
@@ -198,9 +198,9 @@ public class PerShareValueCalculationService {
                 resultDetail.set블렌딩PER(blendedPER.setScale(4, RoundingMode.HALF_UP).toPlainString());
             }
 
-            // V8: adjustedPER 상한 (섹터 기준 PER의 1.5배)
+            // V8: adjustedPER 상한 (섹터 기준 PER의 2.0배)
             BigDecimal adjustedPERVal = new BigDecimal(adjustedPER);
-            BigDecimal maxAdjustedPER = sectorPER.multiply(new BigDecimal("1.5"));
+            BigDecimal maxAdjustedPER = sectorPER.multiply(new BigDecimal("2.0"));
             if (adjustedPERVal.compareTo(maxAdjustedPER) > 0) {
                 adjustedPER = maxAdjustedPER.setScale(4, RoundingMode.HALF_UP).toPlainString();
             }
@@ -289,15 +289,15 @@ public class PerShareValueCalculationService {
 
     /**
      * V8: 고성장률 지속가능성 할인
-     * 30% 초과분은 50%만 인정
-     * 예: 성장률 60% → 30% + (30%×0.5) = 45%로 적용
+     * 50% 초과분은 50%만 인정
+     * 예: 성장률 80% → 50% + (30%×0.5) = 65%로 적용
      */
     BigDecimal applyGrowthDiscount(BigDecimal growth, BigDecimal sectorCap) {
-        BigDecimal threshold = new BigDecimal("0.3");
+        BigDecimal threshold = new BigDecimal("0.5");
         BigDecimal effectiveGrowth;
 
         if (growth.compareTo(threshold) > 0) {
-            // 30% 초과분은 50%만 인정
+            // 50% 초과분은 50%만 인정
             BigDecimal excess = growth.subtract(threshold);
             effectiveGrowth = threshold.add(excess.multiply(new BigDecimal("0.5")));
         } else {
