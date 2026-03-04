@@ -61,4 +61,29 @@ public class SectorCalculationParameters {
      * 그레이엄 PER×PBR 상한 (V7)
      */
     private BigDecimal maxPERxPBR;
+
+    /**
+     * PBR 기반 평가 사용 여부 (V8, Financial Services)
+     */
+    private boolean usePbrValuation;
+
+    /**
+     * 무위험수익률 (Risk-Free Rate, V8 PBR)
+     */
+    private BigDecimal riskFreeRate;
+
+    /**
+     * 시장위험프리미엄 (Market Risk Premium, V8 PBR)
+     */
+    private BigDecimal marketRiskPremium;
+
+    /**
+     * targetPBR 상한 (V8 PBR)
+     */
+    private BigDecimal maxTargetPBR;
+
+    /**
+     * targetPBR 하한 (V8 PBR)
+     */
+    private BigDecimal minTargetPBR;
 }

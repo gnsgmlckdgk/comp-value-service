@@ -118,6 +118,14 @@ public class CompanySharePriceResultDetail {
     /** V8 과대평가 의심 할인 **/
     private boolean 과대평가의심할인 = false;
 
+    /** V8 PBR 기반 평가 (Financial Services) **/
+    private boolean PBR기반평가 = false;
+    private String BPS = "N/A";
+    private String ROE = "N/A";
+    private String COE = "N/A";
+    private String targetPBR = "N/A";
+    private String 실제PBR = "N/A";
+
     public CompanySharePriceResultDetail(String unit) {
         this.단위 = unit;
     }

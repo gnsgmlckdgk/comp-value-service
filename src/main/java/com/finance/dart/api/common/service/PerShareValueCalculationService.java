@@ -43,6 +43,13 @@ public class PerShareValueCalculationService {
         SectorCalculationParameters sectorParams =
                 SectorParameterFactory.getParameters(sector);
 
+        // PBR 기반 평가 라우팅 (Financial Services)
+        if (sectorParams.isUsePbrValuation()
+                && !StringUtil.isStringEmpty(req.getBookValuePerShare())
+                && !StringUtil.isStringEmpty(req.getRoe())) {
+            return calPerValueV8_Financial(req, resultDetail, sector, sectorParams);
+        }
+
         final String per = req.getPer();
         final String incomGrowth = req.getOperatingIncomeGrowth();
         final String epsGrowth = req.getEpsgrowth();
@@ -285,6 +292,96 @@ public class PerShareValueCalculationService {
         }
 
         return result;
+    }
+
+    /**
+     * V8: PBR 기반 적정가 계산 (Financial Services 전용)
+     * 공식: BPS × targetPBR × 추세팩터
+     * - COE = riskFreeRate + Beta × marketRiskPremium
+     * - targetPBR = ROE / COE (상한 3.0, 하한 0.5)
+     * - 추세팩터: 연속하락 0.85, 단일하락 0.92, 그 외 1.0
+     */
+    String calPerValueV8_Financial(CompanySharePriceCalculator req, CompanySharePriceResultDetail resultDetail,
+                                          String sector, SectorCalculationParameters sectorParams) {
+
+        resultDetail.setPBR기반평가(true);
+
+        BigDecimal bps = new BigDecimal(req.getBookValuePerShare());
+        BigDecimal roe = new BigDecimal(req.getRoe());
+
+        // Beta (기본값 1.0)
+        BigDecimal beta = BigDecimal.ONE;
+        if (!StringUtil.isStringEmpty(req.getBeta())) {
+            try {
+                beta = new BigDecimal(req.getBeta());
+                if (beta.compareTo(BigDecimal.ZERO) <= 0) beta = BigDecimal.ONE;
+            } catch (Exception e) {
+                beta = BigDecimal.ONE;
+            }
+        }
+
+        // COE = riskFreeRate + Beta × marketRiskPremium
+        BigDecimal coe = sectorParams.getRiskFreeRate().add(
+                beta.multiply(sectorParams.getMarketRiskPremium()));
+        resultDetail.setCOE(coe.setScale(4, RoundingMode.HALF_UP).toPlainString());
+
+        // targetPBR = ROE / COE (범위 제한)
+        BigDecimal targetPBR;
+        if (coe.compareTo(BigDecimal.ZERO) <= 0) {
+            targetPBR = sectorParams.getMinTargetPBR();
+        } else {
+            targetPBR = roe.divide(coe, 4, RoundingMode.HALF_UP);
+        }
+        targetPBR = targetPBR.max(sectorParams.getMinTargetPBR()).min(sectorParams.getMaxTargetPBR());
+        resultDetail.setTargetPBR(targetPBR.setScale(4, RoundingMode.HALF_UP).toPlainString());
+
+        // 연간 추세팩터
+        BigDecimal trendFactor = BigDecimal.ONE;
+        BigDecimal curProfit = new BigDecimal(req.getOperatingProfitCurrent());
+        BigDecimal preProfit = new BigDecimal(req.getOperatingProfitPre());
+        BigDecimal prePreProfit = new BigDecimal(req.getOperatingProfitPrePre());
+
+        if (curProfit.compareTo(preProfit) < 0 && preProfit.compareTo(prePreProfit) < 0) {
+            trendFactor = new BigDecimal("0.85");
+            resultDetail.set연속하락추세(true);
+        } else if (curProfit.compareTo(preProfit) < 0) {
+            trendFactor = new BigDecimal("0.92");
+            resultDetail.set단일하락추세(true);
+        } else if (curProfit.compareTo(preProfit) > 0 && preProfit.compareTo(prePreProfit) > 0) {
+            resultDetail.set연속상승추세(true);
+        }
+        resultDetail.set영업이익추세팩터(trendFactor.toPlainString());
+
+        // 적정가 = BPS × targetPBR × 추세팩터
+        BigDecimal fairValue = bps.multiply(targetPBR).multiply(trendFactor)
+                .setScale(2, RoundingMode.HALF_UP);
+
+        // PBR 기반이므로 PER 관련 resultDetail도 세팅
+        resultDetail.set실제PER(req.getPer() != null ? req.getPer() : "N/A");
+        resultDetail.set섹터PER(sectorParams.getBasePER().toPlainString());
+        resultDetail.set블렌딩PER("N/A (PBR경로)");
+        resultDetail.set성장률보정PER("N/A (PBR경로)");
+        resultDetail.setPEG(calcHelper.calPeg(req.getPer(), req.getEpsgrowth()));
+
+        // 순부채 차감 (발행주식수 기준 per-share)
+        String totalDebt = req.getTotalDebt();
+        String cash = req.getCashAndCashEquivalents();
+        String issuedShares = req.getIssuedShares();
+
+        if (!StringUtil.isStringEmpty(totalDebt) && !StringUtil.isStringEmpty(cash)
+                && !StringUtil.isStringEmpty(issuedShares)) {
+            BigDecimal netDebt = new BigDecimal(totalDebt).subtract(new BigDecimal(cash));
+            BigDecimal netDebtPerShare = netDebt.divide(new BigDecimal(issuedShares), 4, RoundingMode.HALF_UP);
+            fairValue = fairValue.subtract(netDebtPerShare);
+            resultDetail.set순부채(netDebt.toPlainString());
+        }
+
+        if(log.isDebugEnabled()) {
+            log.debug("[V8 Financial PBR] 섹터:{}, BPS:{}, ROE:{}, Beta:{}, COE:{}, targetPBR:{}, 추세:{}, 적정가:{}",
+                    sector, bps, roe, beta, coe, targetPBR, trendFactor, fairValue);
+        }
+
+        return fairValue.toPlainString();
     }
 
     /**

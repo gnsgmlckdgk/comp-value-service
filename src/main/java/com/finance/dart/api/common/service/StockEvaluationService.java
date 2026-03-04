@@ -364,38 +364,82 @@ public class StockEvaluationService {
         double score = 0;
         StringBuilder details = new StringBuilder();
 
-        // 1. PEG 평가 (8점)
-        String pegStr = detail.getPEG();
-        if (!StringUtil.isStringEmpty(pegStr) && !"N/A".equals(pegStr) && !"999".equals(pegStr)) {
-            try {
-                double peg = Double.parseDouble(pegStr);
-                if (peg < 0.5) {
-                    score += 8;
-                    details.append(String.format("🌟 PEG %.2f (매우 저평가, +8점). ", peg));
-                } else if (peg < 0.8) {
-                    score += 7;
-                    details.append(String.format("✅ PEG %.2f (저평가, +7점). ", peg));
-                } else if (peg < 1.0) {
-                    score += 5;
-                    details.append(String.format("✅ PEG %.2f (양호, +5점). ", peg));
-                } else if (peg < 1.2) {
-                    score += 3;
-                    details.append(String.format("⚠️ PEG %.2f (적정, +3점). ", peg));
-                } else if (peg < 1.5) {
-                    score += 2;
-                    details.append(String.format("⚠️ PEG %.2f (보통, +2점). ", peg));
-                } else if (peg < 2.0) {
-                    score += 1;
-                    details.append(String.format("⚠️ PEG %.2f (고평가 위험, +1점). ", peg));
-                } else {
-                    score += 0;
-                    details.append(String.format("❌ PEG %.2f (과대평가, +0점). ", peg));
+        // 1. PEG 평가 (8점) — PBR 기반 평가 시 PBR-relative로 대체
+        if (detail.isPBR기반평가()) {
+            // PBR-relative 스코어링
+            String pbrStr = detail.getPBR();
+            String targetPbrStr = detail.getTargetPBR();
+            if (!StringUtil.isStringEmpty(pbrStr) && !"N/A".equals(pbrStr)
+                    && !StringUtil.isStringEmpty(targetPbrStr) && !"N/A".equals(targetPbrStr)) {
+                try {
+                    double pbr = Double.parseDouble(pbrStr);
+                    double targetPbr = Double.parseDouble(targetPbrStr);
+                    if (targetPbr > 0) {
+                        double ratio = pbr / targetPbr;
+                        if (ratio < 0.5) {
+                            score += 8;
+                            details.append(String.format("🌟 PBR/targetPBR %.2f (매우 저평가, +8점). ", ratio));
+                        } else if (ratio < 0.7) {
+                            score += 7;
+                            details.append(String.format("✅ PBR/targetPBR %.2f (저평가, +7점). ", ratio));
+                        } else if (ratio < 0.9) {
+                            score += 5;
+                            details.append(String.format("✅ PBR/targetPBR %.2f (양호, +5점). ", ratio));
+                        } else if (ratio < 1.1) {
+                            score += 3;
+                            details.append(String.format("⚠️ PBR/targetPBR %.2f (적정, +3점). ", ratio));
+                        } else if (ratio < 1.3) {
+                            score += 2;
+                            details.append(String.format("⚠️ PBR/targetPBR %.2f (보통, +2점). ", ratio));
+                        } else if (ratio < 1.5) {
+                            score += 1;
+                            details.append(String.format("⚠️ PBR/targetPBR %.2f (고평가 위험, +1점). ", ratio));
+                        } else {
+                            details.append(String.format("❌ PBR/targetPBR %.2f (과대평가, +0점). ", ratio));
+                        }
+                    } else {
+                        details.append("targetPBR 정보 오류 (+0점). ");
+                    }
+                } catch (Exception e) {
+                    details.append("PBR 정보 오류 (+0점). ");
                 }
-            } catch (Exception e) {
-                details.append("PEG 정보 오류 (+0점). ");
+            } else {
+                details.append("PBR/targetPBR 정보 없음 (+0점). ");
             }
         } else {
-            details.append("PEG 정보 없음 (+0점). ");
+            // 기존 PEG 스코어링
+            String pegStr = detail.getPEG();
+            if (!StringUtil.isStringEmpty(pegStr) && !"N/A".equals(pegStr) && !"999".equals(pegStr)) {
+                try {
+                    double peg = Double.parseDouble(pegStr);
+                    if (peg < 0.5) {
+                        score += 8;
+                        details.append(String.format("🌟 PEG %.2f (매우 저평가, +8점). ", peg));
+                    } else if (peg < 0.8) {
+                        score += 7;
+                        details.append(String.format("✅ PEG %.2f (저평가, +7점). ", peg));
+                    } else if (peg < 1.0) {
+                        score += 5;
+                        details.append(String.format("✅ PEG %.2f (양호, +5점). ", peg));
+                    } else if (peg < 1.2) {
+                        score += 3;
+                        details.append(String.format("⚠️ PEG %.2f (적정, +3점). ", peg));
+                    } else if (peg < 1.5) {
+                        score += 2;
+                        details.append(String.format("⚠️ PEG %.2f (보통, +2점). ", peg));
+                    } else if (peg < 2.0) {
+                        score += 1;
+                        details.append(String.format("⚠️ PEG %.2f (고평가 위험, +1점). ", peg));
+                    } else {
+                        score += 0;
+                        details.append(String.format("❌ PEG %.2f (과대평가, +0점). ", peg));
+                    }
+                } catch (Exception e) {
+                    details.append("PEG 정보 오류 (+0점). ");
+                }
+            } else {
+                details.append("PEG 정보 없음 (+0점). ");
+            }
         }
 
         // 2. 가격 차이 평가 (6점) - V8: 과신 방지 (극단적 저평가는 오히려 의심)
@@ -620,17 +664,42 @@ public class StockEvaluationService {
             details.append("매수적정가 정보 없음 (+0점). ");
         }
 
-        // 2. PEG/PSR 이진 판단 (7점) - 고평가 시 단계적 감점
+        // 2. PEG/PSR/PBR 이진 판단 (7점) - 고평가 시 단계적 감점
         {
             int rawPegPsrScore = 0;
+            String binaryLabel = "";
             boolean is매출기반 = detail.is매출기반평가();
-            if (is매출기반) {
+            boolean isPBR기반 = detail.isPBR기반평가();
+
+            if (isPBR기반) {
+                // PBR ≤ targetPBR → 통과
+                String pbrStr = detail.getPBR();
+                String targetPbrStr = detail.getTargetPBR();
+                if (!StringUtil.isStringEmpty(pbrStr) && !"N/A".equals(pbrStr)
+                        && !StringUtil.isStringEmpty(targetPbrStr) && !"N/A".equals(targetPbrStr)) {
+                    try {
+                        double pbr = Double.parseDouble(pbrStr);
+                        double targetPbr = Double.parseDouble(targetPbrStr);
+                        if (pbr > 0 && pbr <= targetPbr) {
+                            rawPegPsrScore = EvaluationConst.STEP5_PEG_PSR_BINARY;
+                        }
+                        if (rawPegPsrScore == 0) {
+                            details.append(String.format("❌ PBR %.2f > targetPBR %.2f (+0점). ", pbr, targetPbr));
+                        }
+                    } catch (Exception e) {
+                        details.append("PBR 정보 오류 (+0점). ");
+                    }
+                } else {
+                    details.append("PBR/targetPBR 정보 없음 (+0점). ");
+                }
+                binaryLabel = "PBR";
+            } else if (is매출기반) {
                 String psrStr = detail.getPSR();
                 if (!StringUtil.isStringEmpty(psrStr) && !"N/A".equals(psrStr)) {
                     try {
                         double psr = Double.parseDouble(psrStr);
                         if (psr > 0 && psr < 2) {
-                            rawPegPsrScore = EvaluationConst.STEP5_PEG_PSR_BINARY;  // 7점
+                            rawPegPsrScore = EvaluationConst.STEP5_PEG_PSR_BINARY;
                         }
                         if (rawPegPsrScore == 0) {
                             details.append(String.format("❌ PSR %.2f ≥ 2 (+0점). ", psr));
@@ -641,13 +710,14 @@ public class StockEvaluationService {
                 } else {
                     details.append("PSR 정보 없음 (+0점). ");
                 }
+                binaryLabel = "PSR";
             } else {
                 String pegStr = detail.getPEG();
                 if (!StringUtil.isStringEmpty(pegStr) && !"N/A".equals(pegStr) && !"999".equals(pegStr)) {
                     try {
                         double peg = Double.parseDouble(pegStr);
                         if (peg > 0 && peg <= 1.0) {
-                            rawPegPsrScore = EvaluationConst.STEP5_PEG_PSR_BINARY;  // 7점
+                            rawPegPsrScore = EvaluationConst.STEP5_PEG_PSR_BINARY;
                         }
                         if (rawPegPsrScore == 0) {
                             details.append(String.format("❌ PEG %.2f > 1 (+0점). ", peg));
@@ -658,16 +728,16 @@ public class StockEvaluationService {
                 } else {
                     details.append("PEG 정보 없음 (+0점). ");
                 }
+                binaryLabel = "PEG";
             }
             if (rawPegPsrScore > 0) {
                 int adjusted = (int) Math.round(rawPegPsrScore * (1.0 - overvaluedPenalty));
                 score += adjusted;
-                String label = is매출기반 ? "PSR" : "PEG";
                 if (overvaluedPenalty > 0) {
                     details.append(String.format("⚠️ %s 기준 충족하나 고평가 감점 %d%% 적용 (+%d점). ",
-                            label, (int)(overvaluedPenalty * 100), adjusted));
+                            binaryLabel, (int)(overvaluedPenalty * 100), adjusted));
                 } else {
-                    details.append(String.format("✅ %s 기준 충족 (+%d점). ", label, adjusted));
+                    details.append(String.format("✅ %s 기준 충족 (+%d점). ", binaryLabel, adjusted));
                 }
             }
         }

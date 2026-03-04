@@ -201,4 +201,23 @@ public class CompanySharePriceCalculator {
     @SerializedName("cik")
     private String cik;
 
+    // PBR 기반 평가용 (Financial Services) ====================================
+    /**
+     * 주당 장부가치 (Book Value Per Share)
+     */
+    @SerializedName("bookValuePerShare")
+    private String bookValuePerShare;
+
+    /**
+     * 자기자본이익률 (Return on Equity)
+     */
+    @SerializedName("roe")
+    private String roe;
+
+    /**
+     * 베타 (시장 변동성 대비 개별 종목 변동성)
+     */
+    @SerializedName("beta")
+    private String beta;
+
 }

@@ -527,4 +527,190 @@ class PerShareValueCalculationServiceV8Test {
         assertEquals(new BigDecimal("44.00"), priceGap,
                 "이전(-28%)에서 현재(+44%)로 개선 확인");
     }
+
+    // ==================================================================================
+    // Financial Services PBR 기반 평가 테스트
+    // ==================================================================================
+
+    /**
+     * Financial PBR 테스트용 공통 데이터 생성
+     */
+    private CompanySharePriceCalculator createFinancialBaseCalParam() {
+        CompanySharePriceCalculator req = createBaseCalParam();
+        // 금융주는 유동비율 미적용이므로 영향 없지만 세팅
+        req.setCurrentAssetsTotal("500000000000");
+        req.setCurrentLiabilitiesTotal("450000000000");
+        req.setCurrentRatio("1.11");
+        req.setInvestmentAssets("100000000000");
+        req.setIntangibleAssets("5000000000");
+        return req;
+    }
+
+    @Test
+    @DisplayName("Financial PBR: 일반 은행 (BPS=50, ROE=12%, Beta=0.8) → BPS×targetPBR")
+    void test_financial_normalBank() {
+        CompanySharePriceCalculator req = createFinancialBaseCalParam();
+        req.setBookValuePerShare("50");
+        req.setRoe("0.12");
+        req.setBeta("0.8");
+        req.setPer("10");
+        req.setEpsgrowth("0.05");
+        req.setOperatingProfitPrePre("5000000000");
+        req.setOperatingProfitPre("5500000000");
+        req.setOperatingProfitCurrent("6000000000");
+
+        CompanySharePriceResultDetail detail = new CompanySharePriceResultDetail("1");
+        String result = service.calPerValueV8(req, detail, "Financial Services");
+
+        assertNotNull(result);
+        assertTrue(detail.isPBR기반평가(), "PBR 기반 평가 플래그가 true여야 함");
+
+        // COE = 0.04 + 0.8 × 0.05 = 0.08
+        // targetPBR = 0.12 / 0.08 = 1.5 (범위 내)
+        // 적정가 = 50 × 1.5 × 1.0 (상승추세) = 75.00 - 순부채/주
+        BigDecimal resultVal = new BigDecimal(result);
+
+        System.out.println("======================================================");
+        System.out.println("Financial PBR: 일반 은행");
+        System.out.println("BPS=50, ROE=12%, Beta=0.8");
+        System.out.println("COE: " + detail.getCOE());
+        System.out.println("targetPBR: " + detail.getTargetPBR());
+        System.out.println("추세팩터: " + detail.get영업이익추세팩터());
+        System.out.println("결과: $" + result);
+        System.out.println("======================================================\n");
+
+        assertEquals("1.5000", detail.getTargetPBR(), "targetPBR은 1.5여야 함");
+        assertTrue(detail.is연속상승추세(), "연속 상승 추세여야 함");
+        assertTrue(resultVal.compareTo(BigDecimal.ZERO) > 0, "적정가는 양수여야 함");
+    }
+
+    @Test
+    @DisplayName("Financial PBR: 고ROE 은행 (ROE=30%) → targetPBR 상한 3.0 적용")
+    void test_financial_highROE_targetPBRCap() {
+        CompanySharePriceCalculator req = createFinancialBaseCalParam();
+        req.setBookValuePerShare("40");
+        req.setRoe("0.30");
+        req.setBeta("1.0");
+        req.setPer("15");
+        req.setEpsgrowth("0.15");
+        req.setOperatingProfitPrePre("8000000000");
+        req.setOperatingProfitPre("9000000000");
+        req.setOperatingProfitCurrent("10000000000");
+
+        CompanySharePriceResultDetail detail = new CompanySharePriceResultDetail("1");
+        String result = service.calPerValueV8(req, detail, "Financial Services");
+
+        // COE = 0.04 + 1.0 × 0.05 = 0.09
+        // targetPBR = 0.30 / 0.09 = 3.33 → 상한 3.0 적용
+        assertEquals("3.0000", detail.getTargetPBR(), "targetPBR은 3.0 상한이어야 함");
+
+        System.out.println("======================================================");
+        System.out.println("Financial PBR: 고ROE 은행 (ROE=30%)");
+        System.out.println("targetPBR: " + detail.getTargetPBR() + " (상한 3.0 적용)");
+        System.out.println("결과: $" + result);
+        System.out.println("======================================================\n");
+    }
+
+    @Test
+    @DisplayName("Financial PBR: 저ROE 은행 (ROE=2%) → targetPBR 하한 0.5 + 하락추세")
+    void test_financial_lowROE_targetPBRFloor() {
+        CompanySharePriceCalculator req = createFinancialBaseCalParam();
+        req.setBookValuePerShare("80");
+        req.setRoe("0.02");
+        req.setBeta("1.2");
+        req.setPer("40");
+        req.setEpsgrowth("0.01");
+        req.setOperatingProfitPrePre("5000000000");
+        req.setOperatingProfitPre("3000000000");
+        req.setOperatingProfitCurrent("1000000000");
+
+        CompanySharePriceResultDetail detail = new CompanySharePriceResultDetail("1");
+        String result = service.calPerValueV8(req, detail, "Financial Services");
+
+        // COE = 0.04 + 1.2 × 0.05 = 0.10
+        // targetPBR = 0.02 / 0.10 = 0.2 → 하한 0.5 적용
+        assertEquals("0.5000", detail.getTargetPBR(), "targetPBR은 0.5 하한이어야 함");
+        assertTrue(detail.is연속하락추세(), "연속 하락 추세여야 함");
+
+        // 적정가 = 80 × 0.5 × 0.85 = 34.0 - 순부채/주
+        BigDecimal resultVal = new BigDecimal(result);
+
+        System.out.println("======================================================");
+        System.out.println("Financial PBR: 저ROE 은행 (ROE=2%, 연속하락)");
+        System.out.println("targetPBR: " + detail.getTargetPBR() + " (하한 0.5 적용)");
+        System.out.println("추세팩터: " + detail.get영업이익추세팩터() + " (연속하락 0.85)");
+        System.out.println("결과: $" + result);
+        System.out.println("======================================================\n");
+
+        assertTrue(resultVal.compareTo(BigDecimal.ZERO) > 0, "적정가는 양수여야 함");
+    }
+
+    @Test
+    @DisplayName("Financial PBR: BPS 없으면 PER 기반 폴백")
+    void test_financial_noBPS_fallbackToPER() {
+        CompanySharePriceCalculator req = createFinancialBaseCalParam();
+        // BPS를 설정하지 않음 → PER 기반 폴백
+        req.setBookValuePerShare(null);
+        req.setRoe("0.12");
+        req.setBeta("1.0");
+        req.setPer("10");
+        req.setEpsgrowth("0.05");
+        req.setOperatingIncomeGrowth("0.1");
+        req.setOperatingProfitPrePre("5000000000");
+        req.setOperatingProfitPre("5500000000");
+        req.setOperatingProfitCurrent("6000000000");
+        req.setQuarterlyOpIncomeQ1("1800000000");
+        req.setQuarterlyOpIncomeQ2("1500000000");
+        req.setQuarterlyOpIncomeQ3("1400000000");
+        req.setQuarterlyOpIncomeQ4("1300000000");
+
+        CompanySharePriceResultDetail detail = new CompanySharePriceResultDetail("1");
+        String result = service.calPerValueV8(req, detail, "Financial Services");
+
+        assertNotNull(result);
+        assertFalse(detail.isPBR기반평가(), "BPS 없으면 PBR 기반 평가 아님 (PER 폴백)");
+
+        System.out.println("======================================================");
+        System.out.println("Financial PBR: BPS 없음 → PER 기반 폴백");
+        System.out.println("PBR기반평가: " + detail.isPBR기반평가());
+        System.out.println("블렌딩PER: " + detail.get블렌딩PER());
+        System.out.println("결과: $" + result);
+        System.out.println("======================================================\n");
+    }
+
+    @Test
+    @DisplayName("Financial PBR: 단일하락 추세팩터(0.92) 적용 확인")
+    void test_financial_singleDeclineTrend() {
+        CompanySharePriceCalculator req = createFinancialBaseCalParam();
+        req.setBookValuePerShare("60");
+        req.setRoe("0.10");
+        req.setBeta("1.0");
+        req.setPer("12");
+        req.setEpsgrowth("0.05");
+        // 전전기 < 전기 > 당기 → 단일하락
+        req.setOperatingProfitPrePre("4000000000");
+        req.setOperatingProfitPre("6000000000");
+        req.setOperatingProfitCurrent("5000000000");
+
+        CompanySharePriceResultDetail detail = new CompanySharePriceResultDetail("1");
+        String result = service.calPerValueV8(req, detail, "Financial Services");
+
+        assertTrue(detail.isPBR기반평가(), "PBR 기반 평가여야 함");
+        assertTrue(detail.is단일하락추세(), "단일 하락 추세여야 함");
+        assertEquals("0.92", detail.get영업이익추세팩터(), "추세팩터는 0.92여야 함");
+
+        // COE = 0.04 + 1.0 × 0.05 = 0.09
+        // targetPBR = 0.10 / 0.09 = 1.1111 (범위 내)
+        BigDecimal expectedTargetPBR = new BigDecimal("1.1111");
+        BigDecimal actualTargetPBR = new BigDecimal(detail.getTargetPBR());
+        assertEquals(0, expectedTargetPBR.compareTo(actualTargetPBR),
+                "targetPBR은 1.1111이어야 함 (실제: " + actualTargetPBR + ")");
+
+        System.out.println("======================================================");
+        System.out.println("Financial PBR: 단일하락 추세 (0.92)");
+        System.out.println("targetPBR: " + detail.getTargetPBR());
+        System.out.println("추세팩터: " + detail.get영업이익추세팩터());
+        System.out.println("결과: $" + result);
+        System.out.println("======================================================\n");
+    }
 }

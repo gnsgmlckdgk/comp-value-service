@@ -285,6 +285,22 @@ public class US_StockCalFromFpmService {
             resultDetail.setPBR(String.valueOf(pbrTTM));
         }
 
+        //@ PBR 기반 평가 데이터 (Financial Services)
+        if (SectorParameterFactory.getParameters(result.get섹터()).isUsePbrValuation()) {
+            Double bps = financialRatios.get(0).getBookValuePerShareTTM();
+            Double netIncomePS = financialRatios.get(0).getNetIncomePerShareTTM();
+            Double equityPS = financialRatios.get(0).getShareholdersEquityPerShareTTM();
+            if (bps != null && bps > 0) {
+                calParam.setBookValuePerShare(String.valueOf(bps));
+                resultDetail.setBPS(String.valueOf(bps));
+            }
+            if (netIncomePS != null && equityPS != null && equityPS > 0) {
+                double roe = netIncomePS / equityPS;
+                calParam.setRoe(String.valueOf(roe));
+                resultDetail.setROE(String.format("%.4f", roe));
+            }
+        }
+
         //@ 성장률(연간)
         String epsGrowth = StringUtil.defaultString(financialGrowth.get(0).getEpsgrowth());
         calParam.setEpsgrowth(epsGrowth);
@@ -409,6 +425,11 @@ public class US_StockCalFromFpmService {
         String pbrStr = resultDetail.getPBR();
         if (pbrStr != null && !pbrStr.isEmpty()) {
             try { pbrTTM = Double.parseDouble(pbrStr); } catch (NumberFormatException ignored) {}
+        }
+
+        //@2-2. Beta (PBR 기반 평가용)
+        if (companyProfile.getBeta() != null) {
+            calParam.setBeta(String.valueOf(companyProfile.getBeta()));
         }
 
         //@3. 계산 (V8 로직) ---------------------------------

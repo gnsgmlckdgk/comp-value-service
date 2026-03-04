@@ -112,6 +112,11 @@ public class SectorParameterFactory {
                 .maxPER(new BigDecimal("15"))
                 .maxPBR(new BigDecimal("2"))
                 .maxPERxPBR(new BigDecimal("22.5"))
+                .usePbrValuation(true)
+                .riskFreeRate(new BigDecimal("0.04"))
+                .marketRiskPremium(new BigDecimal("0.05"))
+                .maxTargetPBR(new BigDecimal("3.0"))
+                .minTargetPBR(new BigDecimal("0.5"))
                 .build());
 
         // Real Estate (부동산)
