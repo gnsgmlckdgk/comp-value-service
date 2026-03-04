@@ -403,46 +403,6 @@ class PerShareValueCalculationServiceV8Test {
     }
 
     // ==================================================================================
-    // 52주 최고가 캡 (PerShareValueCalcHelper.adjust52WeekHighCap)
-    // ==================================================================================
-    @Test
-    @DisplayName("52주캡: 계산값 > 최고가 → 가중평균 (계산값×0.4 + 최고가×0.6)")
-    void test_52weekCap_weightedAverage() {
-        CompanySharePriceResultDetail detail = new CompanySharePriceResultDetail("1");
-        String result = calcHelper.adjust52WeekHighCap("180", 120.0, "100", detail);
-        // 180×0.4 + 120×0.6 = 72 + 72 = 144
-        assertEquals("144.00", result);
-        assertFalse(detail.is급락종목할인());
-    }
-
-    @Test
-    @DisplayName("52주캡: 계산값 <= 최고가 → 캡 미적용")
-    void test_52weekCap_noCap() {
-        CompanySharePriceResultDetail detail = new CompanySharePriceResultDetail("1");
-        String result = calcHelper.adjust52WeekHighCap("100", 150.0, "120", detail);
-        assertEquals("100", result);
-    }
-
-    @Test
-    @DisplayName("52주캡: 급락(30%+) 추가 20% 할인")
-    void test_52weekCap_crashDiscount() {
-        CompanySharePriceResultDetail detail = new CompanySharePriceResultDetail("1");
-        // 현재가 80, 최고가 120 → 33% 급락
-        String result = calcHelper.adjust52WeekHighCap("180", 120.0, "80", detail);
-        // 144 × 0.8 = 115.2
-        assertEquals("115.20", result);
-        assertTrue(detail.is급락종목할인());
-    }
-
-    @Test
-    @DisplayName("52주캡: 52주 데이터 없음 → 원본 반환")
-    void test_52weekCap_nullHigh() {
-        CompanySharePriceResultDetail detail = new CompanySharePriceResultDetail("1");
-        String result = calcHelper.adjust52WeekHighCap("200", null, "100", detail);
-        assertEquals("200", result);
-    }
-
-    // ==================================================================================
     // 동적 안전마진 (PerShareValueCalcHelper.calculateDynamicSafetyMargin)
     // ==================================================================================
     @Test
@@ -485,7 +445,7 @@ class PerShareValueCalculationServiceV8Test {
     // 매매가 계산 (PerShareValueCalcHelper)
     // ==================================================================================
     @Test
-    @DisplayName("매매가: 매수적정가 = 조정가 × (1-마진), 목표매도가 = ×0.95, 손절매 = 매수가×0.8")
+    @DisplayName("매매가: 매수적정가 = 내재가치 × (1-마진), 목표매도가 = ×0.95, 손절매 = 매수가×0.8")
     void test_tradingPrices() {
         String 매수적정가 = calcHelper.calculatePurchasePrice("144.00", 0.30);
         assertEquals("100.80", 매수적정가);
@@ -501,31 +461,28 @@ class PerShareValueCalculationServiceV8Test {
     // 전체 파이프라인 통합 검증
     // ==================================================================================
     @Test
-    @DisplayName("통합: 저평가 기업 전체 파이프라인 (계산값$180 → 가격차이율 +44%)")
+    @DisplayName("통합: 저평가 기업 전체 파이프라인 (계산값$180 → 가격차이율 +80%)")
     void test_fullPipeline_undervalued() {
-        CompanySharePriceResultDetail detail = new CompanySharePriceResultDetail("1");
-
-        // Step 1: 52주 캡
-        String 조정된주당가치 = calcHelper.adjust52WeekHighCap("180", 120.0, "100", detail);
-        assertEquals("144.00", 조정된주당가치);
+        // Step 1: 계산된주당가치를 그대로 내재가치로 사용 (52주 캡 제거)
+        String 주당가치 = "180";
 
         // Step 2: 안전마진
         double margin = calcHelper.calculateDynamicSafetyMargin(1.0, 4);
         assertEquals(0.30, margin, 0.001);
 
         // Step 3: 매매가
-        String 매수적정가 = calcHelper.calculatePurchasePrice(조정된주당가치, margin);
-        assertEquals("100.80", 매수적정가);
+        String 매수적정가 = calcHelper.calculatePurchasePrice(주당가치, margin);
+        assertEquals("126.00", 매수적정가);
 
-        // Step 4: 가격차이율 = (144 - 100) / 100 × 100 = +44%
-        BigDecimal fair = new BigDecimal(조정된주당가치);
+        // Step 4: 가격차이율 = (180 - 100) / 100 × 100 = +80%
+        BigDecimal fair = new BigDecimal(주당가치);
         BigDecimal current = new BigDecimal("100");
         BigDecimal priceGap = fair.subtract(current)
                 .divide(current, 4, java.math.RoundingMode.HALF_UP)
                 .multiply(new BigDecimal("100"))
                 .setScale(2, java.math.RoundingMode.HALF_UP);
-        assertEquals(new BigDecimal("44.00"), priceGap,
-                "이전(-28%)에서 현재(+44%)로 개선 확인");
+        assertEquals(new BigDecimal("80.00"), priceGap,
+                "순수 내재가치 기반 가격차이율 +80%");
     }
 
     // ==================================================================================

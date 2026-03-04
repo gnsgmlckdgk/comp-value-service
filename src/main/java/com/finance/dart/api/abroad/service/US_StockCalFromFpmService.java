@@ -390,7 +390,6 @@ public class US_StockCalFromFpmService {
 
         //@1-2. 52주 가격 히스토리 조회 (RSI, 거래량 분석용)
         List<StockPriceVolumeResDto> priceHistory = null;
-        Double historicalHigh52W = null;
         try {
             LocalDate today = LocalDate.now();
             LocalDate oneYearAgo = today.minusYears(1);
@@ -401,13 +400,6 @@ public class US_StockCalFromFpmService {
             );
             Thread.sleep(TRSC_DELAY);
             priceHistory = stockPriceVolumeService.findStockPriceVolume(priceReqDto);
-            if (priceHistory != null && !priceHistory.isEmpty()) {
-                historicalHigh52W = priceHistory.stream()
-                    .map(StockPriceVolumeResDto::getHigh)
-                    .filter(h -> h != null)
-                    .max(Double::compare)
-                    .orElse(null);
-            }
         } catch (Exception e) {
             log.warn("[V8] {} - 52주 가격 히스토리 조회 실패: {}", symbol, e.getMessage());
         }
@@ -436,22 +428,14 @@ public class US_StockCalFromFpmService {
         if(log.isDebugEnabled()) log.debug("[V8] {} - 계산 입력: PER={}, 섹터={}", symbol, calParam.getPer(), sector);
         String 계산된주당가치 = sharePriceCalculatorService.calPerValueV8(calParam, resultDetail, sector);
 
-        //@3-1. 52주 최고가 캡 + 급락 할인 ---------------------------------
-        String 조정된주당가치 = calcHelper.adjust52WeekHighCap(
-                계산된주당가치, historicalHigh52W,
-                StringUtil.defaultString(companyProfile.getPrice(), "0"), resultDetail);
-        if(log.isDebugEnabled() && !조정된주당가치.equals(계산된주당가치)) {
-            log.debug("[V8 적정가 조정] {} - 계산값({}) → 조정값({})", symbol, 계산된주당가치, 조정된주당가치);
-        }
-
         //@4. V8: 동적 안전마진 ---------------------------------
         double totalMargin = calcHelper.calculateDynamicSafetyMargin(
                 companyProfile.getBeta(), resultDetail.get그레이엄_통과수());
         resultDetail.set안전마진율(String.format("%.0f%%", totalMargin * 100));
 
         //@5. 매매가 산출 ---------------------------------
-        String 매수적정가 = calcHelper.calculatePurchasePrice(조정된주당가치, totalMargin);
-        String 목표매도가 = calcHelper.calculateSellTarget(조정된주당가치);
+        String 매수적정가 = calcHelper.calculatePurchasePrice(계산된주당가치, totalMargin);
+        String 목표매도가 = calcHelper.calculateSellTarget(계산된주당가치);
         String 손절매가 = calcHelper.calculateStopLoss(매수적정가);
 
         //@6. 그레이엄 스크리닝 ---------------------------------
@@ -499,7 +483,7 @@ public class US_StockCalFromFpmService {
         result.set버전(VERSION.toUpperCase());
         result.set섹터(sector);
         if(StringUtil.isStringEmpty(result.get결과메시지())) result.set결과메시지("정상 처리되었습니다.");
-        result.set주당가치(조정된주당가치);
+        result.set주당가치(계산된주당가치);
         result.set계산된주당가치(계산된주당가치);
         result.set매수적정가(매수적정가);
         result.set목표매도가(목표매도가);

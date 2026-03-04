@@ -181,7 +181,9 @@ public class PerShareValueCalcHelper {
      * @param currentPrice     현재 주가
      * @param resultDetail     결과 상세 (급락종목할인 플래그 설정용)
      * @return 조정된 주당가치
+     * @deprecated V8에서 더 이상 사용하지 않음. 내재가치는 순수 펀더멘털로만 산출
      */
+    @Deprecated
     public String adjust52WeekHighCap(String 계산된주당가치, Double historicalHigh52W,
                                        String currentPrice, CompanySharePriceResultDetail resultDetail) {
         if (historicalHigh52W == null) {
@@ -249,7 +251,7 @@ public class PerShareValueCalcHelper {
     }
 
     /**
-     * V8: 매수적정가 계산 = 조정된주당가치 × (1 - 안전마진율)
+     * V8: 매수적정가 계산 = 주당가치(내재가치) × (1 - 안전마진율)
      */
     public String calculatePurchasePrice(String 조정된주당가치, double safetyMargin) {
         String marginStr = String.format("%.2f", safetyMargin);
@@ -260,7 +262,7 @@ public class PerShareValueCalcHelper {
     }
 
     /**
-     * V8: 목표매도가 계산 = 조정된주당가치 × 0.95
+     * V8: 목표매도가 계산 = 주당가치(내재가치) × 0.95
      */
     public String calculateSellTarget(String 조정된주당가치) {
         return new BigDecimal(조정된주당가치)

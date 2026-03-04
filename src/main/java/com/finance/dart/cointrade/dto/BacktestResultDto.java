@@ -19,6 +19,12 @@ public class BacktestResultDto {
 
     private BacktestResultDataDto data;
 
+    @JsonProperty("created_at")
+    private String createdAt;
+
+    @JsonProperty("completed_at")
+    private String completedAt;
+
     // running 상태일 때 사용되는 필드들
     private String message;
 
