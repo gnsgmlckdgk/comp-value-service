@@ -148,11 +148,8 @@ public class StockEvaluationService {
         // 4. 총점 계산
         double totalScore = step1Score + step2Score + step3Score + step4Score + step5Score + step6Score;
 
-        // 4-1. 모멘텀 게이트 적용 (게이트 실패 시 총점 상한 45점)
+        // 4-1. 모멘텀 게이트 상태 (정보 제공용, Step6 점수로 자연 반영)
         boolean momentumGatePass = detail.is모멘텀게이트통과();
-        if (!momentumGatePass && totalScore > EvaluationConst.MOMENTUM_GATE_MAX_SCORE) {
-            totalScore = EvaluationConst.MOMENTUM_GATE_MAX_SCORE;
-        }
 
         // 4-2. 음수 적정가 게이트 적용 (적정가 ≤ 0이면 총점 상한 50점)
         if (!StringUtil.isStringEmpty(fairValue)) {
@@ -442,7 +439,7 @@ public class StockEvaluationService {
             }
         }
 
-        // 2. 가격 차이 평가 (6점) - V8: 과신 방지 (극단적 저평가는 오히려 의심)
+        // 2. 가격 차이 평가 (6점)
         if (!StringUtil.isStringEmpty(currentPrice) && !StringUtil.isStringEmpty(fairValue)) {
             try {
                 BigDecimal current = new BigDecimal(currentPrice);
@@ -454,10 +451,7 @@ public class StockEvaluationService {
                             .multiply(new BigDecimal("100"));
                     double gap = gapPercent.doubleValue();
 
-                    if (gap >= 50) {
-                        score += 3;
-                        details.append(String.format("⚠️ 가격차이 %.1f%% (극단적 저평가, 적정가 과대산출 의심, +3점). ", gap));
-                    } else if (gap >= 30) {
+                    if (gap >= 30) {
                         score += 6;
                         details.append(String.format("✅ 가격차이 %.1f%% (저평가, +6점). ", gap));
                     } else if (gap >= 20) {
@@ -499,15 +493,12 @@ public class StockEvaluationService {
                 } else if (growthPct <= 15) {
                     score += 4;
                     details.append(String.format("✅ 영업이익 성장률 %.1f%% (안정 성장, +4점). ", growthPct));
-                } else if (growthPct <= 50) {
+                } else if (growthPct <= 80) {
                     score += 6;
                     details.append(String.format("🌟 영업이익 성장률 %.1f%% (고성장, +6점). ", growthPct));
-                } else if (growthPct <= 80) {
-                    score += 3;
-                    details.append(String.format("⚠️ 영업이익 성장률 %.1f%% (과도 성장, 지속 어려울 수 있음, +3점). ", growthPct));
                 } else {
-                    score += 1;
-                    details.append(String.format("❌ 영업이익 성장률 %.1f%% (매우 높음, 일시적 급증 가능성, +1점). ", growthPct));
+                    score += 5;
+                    details.append(String.format("🌟 영업이익 성장률 %.1f%% (초고성장, 적정가에서 지속가능성 할인 반영됨, +5점). ", growthPct));
                 }
             } catch (Exception e) {
                 details.append("성장률 정보 오류 (+0점). ");
@@ -547,11 +538,11 @@ public class StockEvaluationService {
                 double o2 = Double.parseDouble(op2);
                 double o3 = Double.parseDouble(op3);
 
-                // 당기 실적이 급증했는지 확인 (일회성 가능성)
-                if (o3 > o2 * 2.5 && o2 <= o1 * 1.2) {
-                    score += 3;
+                // 당기 실적 급증 감지 (전전기·전기 정체 후 당기 2.5배 이상)
+                if (o3 > o2 * 2.5 && o2 <= o1 * 1.2 && o1 > 0) {
+                    score += 9;
                     details.append(String.format("⚠️ 당기 실적 급증 (전전기: %.0f억, 전기: %.0f억, 당기: %.0f억). " +
-                            "일회성 실적일 가능성, 적정가 과대 산출 위험 (+3점). ",
+                            "일회성 가능성 있으나 흑자 유지 (+9점). ",
                             o1 / 100000000, o2 / 100000000, o3 / 100000000));
                 } else if (o1 > 0 && o2 >= o1 && o3 >= o2) {
                     // 꾸준한 증가 추세 - 성장률 크기에 따라 차등
@@ -817,7 +808,7 @@ public class StockEvaluationService {
 
             detailsStr.append(String.format("MA 점수: %d/6, RSI 점수: %d/5, 거래량 점수: %d/4. ", maScore, rsiScore, volumeScore));
             if (!gatePass) {
-                detailsStr.append("⛔ 모멘텀 게이트 실패 (").append(result.getGateReason()).append(") → 총점 상한 45점 적용. ");
+                detailsStr.append("⚠️ 모멘텀 약세 신호 (").append(result.getGateReason()).append("). ");
             } else {
                 detailsStr.append("✅ 모멘텀 게이트 통과 (+3점 보너스). ");
             }

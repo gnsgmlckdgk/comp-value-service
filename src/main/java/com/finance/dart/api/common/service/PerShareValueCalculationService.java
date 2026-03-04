@@ -128,6 +128,17 @@ public class PerShareValueCalculationService {
                 adjustedPER = "0";
                 STEP01 = CalUtil.multi(CalUtil.multi(revenue, psr), growthFactor);
 
+                // PSR 경로 STEP01 상한: 시가총액 × 3 초과 방지
+                if (req.getPrice() > 0 && !StringUtil.isStringEmpty(issuedShares)) {
+                    BigDecimal marketCap = BigDecimal.valueOf(req.getPrice()).multiply(new BigDecimal(issuedShares));
+                    BigDecimal step01Val = new BigDecimal(STEP01);
+                    BigDecimal maxStep01 = marketCap.multiply(new BigDecimal("3"));
+                    if (marketCap.compareTo(BigDecimal.ZERO) > 0 && step01Val.compareTo(maxStep01) > 0) {
+                        log.debug("[V8] PSR경로 STEP01 시가총액 상한 적용: {} → {}", step01Val, maxStep01.setScale(0, RoundingMode.HALF_UP));
+                        STEP01 = maxStep01.setScale(2, RoundingMode.HALF_UP).toPlainString();
+                    }
+                }
+
                 resultDetail.set매출기반평가(true);
                 resultDetail.set매출액(revenue);
                 resultDetail.setPSR(psr);
@@ -254,6 +265,15 @@ public class PerShareValueCalculationService {
             resultDetail.set분기영업이익_Q3(q3Str);
             resultDetail.set분기영업이익_Q4(q4Str);
         }
+
+        // 추세팩터 복합 하한 0.5: 연간×분기 곱이 0.5 미만이면 분기팩터 상향 조정
+        BigDecimal minQuarterlyForFloor = new BigDecimal("0.5")
+                .divide(annualTrendFactor, 4, RoundingMode.HALF_UP);
+        if (quarterlyTrendFactor.compareTo(minQuarterlyForFloor) < 0) {
+            log.debug("[V8] 추세팩터 하한 적용: 연간={}, 분기 {}→{}", annualTrendFactor, quarterlyTrendFactor, minQuarterlyForFloor);
+            quarterlyTrendFactor = minQuarterlyForFloor;
+        }
+
         resultDetail.set분기추세팩터(quarterlyTrendFactor.toPlainString());
 
         // STEP01에 분기 추세팩터 적용

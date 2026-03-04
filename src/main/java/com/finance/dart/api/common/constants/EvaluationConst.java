@@ -41,12 +41,7 @@ public class EvaluationConst {
     public static final String STEP3_DESC = "밸류에이션 평가: PEG, 가격 차이, 성장률 등을 분석하여 현재 주가가 적정한지 또는 저평가/고평가 되었는지 판단합니다.";
     public static final String STEP4_DESC = "영업이익 추세: 최근 3년간 영업이익 추세를 분석하여 성장의 지속가능성을 평가합니다.";
     public static final String STEP5_DESC = "투자 적합성: 매수적정가 대비 현재가, PEG/PSR 이진 판단, 그레이엄 스크리닝 결과를 종합하여 최종 투자 적합성을 판단합니다.";
-    public static final String STEP6_DESC = "모멘텀/기술적 분석: 이동평균선(SMA50/200), RSI, 거래량 추세를 분석하여 매수 타이밍의 적절성을 판단합니다. 데스크로스 등 강한 하락 신호 시 총점 상한이 제한됩니다.";
-
-    /**
-     * 모멘텀 게이트 상한 점수 (게이트 실패 시)
-     */
-    public static final double MOMENTUM_GATE_MAX_SCORE = 45.0;
+    public static final String STEP6_DESC = "모멘텀/기술적 분석: 이동평균선(SMA50/200), RSI, 거래량 추세를 분석하여 매수 타이밍의 적절성을 판단합니다.";
 
     /**
      * 음수 적정가 게이트 상한 점수 (적정가 ≤ 0일 때)
