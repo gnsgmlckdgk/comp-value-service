@@ -80,10 +80,11 @@ public class CointradeConfigService {
     }
 
     /**
-     * 대상 종목 목록 조회 (DB 조회)
+     * 대상 종목 목록 조회 (Upbit 동기화 후 DB 조회)
      */
-    @Transactional(readOnly = true)
+    @Transactional
     public List<CointradeTargetCoinDto> getAllTargetCoins() {
+        syncUpbitMarkets();
         return targetCoinRepository.findByUseYn("Y").stream()
                 .map(entity -> CointradeTargetCoinDto.builder()
                         .coinCode(entity.getCoinCode())
@@ -96,23 +97,38 @@ public class CointradeConfigService {
 
     /**
      * 대상 종목 설정 (선택한 종목들 is_active = true, 나머지 false)
-     * Upbit 전체 마켓 조회 후 DB 동기화
+     * Upbit 동기화 후 is_active 설정
      */
     @Transactional
     public void updateTargetCoins(List<String> coinCodes) {
+        syncUpbitMarkets();
 
+        List<CointradeTargetCoinEntity> activeCoins = targetCoinRepository.findByUseYn("Y");
+        for (CointradeTargetCoinEntity entity : activeCoins) {
+            entity.setIsActive(coinCodes.contains(entity.getCoinCode()));
+            targetCoinRepository.save(entity);
+        }
+
+        log.info("대상 종목 설정 완료: 활성화 {}개, 전체 {}개", coinCodes.size(), activeCoins.size());
+    }
+
+    /**
+     * Upbit 마켓 정보로 DB 동기화 (신규 추가, 상장폐지 처리)
+     * is_active는 변경하지 않음
+     */
+    private void syncUpbitMarkets() {
         List<TradingParisDto> upbitMarkets = upbitService.getTradingPairs();
 
         if (upbitMarkets == null) {
-            log.error("Upbit 거래 목록 조회 실패");
+            log.error("Upbit 거래 목록 조회 실패 - 동기화 건너뜀");
             return;
         }
 
-        // 1. Upbit에 없는 마켓은 use_yn = 'N'으로 비활성화
         List<String> upbitMarketCodes = upbitMarkets.stream()
                 .map(TradingParisDto::getMarket)
                 .toList();
 
+        // 1. Upbit에 없는 마켓은 use_yn = 'N'으로 비활성화
         List<CointradeTargetCoinEntity> existingCoins = targetCoinRepository.findAll();
         for (CointradeTargetCoinEntity entity : existingCoins) {
             if (!upbitMarketCodes.contains(entity.getCoinCode())) {
@@ -121,7 +137,7 @@ public class CointradeConfigService {
             }
         }
 
-        // 2. Upbit 마켓 정보로 DB 업데이트 (신규 추가 및 정보 갱신)
+        // 2. 신규 마켓 추가 + 기존 마켓 정보 갱신
         for (TradingParisDto market : upbitMarkets) {
             String marketCode = market.getMarket();
 
@@ -129,17 +145,16 @@ public class CointradeConfigService {
                     .orElseGet(() -> {
                         CointradeTargetCoinEntity newEntity = new CointradeTargetCoinEntity();
                         newEntity.setCoinCode(marketCode);
+                        newEntity.setIsActive(false);
                         return newEntity;
                     });
 
             entity.setCoinName(market.getKoreanName());
-            entity.setIsActive(coinCodes.contains(marketCode));
             entity.setUseYn("Y");
-
             targetCoinRepository.save(entity);
         }
 
-        log.info("대상 종목 설정 완료: 활성화 {}개, 전체 {}개", coinCodes.size(), upbitMarkets.size());
+        log.info("Upbit 마켓 동기화 완료: {}개", upbitMarkets.size());
     }
 
     /**
