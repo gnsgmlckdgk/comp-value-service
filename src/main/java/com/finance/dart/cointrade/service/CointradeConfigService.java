@@ -84,11 +84,12 @@ public class CointradeConfigService {
      */
     @Transactional(readOnly = true)
     public List<CointradeTargetCoinDto> getAllTargetCoins() {
-        return targetCoinRepository.findAll().stream()
+        return targetCoinRepository.findByUseYn("Y").stream()
                 .map(entity -> CointradeTargetCoinDto.builder()
                         .coinCode(entity.getCoinCode())
                         .coinName(entity.getCoinName())
                         .isActive(entity.getIsActive())
+                        .useYn(entity.getUseYn())
                         .build())
                 .collect(Collectors.toList());
     }
@@ -107,7 +108,7 @@ public class CointradeConfigService {
             return;
         }
 
-        // 1. Upbit에 없는 마켓은 DB에서 삭제
+        // 1. Upbit에 없는 마켓은 use_yn = 'N'으로 비활성화
         List<String> upbitMarketCodes = upbitMarkets.stream()
                 .map(TradingParisDto::getMarket)
                 .toList();
@@ -115,14 +116,15 @@ public class CointradeConfigService {
         List<CointradeTargetCoinEntity> existingCoins = targetCoinRepository.findAll();
         for (CointradeTargetCoinEntity entity : existingCoins) {
             if (!upbitMarketCodes.contains(entity.getCoinCode())) {
-                targetCoinRepository.delete(entity);
+                entity.setUseYn("N");
+                targetCoinRepository.save(entity);
             }
         }
 
         // 2. Upbit 마켓 정보로 DB 업데이트 (신규 추가 및 정보 갱신)
         for (TradingParisDto market : upbitMarkets) {
             String marketCode = market.getMarket();
-            
+
             CointradeTargetCoinEntity entity = targetCoinRepository.findByCoinCode(marketCode)
                     .orElseGet(() -> {
                         CointradeTargetCoinEntity newEntity = new CointradeTargetCoinEntity();
@@ -132,7 +134,8 @@ public class CointradeConfigService {
 
             entity.setCoinName(market.getKoreanName());
             entity.setIsActive(coinCodes.contains(marketCode));
-            
+            entity.setUseYn("Y");
+
             targetCoinRepository.save(entity);
         }
 

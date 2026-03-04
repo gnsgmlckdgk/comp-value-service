@@ -24,4 +24,11 @@ public interface CointradeTargetCoinRepository extends JpaRepository<CointradeTa
      * @return 대상 종목 Entity 목록
      */
     List<CointradeTargetCoinEntity> findByIsActive(Boolean isActive);
+
+    /**
+     * 사용여부로 대상 종목 목록 조회
+     * @param useYn 사용여부 (Y/N)
+     * @return 대상 종목 Entity 목록
+     */
+    List<CointradeTargetCoinEntity> findByUseYn(String useYn);
 }

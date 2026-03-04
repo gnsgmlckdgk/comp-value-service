@@ -17,4 +17,5 @@ public class CointradeTargetCoinDto {
     private String coinCode;
     private String coinName;
     private Boolean isActive;
+    private String useYn;
 }

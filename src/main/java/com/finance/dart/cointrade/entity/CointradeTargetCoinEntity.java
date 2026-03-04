@@ -29,6 +29,9 @@ public class CointradeTargetCoinEntity {
     @Column(name = "is_active")
     private Boolean isActive = true;
 
+    @Column(name = "use_yn", length = 1, columnDefinition = "varchar(1) default 'Y'")
+    private String useYn = "Y";
+
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
