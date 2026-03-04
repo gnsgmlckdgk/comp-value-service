@@ -69,6 +69,7 @@ class CointradeConfigServiceTest {
         CointradeTargetCoinEntity oldCoin = new CointradeTargetCoinEntity();
         oldCoin.setCoinCode("KRW-OLD");
         oldCoin.setIsActive(true);
+        oldCoin.setUseYn("Y");
 
         when(targetCoinRepository.findAll()).thenReturn(Arrays.asList(existingBtc, oldCoin));
 
@@ -83,10 +84,11 @@ class CointradeConfigServiceTest {
         cointradeConfigService.updateTargetCoins(activeCoins);
 
         // Assert
-        // Verify deletion of the old coin
-        verify(targetCoinRepository, times(1)).delete(oldCoin);
+        // Verify old coin is marked as use_yn='N' (not deleted)
+        verify(targetCoinRepository, never()).delete(any());
+        assert oldCoin.getUseYn().equals("N");
 
-        // Verify 3 saves (one for each market in Upbit)
-        verify(targetCoinRepository, times(3)).save(any(CointradeTargetCoinEntity.class));
+        // Verify 4 saves (1 for old coin use_yn='N' + 3 for each Upbit market)
+        verify(targetCoinRepository, times(4)).save(any(CointradeTargetCoinEntity.class));
     }
 }
