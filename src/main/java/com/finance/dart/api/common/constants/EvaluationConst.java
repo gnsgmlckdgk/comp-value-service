@@ -16,7 +16,7 @@ public class EvaluationConst {
      * Step 2: 신뢰도 확인 - 재무 건전성 평가
      * Step 3: 밸류에이션 평가 - PEG, 과대평가 위험
      * Step 4: 영업이익 추세 - 성장 지속가능성
-     * Step 5: 투자 적합성 - 매수적정가, PEG/PSR 이진, 그레이엄
+     * Step 5: 투자 적합성 - 매수적정가(세분화), 그레이엄(강화)
      * Step 6: 모멘텀/기술적 분석 - 이동평균, RSI, 거래량 추세
      */
     public static final int STEP1_WEIGHT = 12;  // 위험 신호 확인 (치명적 결함 필터)
@@ -27,11 +27,10 @@ public class EvaluationConst {
     public static final int STEP6_WEIGHT = 18;  // 모멘텀/기술적 분석
 
     /**
-     * Step 5 서브점수
+     * Step 5 서브점수 (이중 계산 해소: PEG/PSR/PBR 이진 판단 제거, Step3과 중복 방지)
      */
-    public static final int STEP5_PURCHASE_PRICE = 7;  // 매수적정가 vs 현재가
-    public static final int STEP5_PEG_PSR_BINARY = 6;  // PEG/PSR 이진 판단
-    public static final int STEP5_GRAHAM = 4;           // 그레이엄 기준
+    public static final int STEP5_PURCHASE_PRICE = 9;  // 매수적정가 vs 현재가 (세분화)
+    public static final int STEP5_GRAHAM = 8;           // 그레이엄 기준 (강화)
 
     /**
      * Step 설명
@@ -40,7 +39,7 @@ public class EvaluationConst {
     public static final String STEP2_DESC = "신뢰도 확인: PER, 순부채, 영업이익 안정성을 종합적으로 평가하여 기업의 재무 건전성을 판단합니다.";
     public static final String STEP3_DESC = "밸류에이션 평가: PEG, 가격 차이, 성장률 등을 분석하여 현재 주가가 적정한지 또는 저평가/고평가 되었는지 판단합니다.";
     public static final String STEP4_DESC = "영업이익 추세: 최근 3년간 영업이익 추세를 분석하여 성장의 지속가능성을 평가합니다.";
-    public static final String STEP5_DESC = "투자 적합성: 매수적정가 대비 현재가, PEG/PSR 이진 판단, 그레이엄 스크리닝 결과를 종합하여 최종 투자 적합성을 판단합니다.";
+    public static final String STEP5_DESC = "투자 적합성: 매수적정가 대비 현재가 세분화 평가와 그레이엄 스크리닝 결과를 종합하여 최종 투자 적합성을 판단합니다.";
     public static final String STEP6_DESC = "모멘텀/기술적 분석: 이동평균선(SMA50/200), RSI, 거래량 추세를 분석하여 매수 타이밍의 적절성을 판단합니다.";
 
     /**

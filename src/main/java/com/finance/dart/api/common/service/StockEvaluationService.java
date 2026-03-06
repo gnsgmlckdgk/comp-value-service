@@ -373,22 +373,23 @@ public class StockEvaluationService {
                     double targetPbr = Double.parseDouble(targetPbrStr);
                     if (targetPbr > 0) {
                         double ratio = pbr / targetPbr;
-                        if (ratio < 0.5) {
+                        // 금융주 PBR 임계값 강화: 은행의 낮은 PBR은 업계 정상이므로 기준을 엄격하게 적용
+                        if (ratio < 0.3) {
                             score += 8;
                             details.append(String.format("🌟 PBR/targetPBR %.2f (매우 저평가, +8점). ", ratio));
-                        } else if (ratio < 0.7) {
+                        } else if (ratio < 0.5) {
                             score += 7;
                             details.append(String.format("✅ PBR/targetPBR %.2f (저평가, +7점). ", ratio));
-                        } else if (ratio < 0.9) {
+                        } else if (ratio < 0.7) {
                             score += 5;
                             details.append(String.format("✅ PBR/targetPBR %.2f (양호, +5점). ", ratio));
-                        } else if (ratio < 1.1) {
+                        } else if (ratio < 0.85) {
                             score += 3;
                             details.append(String.format("⚠️ PBR/targetPBR %.2f (적정, +3점). ", ratio));
-                        } else if (ratio < 1.3) {
+                        } else if (ratio < 1.0) {
                             score += 2;
                             details.append(String.format("⚠️ PBR/targetPBR %.2f (보통, +2점). ", ratio));
-                        } else if (ratio < 1.5) {
+                        } else if (ratio < 1.2) {
                             score += 1;
                             details.append(String.format("⚠️ PBR/targetPBR %.2f (고평가 위험, +1점). ", ratio));
                         } else {
@@ -593,16 +594,16 @@ public class StockEvaluationService {
 
     /**
      * Step 5: 투자 적합성 (17점)
-     * - 매수적정가 vs 현재가: 최대 7점
-     * - PEG/PSR 이진 판단: 최대 6점
-     * - 그레이엄 기준: 최대 4점
+     * - 매수적정가 vs 현재가: 최대 9점 (세분화)
+     * - 그레이엄 기준: 최대 8점 (강화)
+     * ※ PEG/PSR/PBR 이진 판단 제거 (Step3과 이중 계산 해소)
      */
     private double evaluateStep5(CompanySharePriceResultDetail detail, CompanySharePriceResult result,
                                   String currentPrice, List<StepEvaluationDetail> stepDetails) {
         double score = 0;
         StringBuilder details = new StringBuilder();
 
-        // 과대평가 단계적 감점: 적정가 대비 고평가 비율에 따라 PEG/PSR·그레이엄 점수 감산
+        // 과대평가 단계적 감점: 적정가 대비 고평가 비율에 따라 그레이엄 점수 감산
         // 0%~-10%: 감점 없음, -10%~-20%: 50% 감점, -20%~-30%: 75% 감점, -30% 이하: 100% 차단
         double overvaluedPenalty = 0.0;  // 0.0=감점없음, 1.0=전액차단
         String fairValueStr = result.get주당가치();
@@ -612,7 +613,6 @@ public class StockEvaluationService {
                 double current = Double.parseDouble(currentPrice);
                 if (current > 0) {
                     if (fair <= 0) {
-                        // 적정가 음수 = 주당가치가 마이너스 → 최대 패널티
                         overvaluedPenalty = 1.0;
                     } else {
                         double gapPct = (fair - current) / current * 100;
@@ -628,7 +628,7 @@ public class StockEvaluationService {
             } catch (Exception ignored) {}
         }
 
-        // 1. 매수적정가 vs 현재가 (8점)
+        // 1. 매수적정가 vs 현재가 (9점) - 세분화된 평가
         String purchasePriceStr = result.get매수적정가();
         if (!StringUtil.isStringEmpty(purchasePriceStr) && !StringUtil.isStringEmpty(currentPrice)) {
             try {
@@ -637,13 +637,27 @@ public class StockEvaluationService {
                 double fair = !StringUtil.isStringEmpty(fairValueStr) ? Double.parseDouble(fairValueStr) : 0;
 
                 if (purchasePrice > current) {
-                    score += EvaluationConst.STEP5_PURCHASE_PRICE;  // 8점
-                    details.append(String.format("🌟 매수적정가 $%.2f > 현재가 $%.2f (매수 적합, +%d점). ",
-                            purchasePrice, current, EvaluationConst.STEP5_PURCHASE_PRICE));
+                    double purchaseGapPct = (purchasePrice - current) / current * 100;
+                    if (purchaseGapPct >= 20) {
+                        score += EvaluationConst.STEP5_PURCHASE_PRICE;  // 9점
+                        details.append(String.format("🌟 매수적정가 $%.2f > 현재가 $%.2f (%.1f%% 여유, 매수 매우 적합, +%d점). ",
+                                purchasePrice, current, purchaseGapPct, EvaluationConst.STEP5_PURCHASE_PRICE));
+                    } else {
+                        score += 7;
+                        details.append(String.format("✅ 매수적정가 $%.2f > 현재가 $%.2f (매수 적합, +7점). ",
+                                purchasePrice, current));
+                    }
                 } else if (fair > current) {
-                    score += 3;
-                    details.append(String.format("✅ 적정가 $%.2f > 현재가 $%.2f (상승여력 있음, +3점). ",
-                            fair, current));
+                    double fairGapPct = (fair - current) / current * 100;
+                    if (fairGapPct >= 10) {
+                        score += 4;
+                        details.append(String.format("✅ 적정가 $%.2f > 현재가 $%.2f (%.1f%% 상승여력, +4점). ",
+                                fair, current, fairGapPct));
+                    } else {
+                        score += 2;
+                        details.append(String.format("⚠️ 적정가 $%.2f > 현재가 $%.2f (소폭 상승여력, +2점). ",
+                                fair, current));
+                    }
                 } else {
                     details.append(String.format("❌ 매수적정가 $%.2f ≤ 현재가 $%.2f (+0점). ",
                             purchasePrice, current));
@@ -655,94 +669,16 @@ public class StockEvaluationService {
             details.append("매수적정가 정보 없음 (+0점). ");
         }
 
-        // 2. PEG/PSR/PBR 이진 판단 (7점) - 고평가 시 단계적 감점
-        {
-            int rawPegPsrScore = 0;
-            String binaryLabel = "";
-            boolean is매출기반 = detail.is매출기반평가();
-            boolean isPBR기반 = detail.isPBR기반평가();
-
-            if (isPBR기반) {
-                // PBR ≤ targetPBR → 통과
-                String pbrStr = detail.getPBR();
-                String targetPbrStr = detail.getTargetPBR();
-                if (!StringUtil.isStringEmpty(pbrStr) && !"N/A".equals(pbrStr)
-                        && !StringUtil.isStringEmpty(targetPbrStr) && !"N/A".equals(targetPbrStr)) {
-                    try {
-                        double pbr = Double.parseDouble(pbrStr);
-                        double targetPbr = Double.parseDouble(targetPbrStr);
-                        if (pbr > 0 && pbr <= targetPbr) {
-                            rawPegPsrScore = EvaluationConst.STEP5_PEG_PSR_BINARY;
-                        }
-                        if (rawPegPsrScore == 0) {
-                            details.append(String.format("❌ PBR %.2f > targetPBR %.2f (+0점). ", pbr, targetPbr));
-                        }
-                    } catch (Exception e) {
-                        details.append("PBR 정보 오류 (+0점). ");
-                    }
-                } else {
-                    details.append("PBR/targetPBR 정보 없음 (+0점). ");
-                }
-                binaryLabel = "PBR";
-            } else if (is매출기반) {
-                String psrStr = detail.getPSR();
-                if (!StringUtil.isStringEmpty(psrStr) && !"N/A".equals(psrStr)) {
-                    try {
-                        double psr = Double.parseDouble(psrStr);
-                        if (psr > 0 && psr < 2) {
-                            rawPegPsrScore = EvaluationConst.STEP5_PEG_PSR_BINARY;
-                        }
-                        if (rawPegPsrScore == 0) {
-                            details.append(String.format("❌ PSR %.2f ≥ 2 (+0점). ", psr));
-                        }
-                    } catch (Exception e) {
-                        details.append("PSR 정보 오류 (+0점). ");
-                    }
-                } else {
-                    details.append("PSR 정보 없음 (+0점). ");
-                }
-                binaryLabel = "PSR";
-            } else {
-                String pegStr = detail.getPEG();
-                if (!StringUtil.isStringEmpty(pegStr) && !"N/A".equals(pegStr) && !"999".equals(pegStr)) {
-                    try {
-                        double peg = Double.parseDouble(pegStr);
-                        if (peg > 0 && peg <= 1.0) {
-                            rawPegPsrScore = EvaluationConst.STEP5_PEG_PSR_BINARY;
-                        }
-                        if (rawPegPsrScore == 0) {
-                            details.append(String.format("❌ PEG %.2f > 1 (+0점). ", peg));
-                        }
-                    } catch (Exception e) {
-                        details.append("PEG 정보 오류 (+0점). ");
-                    }
-                } else {
-                    details.append("PEG 정보 없음 (+0점). ");
-                }
-                binaryLabel = "PEG";
-            }
-            if (rawPegPsrScore > 0) {
-                int adjusted = (int) Math.round(rawPegPsrScore * (1.0 - overvaluedPenalty));
-                score += adjusted;
-                if (overvaluedPenalty > 0) {
-                    details.append(String.format("⚠️ %s 기준 충족하나 고평가 감점 %d%% 적용 (+%d점). ",
-                            binaryLabel, (int)(overvaluedPenalty * 100), adjusted));
-                } else {
-                    details.append(String.format("✅ %s 기준 충족 (+%d점). ", binaryLabel, adjusted));
-                }
-            }
-        }
-
-        // 3. 그레이엄 기준 (5점) - 고평가 시 단계적 감점
+        // 2. 그레이엄 기준 (8점) - 고평가 시 단계적 감점
         int grahamPassCount = detail.get그레이엄_통과수();
         {
             int rawGrahamScore = 0;
             if (grahamPassCount >= 5) {
-                rawGrahamScore = 5;
+                rawGrahamScore = EvaluationConst.STEP5_GRAHAM;  // 8점
             } else if (grahamPassCount >= 4) {
-                rawGrahamScore = 3;
+                rawGrahamScore = 5;
             } else if (grahamPassCount >= 3) {
-                rawGrahamScore = 1;
+                rawGrahamScore = 2;
             }
             if (rawGrahamScore > 0) {
                 int adjusted = (int) Math.round(rawGrahamScore * (1.0 - overvaluedPenalty));
@@ -758,6 +694,9 @@ public class StockEvaluationService {
                 details.append("❌ 그레이엄 " + grahamPassCount + "/5 통과 (+0점). ");
             }
         }
+
+        // Step 5 캡 적용 (배점 정합성 보장)
+        score = Math.min(score, EvaluationConst.STEP5_WEIGHT);
 
         stepDetails.add(StepEvaluationDetail.builder()
                 .stepNumber(5)
@@ -872,10 +811,10 @@ public class StockEvaluationService {
      * @return 등급 (S, A, B, C, D, F)
      */
     private String calculateGrade(double totalScore) {
-        if (totalScore >= 90) return "S";
-        if (totalScore >= 80) return "A";
-        if (totalScore >= 70) return "B";
-        if (totalScore >= 60) return "C";
+        if (totalScore >= 92) return "S";
+        if (totalScore >= 83) return "A";
+        if (totalScore >= 73) return "B";
+        if (totalScore >= 63) return "C";
         if (totalScore >= 50) return "D";
         return "F";
     }
@@ -891,11 +830,11 @@ public class StockEvaluationService {
             return "⛔ 투자 비추천: 수익가치 계산 불가, 리스크 매우 높음";
         }
 
-        if (totalScore >= 85) {
+        if (totalScore >= 88) {
             return "🌟 강력 매수 추천: 저평가 + 재무 건전성 우수 + 성장성 우수";
-        } else if (totalScore >= 75) {
+        } else if (totalScore >= 78) {
             return "✅ 매수 추천: 안정적 재무구조 + 합리적 밸류에이션";
-        } else if (totalScore >= 65) {
+        } else if (totalScore >= 68) {
             return "👍 매수 고려 가능: 전반적으로 양호하나 일부 주의 필요";
         } else if (totalScore >= 55) {
             return "⚠️ 신중한 검토 필요: 리스크 요인 존재, 추가 분석 권장";
