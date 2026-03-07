@@ -60,7 +60,7 @@ import java.util.stream.Collectors;
 @Service
 public class US_StockCalFromFpmService {
 
-    private final int TRSC_DELAY = 10;    // 0.01s
+    private final int TRSC_DELAY = 50;    // 0.05s
 
     private final RedisComponent redisComponent;
 

@@ -33,7 +33,7 @@ import java.util.List;
 @Component
 public class US_StockCalHelper {
 
-    private static final int TRSC_DELAY = 10;    // 0.01s
+    private static final int TRSC_DELAY = 50;    // 0.05s
 
     private final RequestContext requestContext;
     private final CompanyProfileSearchService profileSearchService;

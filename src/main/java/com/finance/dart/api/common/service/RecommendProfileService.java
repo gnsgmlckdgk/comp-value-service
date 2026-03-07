@@ -205,6 +205,7 @@ public class RecommendProfileService {
         if (dto.getIsActivelyTrading() != null) configEntity.setIsActivelyTrading(dto.getIsActivelyTrading());
         if (dto.getExchange() != null) configEntity.setExchange(dto.getExchange());
         if (dto.getScreenerLimit() != null) configEntity.setScreenerLimit(dto.getScreenerLimit());
+        if (dto.getExcludeNonCommonStock() != null) configEntity.setExcludeNonCommonStock(dto.getExcludeNonCommonStock());
         if (dto.getSector() != null) configEntity.setSector(dto.getSector());
         if (dto.getIndustry() != null) configEntity.setIndustry(dto.getIndustry());
         if (dto.getCountry() != null) configEntity.setCountry(dto.getCountry());
@@ -252,6 +253,7 @@ public class RecommendProfileService {
             dto.setIsActivelyTrading(config.getIsActivelyTrading());
             dto.setExchange(config.getExchange());
             dto.setScreenerLimit(config.getScreenerLimit());
+            dto.setExcludeNonCommonStock(config.getExcludeNonCommonStock());
             dto.setPriceMin(config.getPriceMin());
             dto.setPriceMax(config.getPriceMax());
             dto.setBetaMin(config.getBetaMin());

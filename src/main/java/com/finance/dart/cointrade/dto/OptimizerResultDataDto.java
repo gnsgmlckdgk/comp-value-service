@@ -27,6 +27,9 @@ public class OptimizerResultDataDto {
     @JsonProperty("best_return")
     private Double bestReturn;
 
+    @JsonProperty("max_return")
+    private Double maxReturn;
+
     @JsonProperty("total_trials")
     private Integer totalTrials;
 

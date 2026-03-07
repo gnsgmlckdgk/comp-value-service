@@ -22,6 +22,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.*;
 import java.util.concurrent.TimeUnit;
+import java.util.regex.Pattern;
 
 /**
  * 추천 종목 처리기
@@ -45,6 +46,27 @@ public class RecommendedStocksProcessor {
 
     /** Redis TTL (24시간) */
     private static final long REDIS_TTL_HOURS = 24;
+
+    /** 비일반주식 심볼 패턴 (워런트/우선주/CVR/유닛 등) */
+    private static final Pattern NON_COMMON_STOCK_SYMBOL_PATTERN = Pattern.compile(
+            ".*[-+](W[SB]?|WT|RT|RI|UN)$"              // 하이픈 뒤 명확한 접미사: -W(워런트), -WT, -RI(CVR), -UN(유닛)
+            + "|.*[-+]P[A-Z]?$"                          // 하이픈 뒤 우선주: -P, -PA, -PB, -PL 등 (BRK-A, BRK-B 같은 클래스 주식은 제외)
+            + "|.{3,}W[SW]$"                             // 워런트: SBCWW 등 (5글자 이상, WW/WS로 끝남)
+            + "|.{3,}PR[A-Z]$"                           // 우선주: BACPRL 등 (하이픈 없는 6글자 이상, PR+시리즈문자)
+    );
+
+    /** 비일반주식 기업명 키워드 (소문자 비교) */
+    private static final List<String> NON_COMMON_STOCK_NAME_KEYWORDS = List.of(
+            "warrant", "warrants",
+            "preferred", "preference",
+            "contingent value right",
+            "first mortgage bond", "mortgage bond",
+            "series due", "% series",
+            "debenture", "subordinated note",
+            "depositary share",
+            " bond,", " bonds,",
+            " notes,", " notes "
+    );
 
     private final StockScreenerService stockScreenerService;
     private final RatiosTtmService ratiosTtmService;
@@ -195,7 +217,37 @@ public class RecommendedStocksProcessor {
             }
         }
 
+        // 비일반주식 제외 필터링 (워런트/우선주/CVR/채권 등)
+        if (results != null && "Y".equals(config.getExcludeNonCommonStock())) {
+            int beforeSize = results.size();
+            results = results.stream()
+                    .filter(dto -> !isNonCommonStock(dto.getSymbol(), dto.getCompanyName()))
+                    .toList();
+            int filtered = beforeSize - results.size();
+            if (filtered > 0) {
+                log.info("[추천 종목] 비일반주식 {}건 제외 (워런트/우선주/CVR/채권)", filtered);
+            }
+        }
+
         return results;
+    }
+
+    /**
+     * 비일반주식 여부 판단 (심볼 패턴 + 기업명 키워드)
+     */
+    static boolean isNonCommonStock(String symbol, String companyName) {
+        if (symbol != null && NON_COMMON_STOCK_SYMBOL_PATTERN.matcher(symbol).matches()) {
+            return true;
+        }
+        if (companyName != null) {
+            String nameLower = companyName.toLowerCase();
+            for (String keyword : NON_COMMON_STOCK_NAME_KEYWORDS) {
+                if (nameLower.contains(keyword)) {
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 
     /**

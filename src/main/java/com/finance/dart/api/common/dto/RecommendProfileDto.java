@@ -32,6 +32,7 @@ public class RecommendProfileDto {
     private String isActivelyTrading;       // 활성거래 종목만 (Y/N)
     private String exchange;                // 거래소 (콤마구분, 예: NYSE,NASDAQ)
     private Integer screenerLimit;          // 스크리너 조회 제한 건수
+    private String excludeNonCommonStock;  // 비일반주식 제외 (워런트/우선주/CVR/채권 등, Y/N)
 
     private BigDecimal priceMin;            // 주가 최소값
     private BigDecimal priceMax;            // 주가 최대값
