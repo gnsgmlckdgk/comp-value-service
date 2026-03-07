@@ -88,9 +88,11 @@
    - **Step5 구성**: 매수적정가(9점, 세분화) + 그레이엄(8점, 강화). PEG/PSR/PBR 이진 판단은 Step3과 이중 계산 해소를 위해 제거됨
 
 8. **PBR 기반 금융주 평가** (Financial Services 전용)
-   - COE = 무위험수익률(4%) + Beta × 시장위험프리미엄(5%)
-   - targetPBR = ROE / COE (범위 0.5~3.0)
-   - 적정가 = BPS × targetPBR × 추세팩터 - 순부채/주
+   - COE = 무위험수익률(4.5%) + Beta × 시장위험프리미엄(5.5%) ← 보수화
+   - ROE cap: 서브섹터별 (은행 18%, 보험 20%, 기타 25%) ← 레버리지 부풀림 방지
+   - targetPBR = cappedROE / COE, 서브섹터별 상한 (은행 1.8, 보험 2.0, 기타 2.5)
+   - 적정가 = BPS × targetPBR × 추세팩터 ← 순부채 차감 제거 (BPS가 이미 순자산)
+   - industry 기반 서브섹터 분류: Bank*, Insurance*, 그 외(Capital Markets, Credit 등)
    - BPS 없으면 기존 PER 기반으로 자동 폴백
    - Step3 PBR/targetPBR 임계값 강화 (은행 저PBR은 업계 정상이므로 기준 엄격화: 0.3/0.5/0.7/0.85/1.0/1.2)
    - Step5에서는 PBR 이진 판단 제거 (Step3에서 이미 평가)
@@ -104,7 +106,7 @@
     - Step3 성장률: 적정가에서 이미 50%초과분 할인 적용하므로 점수에서 이중 감점 없음
     - Step4 당기급증: 별도 의심 분기 없이 일반 추세 로직으로 평가
 
-- **추가 필드**: SMA50/200, RSI, 거래량비율, 모멘텀점수, 안전마진율, 과대평가의심할인, PBR기반평가, BPS, ROE, COE, targetPBR
+- **추가 필드**: SMA50/200, RSI, 거래량비율, 모멘텀점수, 안전마진율, 과대평가의심할인, PBR기반평가, BPS, ROE, COE, targetPBR, industry
 
 ---
 
@@ -122,9 +124,10 @@ STEP05 = 순부채 (총부채 - 현금)
 
 V8 Financial Services (PBR 경로):
 ```
-COE = riskFreeRate + Beta × marketRiskPremium
-targetPBR = ROE / COE (0.5 ≤ targetPBR ≤ 3.0)
-주당가치 = BPS × targetPBR × 추세팩터 - 순부채/주
+COE = 4.5% + Beta × 5.5%
+cappedROE = min(ROE, 서브섹터별cap)   ← 은행18%, 보험20%, 기타25%
+targetPBR = cappedROE / COE           ← 은행≤1.8, 보험≤2.0, 기타≤2.5
+주당가치 = BPS × targetPBR × 추세팩터  ← 순부채 차감 없음 (BPS=순자산)
 ```
 
 V8 후처리:

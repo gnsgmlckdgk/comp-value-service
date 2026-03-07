@@ -220,4 +220,10 @@ public class CompanySharePriceCalculator {
     @SerializedName("beta")
     private String beta;
 
+    /**
+     * 산업군 (V8 Financial Services 서브섹터 분화용)
+     */
+    @SerializedName("industry")
+    private String industry;
+
 }

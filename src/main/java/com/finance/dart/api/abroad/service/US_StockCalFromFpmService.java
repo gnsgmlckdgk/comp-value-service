@@ -424,6 +424,9 @@ public class US_StockCalFromFpmService {
             calParam.setBeta(String.valueOf(companyProfile.getBeta()));
         }
 
+        //@2-3. Industry (Financial Services 서브섹터 분화용)
+        calParam.setIndustry(companyProfile.getIndustry());
+
         //@3. 계산 (V8 로직) ---------------------------------
         if(log.isDebugEnabled()) log.debug("[V8] {} - 계산 입력: PER={}, 섹터={}", symbol, calParam.getPer(), sector);
         String 계산된주당가치 = sharePriceCalculatorService.calPerValueV8(calParam, resultDetail, sector);

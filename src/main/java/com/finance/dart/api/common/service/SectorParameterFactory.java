@@ -100,7 +100,7 @@ public class SectorParameterFactory {
                 .maxPERxPBR(new BigDecimal("45"))
                 .build());
 
-        // Financial Services (금융)
+        // Financial Services (금융) — V8 보수화: COE 상향, targetPBR 축소, ROE 상한 도입
         SECTOR_PARAMS.put("Financial Services", SectorCalculationParameters.builder()
                 .sectorName("Financial Services")
                 .basePER(new BigDecimal("12"))
@@ -113,10 +113,11 @@ public class SectorParameterFactory {
                 .maxPBR(new BigDecimal("2"))
                 .maxPERxPBR(new BigDecimal("22.5"))
                 .usePbrValuation(true)
-                .riskFreeRate(new BigDecimal("0.04"))
-                .marketRiskPremium(new BigDecimal("0.05"))
-                .maxTargetPBR(new BigDecimal("3.0"))
+                .riskFreeRate(new BigDecimal("0.045"))       // 4% → 4.5% (보수화)
+                .marketRiskPremium(new BigDecimal("0.055"))   // 5% → 5.5% (금융 특유 리스크 반영)
+                .maxTargetPBR(new BigDecimal("2.0"))          // 3.0 → 2.0 (서브섹터별 오버라이드)
                 .minTargetPBR(new BigDecimal("0.5"))
+                .roeCap(new BigDecimal("0.20"))               // ROE 상한 20% (서브섹터별 오버라이드)
                 .build());
 
         // Real Estate (부동산)

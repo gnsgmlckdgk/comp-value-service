@@ -318,16 +318,44 @@ public class PerShareValueCalculationService {
      * V8: PBR 기반 적정가 계산 (Financial Services 전용)
      * 공식: BPS × targetPBR × 추세팩터
      * - COE = riskFreeRate + Beta × marketRiskPremium
-     * - targetPBR = ROE / COE (상한 3.0, 하한 0.5)
+     * - targetPBR = ROE / COE (서브섹터별 상한 적용)
      * - 추세팩터: 연속하락 0.85, 단일하락 0.92, 그 외 1.0
+     * - 순부채 차감 없음 (BPS가 이미 순자산 = 자산-부채 반영)
+     * - ROE cap: 서브섹터별 (은행 18%, 보험 20%, 기타 25%)
+     * - targetPBR 상한: 서브섹터별 (은행 1.8, 보험 2.0, 기타 2.5)
      */
     String calPerValueV8_Financial(CompanySharePriceCalculator req, CompanySharePriceResultDetail resultDetail,
                                           String sector, SectorCalculationParameters sectorParams) {
 
         resultDetail.setPBR기반평가(true);
 
+        String industry = req.getIndustry();
         BigDecimal bps = new BigDecimal(req.getBookValuePerShare());
         BigDecimal roe = new BigDecimal(req.getRoe());
+
+        // 서브섹터별 ROE cap & targetPBR 상한 결정
+        BigDecimal roeCap = sectorParams.getRoeCap() != null ? sectorParams.getRoeCap() : new BigDecimal("0.20");
+        BigDecimal subSectorMaxTargetPBR = sectorParams.getMaxTargetPBR();
+
+        if (!StringUtil.isStringEmpty(industry)) {
+            String ind = industry.toLowerCase();
+            if (ind.contains("bank")) {
+                // 은행: 레버리지가 높아 ROE가 부풀려짐, 보수적 평가
+                roeCap = new BigDecimal("0.18");
+                subSectorMaxTargetPBR = new BigDecimal("1.8");
+            } else if (ind.contains("insurance")) {
+                // 보험: 은행보다 레버리지 낮지만 여전히 보수적
+                roeCap = new BigDecimal("0.20");
+                subSectorMaxTargetPBR = new BigDecimal("2.0");
+            } else {
+                // Capital Markets, Credit Services, FinTech 등
+                roeCap = new BigDecimal("0.25");
+                subSectorMaxTargetPBR = new BigDecimal("2.5");
+            }
+        }
+
+        // ROE cap 적용 (일시적 고ROE로 인한 과대평가 방지)
+        BigDecimal cappedRoe = roe.min(roeCap);
 
         // Beta (기본값 1.0)
         BigDecimal beta = BigDecimal.ONE;
@@ -345,14 +373,14 @@ public class PerShareValueCalculationService {
                 beta.multiply(sectorParams.getMarketRiskPremium()));
         resultDetail.setCOE(coe.setScale(4, RoundingMode.HALF_UP).toPlainString());
 
-        // targetPBR = ROE / COE (범위 제한)
+        // targetPBR = cappedROE / COE (서브섹터별 범위 제한)
         BigDecimal targetPBR;
         if (coe.compareTo(BigDecimal.ZERO) <= 0) {
             targetPBR = sectorParams.getMinTargetPBR();
         } else {
-            targetPBR = roe.divide(coe, 4, RoundingMode.HALF_UP);
+            targetPBR = cappedRoe.divide(coe, 4, RoundingMode.HALF_UP);
         }
-        targetPBR = targetPBR.max(sectorParams.getMinTargetPBR()).min(sectorParams.getMaxTargetPBR());
+        targetPBR = targetPBR.max(sectorParams.getMinTargetPBR()).min(subSectorMaxTargetPBR);
         resultDetail.setTargetPBR(targetPBR.setScale(4, RoundingMode.HALF_UP).toPlainString());
 
         // 연간 추세팩터
@@ -373,6 +401,7 @@ public class PerShareValueCalculationService {
         resultDetail.set영업이익추세팩터(trendFactor.toPlainString());
 
         // 적정가 = BPS × targetPBR × 추세팩터
+        // ※ 순부채 차감 제거: BPS = (총자산-총부채)/주식수 이므로 이미 부채 반영됨 (이중 차감 방지)
         BigDecimal fairValue = bps.multiply(targetPBR).multiply(trendFactor)
                 .setScale(2, RoundingMode.HALF_UP);
 
@@ -383,22 +412,17 @@ public class PerShareValueCalculationService {
         resultDetail.set성장률보정PER("N/A (PBR경로)");
         resultDetail.setPEG(calcHelper.calPeg(req.getPer(), req.getEpsgrowth()));
 
-        // 순부채 차감 (발행주식수 기준 per-share)
+        // 순부채 정보는 참고용으로만 기록 (적정가 차감하지 않음)
         String totalDebt = req.getTotalDebt();
         String cash = req.getCashAndCashEquivalents();
-        String issuedShares = req.getIssuedShares();
-
-        if (!StringUtil.isStringEmpty(totalDebt) && !StringUtil.isStringEmpty(cash)
-                && !StringUtil.isStringEmpty(issuedShares)) {
+        if (!StringUtil.isStringEmpty(totalDebt) && !StringUtil.isStringEmpty(cash)) {
             BigDecimal netDebt = new BigDecimal(totalDebt).subtract(new BigDecimal(cash));
-            BigDecimal netDebtPerShare = netDebt.divide(new BigDecimal(issuedShares), 4, RoundingMode.HALF_UP);
-            fairValue = fairValue.subtract(netDebtPerShare);
             resultDetail.set순부채(netDebt.toPlainString());
         }
 
         if(log.isDebugEnabled()) {
-            log.debug("[V8 Financial PBR] 섹터:{}, BPS:{}, ROE:{}, Beta:{}, COE:{}, targetPBR:{}, 추세:{}, 적정가:{}",
-                    sector, bps, roe, beta, coe, targetPBR, trendFactor, fairValue);
+            log.debug("[V8 Financial PBR] 섹터:{}, 산업:{}, BPS:{}, ROE:{} (cap:{}→{}), Beta:{}, COE:{}, targetPBR:{} (max:{}), 추세:{}, 적정가:{}",
+                    sector, industry, bps, roe, roeCap, cappedRoe, beta, coe, targetPBR, subSectorMaxTargetPBR, trendFactor, fairValue);
         }
 
         return fairValue.toPlainString();

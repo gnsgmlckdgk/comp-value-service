@@ -86,4 +86,9 @@ public class SectorCalculationParameters {
      * targetPBR 하한 (V8 PBR)
      */
     private BigDecimal minTargetPBR;
+
+    /**
+     * ROE 상한 (V8 Financial Services, 서브섹터별 오버라이드 가능)
+     */
+    private BigDecimal roeCap;
 }
