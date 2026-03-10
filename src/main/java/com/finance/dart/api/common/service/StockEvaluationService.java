@@ -5,6 +5,7 @@ import com.finance.dart.api.abroad.dto.fmp.chart.StockPriceVolumeResDto;
 import com.finance.dart.api.abroad.dto.fmp.company.CompanyProfileDataResDto;
 import com.finance.dart.api.abroad.dto.fmp.quote.StockQuoteReqDto;
 import com.finance.dart.api.abroad.dto.fmp.quote.StockQuoteResDto;
+import com.finance.dart.api.abroad.component.FmpRateLimiter;
 import com.finance.dart.api.abroad.service.US_StockCalFromFpmService;
 import com.finance.dart.api.abroad.service.fmp.CompanyProfileSearchService;
 import com.finance.dart.api.abroad.service.fmp.StockPriceVolumeService;
@@ -48,6 +49,7 @@ public class StockEvaluationService {
     private final TechnicalAnalysisService technicalAnalysisService;
     private final StockQuoteService stockQuoteService;
     private final StockPriceVolumeService stockPriceVolumeService;
+    private final FmpRateLimiter fmpRateLimiter;
 
     /**
      * 종목 평가 (다건)
@@ -73,6 +75,7 @@ public class StockEvaluationService {
         }
 
         for (String symbol : request.getSymbols()) {
+            fmpRateLimiter.waitIfNeeded();  // Rate limit 종목 간 체크
             try {
                 StockEvaluationResponse response = evaluateSingleStock(symbol);
                 responses.add(response);
@@ -112,7 +115,7 @@ public class StockEvaluationService {
             // Redis에 데이터 없음 -> calPerValue 최신버전 실행
             result = stockCalFromFpmService.calPerValue(symbol);
             log.debug("Calculated new value: {}", symbol);
-            Thread.sleep(1500); // FMP API rate limit 방지 (300건/분, 종목당 ~11건 호출)
+            // Thread.sleep(1500); // FmpRateLimiter로 대체 (2026.03.10)
         }
 
         // 2. 기업 정보 조회

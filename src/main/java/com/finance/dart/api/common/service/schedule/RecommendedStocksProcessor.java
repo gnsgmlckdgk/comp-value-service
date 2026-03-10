@@ -62,10 +62,17 @@ public class RecommendedStocksProcessor {
             "contingent value right",
             "first mortgage bond", "mortgage bond",
             "series due", "% series",
-            "debenture", "subordinated note",
+            "debenture", "subordinated note", "junior subordinated",
             "depositary share",
-            " bond,", " bonds,",
-            " notes,", " notes "
+            "capital trust",
+            " bond", " bonds",
+            " notes", " note "
+    );
+
+    /** 비일반주식 기업명 패턴 (정규식) - 이자율, 만기일 등 */
+    private static final Pattern NON_COMMON_STOCK_NAME_PATTERN = Pattern.compile(
+            "\\d+\\.?\\d*\\s*%"               // 이자율 표기: "5.35%", "7.25 %" 등 (채권/노트)
+            + "|\\bdue\\s+20\\d{2}\\b"         // 만기일: "due 2027" 등
     );
 
     private final StockScreenerService stockScreenerService;
@@ -245,6 +252,9 @@ public class RecommendedStocksProcessor {
                 if (nameLower.contains(keyword)) {
                     return true;
                 }
+            }
+            if (NON_COMMON_STOCK_NAME_PATTERN.matcher(nameLower).find()) {
+                return true;
             }
         }
         return false;

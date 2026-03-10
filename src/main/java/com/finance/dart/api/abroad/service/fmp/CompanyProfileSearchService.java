@@ -5,6 +5,7 @@ import com.finance.dart.api.abroad.dto.fmp.company.CompanyProfileDataResDto;
 import com.finance.dart.api.abroad.enums.FmpApiList;
 import com.finance.dart.common.component.ConfigComponent;
 import com.finance.dart.common.component.HttpClientComponent;
+import com.finance.dart.api.abroad.component.FmpRateLimiter;
 import com.finance.dart.common.util.ClientUtil;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -25,6 +26,7 @@ public class CompanyProfileSearchService {
 
     private final ConfigComponent configComponent;
     private final HttpClientComponent httpClientComponent;
+    private final FmpRateLimiter fmpRateLimiter;
 
 
     /**
@@ -37,6 +39,9 @@ public class CompanyProfileSearchService {
      */
     public List<CompanyProfileDataResDto> findProfileListBySymbol(String symbol) {
 
+        //@ Rate limit 안전망
+        fmpRateLimiter.waitIfHardLimit();
+
         //@ 요청 데이터 세팅
         String apiKey = configComponent.getFmpApiKey();
         String url = FmpApiList.CompanyProfileData.url;
@@ -47,6 +52,9 @@ public class CompanyProfileSearchService {
         //@ 요청
         ResponseEntity<List<CompanyProfileDataResDto>> response =
                 httpClientComponent.exchangeSync(url, HttpMethod.GET, new ParameterizedTypeReference<>() {});
+
+        //@ 호출 기록
+        fmpRateLimiter.recordCall();
 
         //@ 응답데이터 가공
         List<CompanyProfileDataResDto> findCompanySymbolResDtoList = response.getBody();

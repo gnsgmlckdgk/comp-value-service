@@ -37,6 +37,7 @@ import com.finance.dart.common.util.CalUtil;
 import com.finance.dart.common.util.DateUtil;
 import com.finance.dart.common.util.StringUtil;
 import com.google.gson.Gson;
+import com.finance.dart.api.abroad.component.FmpRateLimiter;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -76,6 +77,7 @@ public class US_StockCalFromFpmService {
     private final PerShareValueCalculationService sharePriceCalculatorService;
     private final PerShareValueCalcHelper calcHelper;
     private final US_StockCalHelper helper;
+    private final FmpRateLimiter fmpRateLimiter;
 
 
     /**
@@ -111,7 +113,7 @@ public class US_StockCalFromFpmService {
         CompanySharePriceCalculator calParam = new CompanySharePriceCalculator();
 
         //@ 필요데이터 조회 (연간 영업이익 3년)
-        Thread.sleep(TRSC_DELAY);
+        // Thread.sleep(TRSC_DELAY); // FmpRateLimiter로 대체 (2026.03.10)
         IncomeStatReqDto incomeStatReqDto = new IncomeStatReqDto(symbol, 3, FmpPeriod.annual);
         List<IncomeStatResDto> income = incomeStatementService.findIncomeStat(incomeStatReqDto);
         if(income == null || income.size() < 3) {
@@ -127,7 +129,7 @@ public class US_StockCalFromFpmService {
         }
 
         //@ 분기 영업이익 4개 조회
-        Thread.sleep(TRSC_DELAY);
+        // Thread.sleep(TRSC_DELAY); // FmpRateLimiter로 대체 (2026.03.10)
         IncomeStatReqDto quarterlyIncomeReqDto = new IncomeStatReqDto(symbol, 4, FmpPeriod.quarter);
         List<IncomeStatResDto> quarterlyIncome = incomeStatementService.findIncomeStat(quarterlyIncomeReqDto);
         if(quarterlyIncome != null && quarterlyIncome.size() >= 4) {
@@ -143,7 +145,7 @@ public class US_StockCalFromFpmService {
             calParam.setQuarterlyOpIncomeQ4(StringUtil.defaultString(quarterlyIncome.get(3).getOperatingIncome()));
         }
 
-        Thread.sleep(TRSC_DELAY);
+        // Thread.sleep(TRSC_DELAY); // FmpRateLimiter로 대체 (2026.03.10)
         BalanceSheetReqDto balanceSheetReqDto = new BalanceSheetReqDto(symbol, 1, FmpPeriod.quarter);
         List<BalanceSheetResDto> balance = balanceSheetStatementService.findBalanceSheet(balanceSheetReqDto);
         if(balance == null || balance.size() < 1) {
@@ -158,7 +160,7 @@ public class US_StockCalFromFpmService {
             }
         }
 
-        Thread.sleep(TRSC_DELAY);
+        // Thread.sleep(TRSC_DELAY); // FmpRateLimiter로 대체 (2026.03.10)
         EnterpriseValuesReqDto enterpriseValuesReqDto = new EnterpriseValuesReqDto(symbol, 1, FmpPeriod.quarter);
         List<EnterpriseValuesResDto> enterpriseValues = enterpriseValueService.findEnterpriseValue(enterpriseValuesReqDto);
         if(enterpriseValues == null || enterpriseValues.size() < 1) {
@@ -166,7 +168,7 @@ public class US_StockCalFromFpmService {
             return null;
         }
 
-        Thread.sleep(TRSC_DELAY);
+        // Thread.sleep(TRSC_DELAY); // FmpRateLimiter로 대체 (2026.03.10)
         FinancialRatiosTTM_ReqDto financialRatiosTTM_ReqDto = new FinancialRatiosTTM_ReqDto(symbol);
         List<FinancialRatiosTTM_ResDto> financialRatios = financialRatiosService.findFinancialRatiosTTM(financialRatiosTTM_ReqDto);
         if(financialRatios == null || financialRatios.size() < 1) {
@@ -174,7 +176,7 @@ public class US_StockCalFromFpmService {
             return null;
         }
 
-        Thread.sleep(TRSC_DELAY);
+        // Thread.sleep(TRSC_DELAY); // FmpRateLimiter로 대체 (2026.03.10)
         List<FinancialRatiosResDto> historicalRatios = null;
         try {
             FinancialRatiosReqDto historicalRatiosReqDto = new FinancialRatiosReqDto(symbol, 5, FmpPeriod.annual);
@@ -193,7 +195,7 @@ public class US_StockCalFromFpmService {
             }
         }
 
-        Thread.sleep(TRSC_DELAY);
+        // Thread.sleep(TRSC_DELAY); // FmpRateLimiter로 대체 (2026.03.10)
         FinancialGrowthReqDto financialGrowthReqDto = new FinancialGrowthReqDto(symbol, 1, FmpPeriod.fiscalYear);
         List<FinancialGrowthResDto> financialGrowth = financialGrowthService.financialStatementsGrowth(financialGrowthReqDto);
         if(financialGrowth == null || financialGrowth.size() < 1) {
@@ -201,7 +203,7 @@ public class US_StockCalFromFpmService {
             return null;
         }
 
-        Thread.sleep(TRSC_DELAY);
+        // Thread.sleep(TRSC_DELAY); // FmpRateLimiter로 대체 (2026.03.10)
         IncomeStatGrowthReqDto incomeStatGrowthReqDto = new IncomeStatGrowthReqDto(symbol, 1, FmpPeriod.annual);
         List<IncomeStatGrowthResDto> incomeStatGrowth = incomeStatGrowthService.findIncomeStatGrowth(incomeStatGrowthReqDto);
         if(incomeStatGrowth == null || incomeStatGrowth.size() < 1) {
@@ -376,7 +378,7 @@ public class US_StockCalFromFpmService {
         if(log.isDebugEnabled()) log.debug("[V8] 섹터 정보: {}", sector);
 
         //@1-1. V8 추가: StockQuote 조회 (SMA50, SMA200, price)
-        Thread.sleep(TRSC_DELAY);
+        // Thread.sleep(TRSC_DELAY); // FmpRateLimiter로 대체 (2026.03.10)
         StockQuoteResDto stockQuote = null;
         try {
             StockQuoteReqDto quoteReq = new StockQuoteReqDto(symbol);
@@ -398,7 +400,7 @@ public class US_StockCalFromFpmService {
                 oneYearAgo.format(DateTimeFormatter.ISO_LOCAL_DATE),
                 today.format(DateTimeFormatter.ISO_LOCAL_DATE)
             );
-            Thread.sleep(TRSC_DELAY);
+            // Thread.sleep(TRSC_DELAY); // FmpRateLimiter로 대체 (2026.03.10)
             priceHistory = stockPriceVolumeService.findStockPriceVolume(priceReqDto);
         } catch (Exception e) {
             log.warn("[V8] {} - 52주 가격 히스토리 조회 실패: {}", symbol, e.getMessage());
@@ -525,6 +527,7 @@ public class US_StockCalFromFpmService {
         }
 
         for(String symbol : symbolList) {
+            fmpRateLimiter.waitIfNeeded();  // Rate limit 종목 간 체크
             try {
                 CompanySharePriceResult result = calPerValueV8(symbol);
                 if("F".equals(StringUtil.defaultString(detail))) result.set상세정보(null);
@@ -536,7 +539,7 @@ public class US_StockCalFromFpmService {
                 helper.errorProcess(errorResult, "처리 중 오류가 발생했습니다.");
                 resultList.add(errorResult);
             }
-            Thread.sleep(TRSC_DELAY);
+            // Thread.sleep(TRSC_DELAY); // FmpRateLimiter로 대체 (2026.03.10)
         }
 
         return resultList;

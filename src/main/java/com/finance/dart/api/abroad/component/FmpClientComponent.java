@@ -25,6 +25,7 @@ public class FmpClientComponent {
 
     private final ConfigComponent configComponent;
     private final HttpClientComponent httpClientComponent;
+    private final FmpRateLimiter fmpRateLimiter;
 
     /**
      * FMP API GET 전송
@@ -32,6 +33,9 @@ public class FmpClientComponent {
      * @return
      */
     public <T extends FmpReqCommon, R> R sendGet(FmpApiList fmpApi, T requestData, ParameterizedTypeReference<R> responseType) {
+
+        //@ Rate limit 안전망
+        fmpRateLimiter.waitIfHardLimit();
 
         //@ 요청 데이터
         requestData.setApikey(configComponent.getFmpApiKey());
@@ -42,6 +46,9 @@ public class FmpClientComponent {
         //@ 요청
         ResponseEntity<R> response =
                 httpClientComponent.exchangeSync(url, HttpMethod.GET, responseType);
+
+        //@ 호출 기록
+        fmpRateLimiter.recordCall();
 
         return response.getBody();
     }
@@ -61,6 +68,10 @@ public class FmpClientComponent {
             List<T> requestDataList,
             Function<T, String> idExtractor,
             ParameterizedTypeReference<R> responseType) {
+
+        //@ Rate limit 안전망 + 호출 수 사전 기록
+        fmpRateLimiter.waitIfHardLimit();
+        fmpRateLimiter.recordCalls(requestDataList.size());
 
         List<AsyncRequestDto<R>> sendBodyList = new LinkedList<>();
 
