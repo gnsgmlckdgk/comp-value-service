@@ -123,6 +123,9 @@ public class StockEvaluationService {
 
         // 3. Step 1~5 평가 수행
         CompanySharePriceResultDetail detail = result.get상세정보();
+        if (detail == null) {
+            throw new IllegalStateException(symbol + " - 상세정보 없음 (재무데이터 부족)");
+        }
         String currentPrice = result.get현재가격();
         String fairValue = result.get주당가치();
         String calFairValue = result.get계산된주당가치();
