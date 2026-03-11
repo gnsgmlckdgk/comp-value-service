@@ -19,7 +19,7 @@ import java.util.List;
     "symbol", "companyName", "currentPrice", "fairValue", "priceDifference",
     "priceGapPercent", "totalScore", "grade", "recommendation",
     "purchasePrice", "sellTarget", "stopLossPrice",
-    "peg", "per", "sector", "industry", "beta", "exchange", "country", "marketCap",
+    "peg", "per", "sector", "industry", "beta", "exchange", "country", "marketCap", "averageVolume",
     "step1Score", "step2Score", "step3Score", "step4Score", "step5Score", "step6Score",
     "momentumGatePass", "entryTiming", "stepDetails", "resultDetail"
 })
@@ -117,6 +117,11 @@ public class StockEvaluationResponse {
      * 시가총액
      */
     private String marketCap;
+
+    /**
+     * 평균 거래량
+     */
+    private Long averageVolume;
 
     /**
      * 매수적정가 (안전마진 적용)

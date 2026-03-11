@@ -49,4 +49,12 @@ public class RedisKeyGenerator {
         return "compvalue:abroad:recommended:stock:" + symbol;
     }
 
+    /**
+     * 투자판단 최근 조회 내역
+     * @return compvalue:evaluation:recent-queries
+     */
+    public static String genEvaluationRecentQueries() {
+        return "compvalue:abroad:evaluation:recent-queries";
+    }
+
 }

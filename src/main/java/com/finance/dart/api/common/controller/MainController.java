@@ -24,9 +24,14 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
+import com.finance.dart.common.component.RedisComponent;
+import com.finance.dart.common.component.RedisKeyGenerator;
+import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
+
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.*;
 
 @Slf4j
 @AllArgsConstructor
@@ -40,6 +45,7 @@ public class MainController {
     private final PerShareValueCalculationService perShareValueCalculationService;  // 가치계산 서비스
     private final RecommendedCompanyService recommendedCompanyService;              // 기업추천 서비스
     private final StockEvaluationService stockEvaluationService;                    // 종목평가 서비스
+    private final RedisComponent redisComponent;
 
 
     /**
@@ -193,7 +199,65 @@ public class MainController {
 
         List<StockEvaluationResponse> responseBody = stockEvaluationService.evaluateStocks(request);
 
+        // 최근 조회 내역 저장 (비동기적으로 실패해도 무시)
+        try {
+            saveRecentQuery(request.getSymbols());
+        } catch (Exception e) {
+            log.warn("최근 조회 내역 저장 실패", e);
+        }
+
         return new ResponseEntity<>(new CommonResponse<>(responseBody), HttpStatus.OK);
+    }
+
+    private static final int MAX_RECENT_QUERIES = 3;
+    private static final Gson gson = new Gson();
+
+    /**
+     * 투자판단 최근 조회 내역 조회
+     */
+    @GetMapping("/evaluate/recent-queries")
+    public ResponseEntity<CommonResponse<List<Map<String, Object>>>> getRecentQueries() {
+        String redisKey = RedisKeyGenerator.genEvaluationRecentQueries();
+        String cached = redisComponent.getValue(redisKey);
+        List<Map<String, Object>> queries = cached != null
+                ? gson.fromJson(cached, new TypeToken<List<Map<String, Object>>>(){}.getType())
+                : List.of();
+        return new ResponseEntity<>(new CommonResponse<>(queries), HttpStatus.OK);
+    }
+
+    /**
+     * 최근 조회 내역 저장 (최대 3건, 중복 제거)
+     */
+    private void saveRecentQuery(List<String> symbols) {
+        if (symbols == null || symbols.isEmpty()) return;
+
+        String redisKey = RedisKeyGenerator.genEvaluationRecentQueries();
+        String cached = redisComponent.getValue(redisKey);
+        List<Map<String, Object>> queries = cached != null
+                ? gson.fromJson(cached, new TypeToken<List<Map<String, Object>>>(){}.getType())
+                : new ArrayList<>();
+
+        // 동일 심볼 세트 중복 제거 (정렬 후 비교)
+        List<String> sorted = symbols.stream().sorted().toList();
+        queries.removeIf(q -> {
+            List<String> existing = ((List<?>) q.get("symbols")).stream()
+                    .map(Object::toString).sorted().toList();
+            return existing.equals(sorted);
+        });
+
+        // 새 항목 추가 (맨 앞)
+        Map<String, Object> entry = new LinkedHashMap<>();
+        entry.put("symbols", symbols);
+        entry.put("symbolCount", symbols.size());
+        entry.put("queriedAt", LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")));
+        queries.add(0, entry);
+
+        // 최대 3건 유지
+        if (queries.size() > MAX_RECENT_QUERIES) {
+            queries = new ArrayList<>(queries.subList(0, MAX_RECENT_QUERIES));
+        }
+
+        redisComponent.saveValueWithTtl(redisKey, gson.toJson(queries), 604800); // 7일 TTL
     }
 
 }

@@ -199,6 +199,7 @@ public class StockEvaluationService {
                 .country(profile != null ? profile.getCountry() : "N/A")
                 .marketCap(profile != null && profile.getMarketCap() != null ?
                         formatMarketCap(profile.getMarketCap()) : "N/A")
+                .averageVolume(profile != null ? profile.getAverageVolume() : null)
                 .step1Score(step1Score)
                 .step2Score(step2Score)
                 .step3Score(step3Score)
