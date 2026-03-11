@@ -199,18 +199,25 @@ public class MainController {
 
         List<StockEvaluationResponse> responseBody = stockEvaluationService.evaluateStocks(request);
 
-        // 최근 조회 내역 저장 (비동기적으로 실패해도 무시)
-        try {
-            saveRecentQuery(request.getSymbols());
-        } catch (Exception e) {
-            log.warn("최근 조회 내역 저장 실패", e);
-        }
-
         return new ResponseEntity<>(new CommonResponse<>(responseBody), HttpStatus.OK);
     }
 
     private static final int MAX_RECENT_QUERIES = 3;
     private static final Gson gson = new Gson();
+
+    /**
+     * 투자판단 최근 조회 내역 저장 (프론트에서 분석 버튼 클릭 시 전체 심볼 리스트로 1회 호출)
+     */
+    @PostMapping("/evaluate/recent-queries")
+    public ResponseEntity<CommonResponse<Void>> saveRecentQueryApi(
+            @RequestBody StockEvaluationRequest request) {
+        try {
+            saveRecentQuery(request.getSymbols());
+        } catch (Exception e) {
+            log.warn("최근 조회 내역 저장 실패", e);
+        }
+        return new ResponseEntity<>(new CommonResponse<>(null), HttpStatus.OK);
+    }
 
     /**
      * 투자판단 최근 조회 내역 조회
