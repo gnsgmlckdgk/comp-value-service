@@ -243,10 +243,15 @@ public class TranRecordService {
             if(afterTradeResDtoList != null && !afterTradeResDtoList.isEmpty()) {
                 AfterTradeResDto afterTradeResDto = afterTradeResDtoList.get(0);
 
-                long quoteTimestamp = stockQuoteResDto.getTimestamp();      // 정규장
-                long afterTradeTimestamp = afterTradeResDto.getTimestamp(); // 애프터마켓
+                long quoteTimestamp = stockQuoteResDto.getTimestamp();      // 정규장 (초 단위)
+                long afterTradeTimestamp = afterTradeResDto.getTimestamp(); // 애프터마켓 (밀리초 단위)
 
-                if(afterTradeTimestamp > quoteTimestamp) {  // 애프터마켓이 더 최신
+                // 단위 통일: 밀리초 → 초로 변환하여 비교
+                long afterTradeTimestampSec = afterTradeTimestamp > 9_999_999_999L
+                        ? afterTradeTimestamp / 1000
+                        : afterTradeTimestamp;
+
+                if(afterTradeTimestampSec > quoteTimestamp) {  // 애프터마켓이 더 최신
                     tranRecordCurValueResDto.setCurrentPrice(afterTradeResDto.getPrice());
                 }
             }
