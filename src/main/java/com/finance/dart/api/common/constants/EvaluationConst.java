@@ -69,4 +69,42 @@ public class EvaluationConst {
     public static final double GROWTH_HIGH_RISK = 0.8;      // 80%
     public static final double GROWTH_VERY_HIGH_RISK = 1.0; // 100%
 
+    /**
+     * 진입 타이밍 연동 상한 (타이밍 점수 기반 총점 상한)
+     * 타이밍 점수 < 30 ("하락 구간") → 총점 상한 65점 (C등급 한도)
+     * 타이밍 점수 < 50 ("대기 권장") → 총점 상한 77점 (B등급 한도)
+     */
+    public static final double TIMING_GATE_RED_MAX_SCORE = 65.0;
+    public static final double TIMING_GATE_YELLOW_MAX_SCORE = 77.0;
+    public static final int TIMING_GATE_RED_THRESHOLD = 30;
+    public static final int TIMING_GATE_YELLOW_THRESHOLD = 50;
+
+    /**
+     * SMA200 하방 디스카운트 (Step6 추가 감점)
+     * 현재가/SMA200 비율에 따른 감점
+     */
+    public static final double SMA200_SEVERE_THRESHOLD = 0.85;  // -15% 이하
+    public static final double SMA200_WARNING_THRESHOLD = 0.90; // -10% 이하
+    public static final double SMA200_MILD_THRESHOLD = 1.0;     // SMA200 미만
+    public static final int SMA200_SEVERE_PENALTY = 5;
+    public static final int SMA200_WARNING_PENALTY = 3;
+    public static final int SMA200_MILD_PENALTY = 1;
+
+    /**
+     * 52주 고점 대비 하락률 감점 (Step6 추가 감점)
+     */
+    public static final double HIGH52W_SEVERE_DROP = -0.30;  // -30% 이상 하락
+    public static final double HIGH52W_WARNING_DROP = -0.20;  // -20% 이상 하락
+    public static final int HIGH52W_SEVERE_PENALTY = 4;
+    public static final int HIGH52W_WARNING_PENALTY = 2;
+
+    /**
+     * Forward PER 크로스체크 (Step2 감점)
+     * Forward PER / TTM PER 비율이 높으면 미래 실적 악화 예상
+     */
+    public static final double FORWARD_PER_SEVERE_RATIO = 1.5;  // 50% 이상 증가
+    public static final double FORWARD_PER_WARNING_RATIO = 1.3; // 30% 이상 증가
+    public static final int FORWARD_PER_SEVERE_PENALTY = 5;
+    public static final int FORWARD_PER_WARNING_PENALTY = 3;
+
 }

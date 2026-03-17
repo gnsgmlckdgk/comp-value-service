@@ -215,6 +215,15 @@ public enum FmpApiList {
             "주식 가격 그리고 거래량 데이터 조회 API"
     ),
 
+    /** 애널리스트 추정치 조회 **/
+    AnalystEstimates(
+            "Analyst Estimates API",
+            "https://financialmodelingprep.com/stable/analyst-estimates",
+            HttpMethod.GET,
+            "https://site.financialmodelingprep.com/developer/docs/stable/analyst-estimates",
+            "애널리스트 추정치 조회 API (Forward EPS/매출 컨센서스)"
+    ),
+
     /** 거래소별 차트 조회 **/
     HistoricalIndexFullChart(
             "Historical Index Full Chart API",

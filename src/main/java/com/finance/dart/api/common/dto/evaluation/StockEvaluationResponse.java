@@ -190,6 +190,21 @@ public class StockEvaluationResponse {
     private CompanySharePriceResultDetail resultDetail;
 
     /**
+     * 52주 고점 대비 하락률 (%)
+     */
+    private String high52wDropPercent;
+
+    /**
+     * Forward PER (애널리스트 컨센서스 기반)
+     */
+    private String forwardPer;
+
+    /**
+     * Forward PER 경고 메시지 (TTM PER 대비 크게 상승 시)
+     */
+    private String forwardPerWarning;
+
+    /**
      * 계산 버전
      */
     @Builder.Default

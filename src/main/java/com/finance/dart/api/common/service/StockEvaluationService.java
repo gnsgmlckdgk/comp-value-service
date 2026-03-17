@@ -1,5 +1,7 @@
 package com.finance.dart.api.common.service;
 
+import com.finance.dart.api.abroad.dto.fmp.analystestimates.AnalystEstimatesReqDto;
+import com.finance.dart.api.abroad.dto.fmp.analystestimates.AnalystEstimatesResDto;
 import com.finance.dart.api.abroad.dto.fmp.chart.StockPriceVolumeReqDto;
 import com.finance.dart.api.abroad.dto.fmp.chart.StockPriceVolumeResDto;
 import com.finance.dart.api.abroad.dto.fmp.company.CompanyProfileDataResDto;
@@ -7,6 +9,7 @@ import com.finance.dart.api.abroad.dto.fmp.quote.StockQuoteReqDto;
 import com.finance.dart.api.abroad.dto.fmp.quote.StockQuoteResDto;
 import com.finance.dart.api.abroad.component.FmpRateLimiter;
 import com.finance.dart.api.abroad.service.US_StockCalFromFpmService;
+import com.finance.dart.api.abroad.service.fmp.AnalystEstimatesService;
 import com.finance.dart.api.abroad.service.fmp.CompanyProfileSearchService;
 import com.finance.dart.api.abroad.service.fmp.StockPriceVolumeService;
 import com.finance.dart.api.abroad.service.fmp.StockQuoteService;
@@ -49,6 +52,7 @@ public class StockEvaluationService {
     private final TechnicalAnalysisService technicalAnalysisService;
     private final StockQuoteService stockQuoteService;
     private final StockPriceVolumeService stockPriceVolumeService;
+    private final AnalystEstimatesService analystEstimatesService;
     private final FmpRateLimiter fmpRateLimiter;
 
     /**
@@ -167,6 +171,80 @@ public class StockEvaluationService {
             } catch (Exception ignored) {}
         }
 
+        // 4-3. [개선1] 진입 타이밍 → 등급 상한 연동
+        if (entryTiming != null) {
+            int timingScore = entryTiming.getTimingScore();
+            if (timingScore < EvaluationConst.TIMING_GATE_RED_THRESHOLD
+                    && totalScore > EvaluationConst.TIMING_GATE_RED_MAX_SCORE) {
+                log.info("[TimingGate] {} - 타이밍 점수 {}(<{}), 총점 {} → {} 상한 적용",
+                        symbol, timingScore, EvaluationConst.TIMING_GATE_RED_THRESHOLD,
+                        totalScore, EvaluationConst.TIMING_GATE_RED_MAX_SCORE);
+                totalScore = EvaluationConst.TIMING_GATE_RED_MAX_SCORE;
+            } else if (timingScore < EvaluationConst.TIMING_GATE_YELLOW_THRESHOLD
+                    && totalScore > EvaluationConst.TIMING_GATE_YELLOW_MAX_SCORE) {
+                log.info("[TimingGate] {} - 타이밍 점수 {}(<{}), 총점 {} → {} 상한 적용",
+                        symbol, timingScore, EvaluationConst.TIMING_GATE_YELLOW_THRESHOLD,
+                        totalScore, EvaluationConst.TIMING_GATE_YELLOW_MAX_SCORE);
+                totalScore = EvaluationConst.TIMING_GATE_YELLOW_MAX_SCORE;
+            }
+        }
+
+        // 4-4. [개선3] 52주 고점 대비 하락률 감점
+        String high52wDropPercent = calculate52WeekHighDrop(priceHistory, stockQuote);
+        if (high52wDropPercent != null) {
+            try {
+                double dropPct = Double.parseDouble(high52wDropPercent.replace("%", ""));
+                double dropRatio = dropPct / 100.0;
+                if (dropRatio <= EvaluationConst.HIGH52W_SEVERE_DROP) {
+                    totalScore -= EvaluationConst.HIGH52W_SEVERE_PENALTY;
+                    log.info("[52wHigh] {} - 52주 고점 대비 {}% 하락, -{} 감점",
+                            symbol, dropPct, EvaluationConst.HIGH52W_SEVERE_PENALTY);
+                } else if (dropRatio <= EvaluationConst.HIGH52W_WARNING_DROP) {
+                    totalScore -= EvaluationConst.HIGH52W_WARNING_PENALTY;
+                    log.info("[52wHigh] {} - 52주 고점 대비 {}% 하락, -{} 감점",
+                            symbol, dropPct, EvaluationConst.HIGH52W_WARNING_PENALTY);
+                }
+                totalScore = Math.max(0, totalScore);
+            } catch (Exception ignored) {}
+        }
+
+        // 4-5. [개선4] Forward PER 크로스체크
+        String forwardPer = null;
+        String forwardPerWarning = null;
+        try {
+            AnalystEstimatesResDto estimates = fetchAnalystEstimates(symbol);
+            if (estimates != null && estimates.getEstimatedEpsAvg() != null
+                    && estimates.getEstimatedEpsAvg() > 0
+                    && stockQuote != null && stockQuote.getPrice() != null) {
+                double fwdPer = stockQuote.getPrice() / estimates.getEstimatedEpsAvg();
+                forwardPer = String.format("%.2f", fwdPer);
+
+                String perStr = detail.getPER();
+                if (!StringUtil.isStringEmpty(perStr) && !"N/A".equals(perStr)) {
+                    double ttmPer = Double.parseDouble(perStr);
+                    if (ttmPer > 0) {
+                        double ratio = fwdPer / ttmPer;
+                        if (ratio >= EvaluationConst.FORWARD_PER_SEVERE_RATIO) {
+                            totalScore -= EvaluationConst.FORWARD_PER_SEVERE_PENALTY;
+                            forwardPerWarning = String.format(
+                                    "Forward PER(%.1f)이 TTM PER(%.1f) 대비 %.0f%% 높음 - 실적 악화 예상, -%d점",
+                                    fwdPer, ttmPer, (ratio - 1) * 100, EvaluationConst.FORWARD_PER_SEVERE_PENALTY);
+                            log.info("[ForwardPER] {} - {}", symbol, forwardPerWarning);
+                        } else if (ratio >= EvaluationConst.FORWARD_PER_WARNING_RATIO) {
+                            totalScore -= EvaluationConst.FORWARD_PER_WARNING_PENALTY;
+                            forwardPerWarning = String.format(
+                                    "Forward PER(%.1f)이 TTM PER(%.1f) 대비 %.0f%% 높음 - 실적 둔화 우려, -%d점",
+                                    fwdPer, ttmPer, (ratio - 1) * 100, EvaluationConst.FORWARD_PER_WARNING_PENALTY);
+                            log.info("[ForwardPER] {} - {}", symbol, forwardPerWarning);
+                        }
+                        totalScore = Math.max(0, totalScore);
+                    }
+                }
+            }
+        } catch (Exception e) {
+            log.warn("[ForwardPER] {} - 애널리스트 추정치 조회 실패: {}", symbol, e.getMessage());
+        }
+
         // 5. 가격 차이 계산
         String priceDifference = calculatePriceDifference(currentPrice, fairValue);
         String priceGapPercent = calculatePriceGapPercent(currentPrice, fairValue);
@@ -208,6 +286,9 @@ public class StockEvaluationService {
                 .step6Score(step6Score)
                 .momentumGatePass(momentumGatePass)
                 .entryTiming(entryTiming)
+                .high52wDropPercent(high52wDropPercent)
+                .forwardPer(forwardPer)
+                .forwardPerWarning(forwardPerWarning)
                 .stepDetails(stepDetails)
                 .resultDetail(detail)
                 .calVersion(result.get버전())
@@ -759,6 +840,29 @@ public class StockEvaluationService {
                 detailsStr.append("✅ 모멘텀 게이트 통과 (+3점 보너스). ");
             }
 
+            // [개선2] SMA200 하방 디스카운트
+            if (stockQuote != null && stockQuote.getPrice() != null && stockQuote.getPriceAvg200() != null) {
+                double price = stockQuote.getPrice();
+                double sma200 = stockQuote.getPriceAvg200();
+                if (sma200 > 0) {
+                    double priceToSma200 = price / sma200;
+                    if (priceToSma200 < EvaluationConst.SMA200_SEVERE_THRESHOLD) {
+                        score -= EvaluationConst.SMA200_SEVERE_PENALTY;
+                        detailsStr.append(String.format("🔻 현재가가 SMA200 대비 %.1f%% 하방 (-%d점). ",
+                                (priceToSma200 - 1) * 100, EvaluationConst.SMA200_SEVERE_PENALTY));
+                    } else if (priceToSma200 < EvaluationConst.SMA200_WARNING_THRESHOLD) {
+                        score -= EvaluationConst.SMA200_WARNING_PENALTY;
+                        detailsStr.append(String.format("⚠️ 현재가가 SMA200 대비 %.1f%% 하방 (-%d점). ",
+                                (priceToSma200 - 1) * 100, EvaluationConst.SMA200_WARNING_PENALTY));
+                    } else if (priceToSma200 < EvaluationConst.SMA200_MILD_THRESHOLD) {
+                        score -= EvaluationConst.SMA200_MILD_PENALTY;
+                        detailsStr.append(String.format("⚠️ 현재가가 SMA200 미만 (%.1f%%, -%d점). ",
+                                (priceToSma200 - 1) * 100, EvaluationConst.SMA200_MILD_PENALTY));
+                    }
+                    score = Math.max(0, score);
+                }
+            }
+
         } catch (Exception e) {
             log.warn("[Step6] {} - 기술적 분석 실패: {}", symbol, e.getMessage());
             score = 9;  // 실패 시 중간 점수
@@ -928,6 +1032,55 @@ public class StockEvaluationService {
             log.warn("Failed to calculate price gap percent", e);
             return "N/A";
         }
+    }
+
+    /**
+     * [개선3] 52주 고점 대비 하락률 계산
+     * @param priceHistory 52주 가격 히스토리 (최신→과거)
+     * @param stockQuote 현재 시세
+     * @return 하락률 문자열 (예: "-25.30%"), 계산 불가 시 null
+     */
+    private String calculate52WeekHighDrop(List<StockPriceVolumeResDto> priceHistory,
+                                            StockQuoteResDto stockQuote) {
+        if (priceHistory == null || priceHistory.isEmpty() || stockQuote == null
+                || stockQuote.getPrice() == null) {
+            return null;
+        }
+        try {
+            double high52w = priceHistory.stream()
+                    .filter(p -> p.getHigh() != null)
+                    .mapToDouble(StockPriceVolumeResDto::getHigh)
+                    .max()
+                    .orElse(0);
+            if (high52w <= 0) return null;
+
+            double currentPrice = stockQuote.getPrice();
+            double dropPct = (currentPrice - high52w) / high52w * 100;
+            return String.format("%.2f%%", dropPct);
+        } catch (Exception e) {
+            log.warn("52주 고점 대비 하락률 계산 실패: {}", e.getMessage());
+            return null;
+        }
+    }
+
+    /**
+     * [개선4] 애널리스트 추정치 조회 (Forward EPS 등)
+     * @param symbol 심볼
+     * @return 가장 최근 추정치 (없으면 null)
+     */
+    private AnalystEstimatesResDto fetchAnalystEstimates(String symbol) {
+        try {
+            AnalystEstimatesReqDto reqDto = new AnalystEstimatesReqDto();
+            reqDto.setSymbol(symbol);
+            reqDto.setLimit(1);
+            List<AnalystEstimatesResDto> estimates = analystEstimatesService.findAnalystEstimates(reqDto);
+            if (estimates != null && !estimates.isEmpty()) {
+                return estimates.get(0);
+            }
+        } catch (Exception e) {
+            log.warn("[ForwardPER] {} - 애널리스트 추정치 조회 실패: {}", symbol, e.getMessage());
+        }
+        return null;
     }
 
     /**
