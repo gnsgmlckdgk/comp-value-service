@@ -19,6 +19,8 @@ import com.finance.dart.api.abroad.dto.fmp.incomestatement.IncomeStatReqDto;
 import com.finance.dart.api.abroad.dto.fmp.incomestatement.IncomeStatResDto;
 import com.finance.dart.api.abroad.dto.fmp.incomestatgrowth.IncomeStatGrowthReqDto;
 import com.finance.dart.api.abroad.dto.fmp.incomestatgrowth.IncomeStatGrowthResDto;
+import com.finance.dart.api.abroad.dto.fmp.quote.AfterTradeReqDto;
+import com.finance.dart.api.abroad.dto.fmp.quote.AfterTradeResDto;
 import com.finance.dart.api.abroad.dto.fmp.quote.StockQuoteReqDto;
 import com.finance.dart.api.abroad.dto.fmp.quote.StockQuoteResDto;
 import com.finance.dart.stockpredictor.dto.PredictionResponseDto;
@@ -72,6 +74,7 @@ public class US_StockCalFromFpmService {
     private final FinancialGrowthService financialGrowthService;
     private final IncomeStatGrowthService incomeStatGrowthService;
     private final StockQuoteService stockQuoteService;
+    private final AfterTradeService afterTradeService;
     private final StockPriceVolumeService stockPriceVolumeService;
 
     private final PerShareValueCalculationService sharePriceCalculatorService;
@@ -356,10 +359,15 @@ public class US_StockCalFromFpmService {
         final String UNIT = "1";
         final String resultDataRedisKey = RedisKeyGenerator.genAbroadCompValueRstData(symbol, VERSION);
 
-        //@ Redis 저장값 확인(캐시 역할)
+        //@ Redis 저장값 확인(캐시 역할) - 현재가격만 실시간 갱신
         String saveData = redisComponent.getValue(resultDataRedisKey);
         if(!StringUtil.isStringEmpty(saveData)) {
-            return new Gson().fromJson(saveData, CompanySharePriceResult.class);
+            CompanySharePriceResult cached = new Gson().fromJson(saveData, CompanySharePriceResult.class);
+            String latestPrice = fetchLatestPrice(symbol);
+            if(latestPrice != null) {
+                cached.set현재가격(latestPrice);
+            }
+            return cached;
         }
 
         CompanySharePriceResult result = new CompanySharePriceResult();
@@ -494,8 +502,11 @@ public class US_StockCalFromFpmService {
         result.set목표매도가(목표매도가);
         result.set손절매가(손절매가);
         result.set안전마진율(String.format("%.0f%%", totalMargin * 100));
-        // 현재가: StockQuote(실시간) 우선, 없으면 CompanyProfile 폴백
-        if(stockQuote != null && stockQuote.getPrice() != null) {
+        // 현재가: StockQuote + AftermarketTrade 비교하여 최신 가격 사용
+        String latestPrice = fetchLatestPrice(symbol);
+        if(latestPrice != null) {
+            result.set현재가격(latestPrice);
+        } else if(stockQuote != null && stockQuote.getPrice() != null) {
             result.set현재가격(String.valueOf(stockQuote.getPrice()));
         } else {
             result.set현재가격(StringUtil.defaultString(companyProfile.getPrice()));
@@ -548,5 +559,44 @@ public class US_StockCalFromFpmService {
         }
 
         return resultList;
+    }
+
+    /**
+     * 정규장 + 애프터마켓 중 최신 가격 조회
+     * @param symbol 종목 심볼
+     * @return 최신 가격 문자열, 조회 실패 시 null
+     */
+    private String fetchLatestPrice(String symbol) {
+        try {
+            List<StockQuoteResDto> quotes = stockQuoteService.findStockQuote(new StockQuoteReqDto(symbol));
+            if(quotes == null || quotes.isEmpty()) return null;
+
+            StockQuoteResDto quote = quotes.get(0);
+            Double price = quote.getPrice();
+            if(price == null) return null;
+
+            // 애프터마켓 조회
+            List<AfterTradeResDto> afterTrades = afterTradeService.findAfterTrade(new AfterTradeReqDto(symbol));
+            if(afterTrades != null && !afterTrades.isEmpty()) {
+                AfterTradeResDto afterTrade = afterTrades.get(0);
+
+                long quoteTimestamp = quote.getTimestamp();
+                long afterTradeTimestamp = afterTrade.getTimestamp();
+
+                // 단위 통일: 밀리초 → 초로 변환
+                long afterTradeTimestampSec = afterTradeTimestamp > 9_999_999_999L
+                        ? afterTradeTimestamp / 1000
+                        : afterTradeTimestamp;
+
+                if(afterTradeTimestampSec > quoteTimestamp && afterTrade.getPrice() != null) {
+                    price = afterTrade.getPrice();
+                }
+            }
+
+            return String.valueOf(price);
+        } catch (Exception e) {
+            log.warn("[fetchLatestPrice] {} - 최신 가격 조회 실패: {}", symbol, e.getMessage());
+            return null;
+        }
     }
 }
