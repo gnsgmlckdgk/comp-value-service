@@ -494,7 +494,12 @@ public class US_StockCalFromFpmService {
         result.set목표매도가(목표매도가);
         result.set손절매가(손절매가);
         result.set안전마진율(String.format("%.0f%%", totalMargin * 100));
-        result.set현재가격(StringUtil.defaultString(companyProfile.getPrice()));
+        // 현재가: StockQuote(실시간) 우선, 없으면 CompanyProfile 폴백
+        if(stockQuote != null && stockQuote.getPrice() != null) {
+            result.set현재가격(String.valueOf(stockQuote.getPrice()));
+        } else {
+            result.set현재가격(StringUtil.defaultString(companyProfile.getPrice()));
+        }
         result.set확인시간(DateUtil.getToday("yyyy-MM-dd HH:mm:ss"));
         result.set예측데이터(predictionResponseDto);
         helper.setRstDetailContextData(resultDetail);
