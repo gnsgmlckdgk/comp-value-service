@@ -1072,6 +1072,7 @@ public class StockEvaluationService {
         try {
             AnalystEstimatesReqDto reqDto = new AnalystEstimatesReqDto();
             reqDto.setSymbol(symbol);
+            reqDto.setPeriod("annual");
             reqDto.setLimit(1);
             List<AnalystEstimatesResDto> estimates = analystEstimatesService.findAnalystEstimates(reqDto);
             if (estimates != null && !estimates.isEmpty()) {
