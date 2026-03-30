@@ -109,4 +109,9 @@ public class BacktestRequestConfigDto {
     @SerializedName("min_model_agreement")
     private Double minModelAgreement;
 
+    /** 앙상블 모드 (ensemble/lstm_only/gru_only/cnn_only, 기본값: DB 또는 lstm_only) */
+    @JsonProperty("ensemble_mode")
+    @SerializedName("ensemble_mode")
+    private String ensembleMode;
+
 }
