@@ -37,15 +37,15 @@ public class TradeDto {
 
     private String reason;
 
-    @JsonProperty("predicted_high")
-    private Double predictedHigh;
+    @JsonProperty("momentum_score")
+    private Double momentumScore;
 
-    @JsonProperty("predicted_low")
-    private Double predictedLow;
+    @JsonProperty("ml_confidence")
+    private Double mlConfidence;
 
-    @JsonProperty("up_probability")
-    private Double upProbability;
+    @JsonProperty("entry_reason")
+    private String entryReason;
 
-    @JsonProperty("expected_return")
-    private Double expectedReturn;
+    @JsonProperty("hold_duration_sec")
+    private Integer holdDurationSec;
 }

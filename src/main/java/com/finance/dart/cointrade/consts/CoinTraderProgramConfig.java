@@ -75,25 +75,10 @@ public class CoinTraderProgramConfig {
     /** 보유 종목 매도 **/
     public static final String API_URI_HOLDINGS_SELL = "api/holdings/sell";
 
-    /** 백테스트 옵티마이저 실행 **/
-    public static final String API_URI_OPTIMIZER_RUN = "api/backtest/optimizer";
+    /** 스캐너 시그널 목록 조회 **/
+    public static final String API_URI_SCANNER_SIGNALS = "api/scanner/signals";
 
-    /** 백테스트 옵티마이저 상태 조회 **/
-    public static final String API_URI_OPTIMIZER_STATUS = "api/backtest/optimizer/status";
-
-    /** 백테스트 옵티마이저 결과 조회 **/
-    public static final String API_URI_OPTIMIZER_RESULT = "api/backtest/optimizer/result";
-
-    /** 백테스트 옵티마이저 이력 조회 **/
-    public static final String API_URI_OPTIMIZER_HISTORY = "api/backtest/optimizer/history";
-
-    /** 백테스트 옵티마이저 제목 수정 **/
-    public static final String API_URI_OPTIMIZER_UPDATE = "api/backtest/optimizer/result";
-
-    /** 백테스트 옵티마이저 결과 삭제 **/
-    public static final String API_URI_OPTIMIZER_DELETE = "api/backtest/optimizer/result";
-
-    /** 백테스트 옵티마이저 작업 취소 **/
-    public static final String API_URI_OPTIMIZER_CANCEL = "api/backtest/optimizer/cancel";
+    /** 스캐너 상태 조회 **/
+    public static final String API_URI_SCANNER_STATUS = "api/scanner/status";
 
 }

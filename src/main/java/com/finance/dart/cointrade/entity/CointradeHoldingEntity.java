@@ -5,7 +5,6 @@ import lombok.Data;
 import org.hibernate.annotations.CreationTimestamp;
 
 import java.math.BigDecimal;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 /**
@@ -33,24 +32,32 @@ public class CointradeHoldingEntity {
     @Column(name = "total_amount", nullable = false, precision = 20, scale = 8)
     private BigDecimal totalAmount;
 
-    @Column(name = "predicted_high", nullable = false, precision = 20, scale = 8)
-    private BigDecimal predictedHigh;
+    @Column(name = "peak_price", precision = 20, scale = 8)
+    private BigDecimal peakPrice;
 
-    @Column(name = "predicted_low", nullable = false, precision = 20, scale = 8)
-    private BigDecimal predictedLow;
+    @Column(name = "momentum_score", precision = 6, scale = 4)
+    private BigDecimal momentumScore;
+
+    @Column(name = "ml_confidence", precision = 6, scale = 4)
+    private BigDecimal mlConfidence;
+
+    @Column(name = "entry_reason", length = 100)
+    private String entryReason;
+
+    @Column(name = "scanner_signal_id")
+    private Long scannerSignalId;
+
+    @Column(name = "take_profit_price", precision = 20, scale = 8)
+    private BigDecimal takeProfitPrice;
+
+    @Column(name = "stop_loss_price", precision = 20, scale = 8)
+    private BigDecimal stopLossPrice;
+
+    @Column(name = "max_hold_until")
+    private LocalDateTime maxHoldUntil;
 
     @Column(name = "buy_date")
     private LocalDateTime buyDate;
-
-    @Column(name = "up_probability", nullable = false, precision = 5, scale = 2)
-    private BigDecimal upProbability; // 상승 확률
-
-    @Column(name = "down_probability", nullable = false, precision = 5, scale = 2)
-    private BigDecimal downProbability; // 하락 확률
-
-    @Column(name = "expected_return", nullable = false, precision = 5, scale = 2)
-    private BigDecimal expectedReturn; // 기대 수익률 (%)
-
 
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)

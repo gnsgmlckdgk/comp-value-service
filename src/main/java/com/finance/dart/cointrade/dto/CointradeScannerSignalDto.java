@@ -9,26 +9,25 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 /**
- * 코인 자동매매 거래 기록 조회 응답 DTO
+ * 코인 자동매매 스캐너 시그널 조회 응답 DTO
  */
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class CointradeTradeHistoryDto {
+public class CointradeScannerSignalDto {
 
     private Long id;
     private String coinCode;
-    private String tradeType;
-    private BigDecimal price;
-    private BigDecimal quantity;
-    private BigDecimal totalAmount;
-    private String reason;
-    private BigDecimal profitLoss;
-    private BigDecimal profitLossRate;
+    private LocalDateTime detectedAt;
+    private String signalType;
     private BigDecimal momentumScore;
+    private BigDecimal volumeRatio;
+    private BigDecimal priceChangePct;
+    private BigDecimal rsiValue;
+    private BigDecimal vwapDeviation;
     private BigDecimal mlConfidence;
-    private String entryReason;
-    private Integer holdDurationSec;
+    private String actionTaken;
+    private BigDecimal currentPrice;
     private LocalDateTime createdAt;
 }

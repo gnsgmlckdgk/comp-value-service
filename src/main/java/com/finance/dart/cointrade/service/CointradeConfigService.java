@@ -168,12 +168,15 @@ public class CointradeConfigService {
                         .buyPrice(entity.getBuyPrice())
                         .quantity(entity.getQuantity())
                         .totalAmount(entity.getTotalAmount())
-                        .predictedHigh(entity.getPredictedHigh())
-                        .predictedLow(entity.getPredictedLow())
+                        .peakPrice(entity.getPeakPrice())
+                        .momentumScore(entity.getMomentumScore())
+                        .mlConfidence(entity.getMlConfidence())
+                        .entryReason(entity.getEntryReason())
+                        .scannerSignalId(entity.getScannerSignalId())
+                        .takeProfitPrice(entity.getTakeProfitPrice())
+                        .stopLossPrice(entity.getStopLossPrice())
+                        .maxHoldUntil(entity.getMaxHoldUntil())
                         .buyDate(entity.getBuyDate())
-                        .upProbability(entity.getUpProbability())
-                        .downProbability(entity.getDownProbability())
-                        .expectedReturn(entity.getExpectedReturn())
                         .build())
                 .collect(Collectors.toList());
     }
@@ -219,11 +222,10 @@ public class CointradeConfigService {
                 .reason(entity.getReason())
                 .profitLoss(entity.getProfitLoss())
                 .profitLossRate(entity.getProfitLossRate())
-                .predictedHigh(entity.getPredictedHigh())
-                .predictedLow(entity.getPredictedLow())
-                .upProbability(entity.getUpProbability())
-                .downProbability(entity.getDownProbability())
-                .expectedReturn(entity.getExpectedReturn())
+                .momentumScore(entity.getMomentumScore())
+                .mlConfidence(entity.getMlConfidence())
+                .entryReason(entity.getEntryReason())
+                .holdDurationSec(entity.getHoldDurationSec())
                 .createdAt(entity.getCreatedAt())
                 .build());
     }
@@ -446,6 +448,24 @@ public class CointradeConfigService {
                 new ParameterizedTypeReference<CointradeSellResponseDto>() {},
                 300000  // 300초(5분), 종목 많으면 오래걸림
         ).getBody();
+    }
+
+    /**
+     * 스캐너 시그널 목록 조회 (CoinTrader 프록시)
+     */
+    public Map<String, Object> getScannerSignals() {
+        String url = buildUrl(CoinTraderProgramConfig.API_URI_SCANNER_SIGNALS);
+        log.info("스캐너 시그널 목록 조회 요청 - URL: {}", url);
+        return httpClientComponent.exchangeSync(url, HttpMethod.GET, new ParameterizedTypeReference<Map<String, Object>>() {}).getBody();
+    }
+
+    /**
+     * 스캐너 상태 조회 (CoinTrader 프록시)
+     */
+    public Map<String, Object> getScannerStatus() {
+        String url = buildUrl(CoinTraderProgramConfig.API_URI_SCANNER_STATUS);
+        log.info("스캐너 상태 조회 요청 - URL: {}", url);
+        return httpClientComponent.exchangeSync(url, HttpMethod.GET, new ParameterizedTypeReference<Map<String, Object>>() {}).getBody();
     }
 
     private String buildUrl(String uri) {

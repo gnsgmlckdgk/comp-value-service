@@ -4,7 +4,6 @@ import lombok.Builder;
 import lombok.Data;
 
 import java.math.BigDecimal;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 @Data
@@ -14,12 +13,13 @@ public class CointradeMlModelDto {
     private String coinCode;
     private String modelPath;
     private LocalDateTime trainedAt;
-    private LocalDate trainDataStart;
-    private LocalDate trainDataEnd;
-    private BigDecimal mseHigh;
-    private BigDecimal mseLow;
-    private BigDecimal lossUpProb;
-    private Integer predictionDays;
+    private LocalDateTime trainDataStart;
+    private LocalDateTime trainDataEnd;
+    private BigDecimal accuracy;
+    private BigDecimal aucRoc;
+    private Integer featureCount;
+    private Integer trainSamples;
+    private String candleUnit;
     private String modelType;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;

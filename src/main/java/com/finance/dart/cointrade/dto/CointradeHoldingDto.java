@@ -6,7 +6,6 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 /**
@@ -22,10 +21,13 @@ public class CointradeHoldingDto {
     private BigDecimal buyPrice;
     private BigDecimal quantity;
     private BigDecimal totalAmount;
-    private BigDecimal predictedHigh;
-    private BigDecimal predictedLow;
+    private BigDecimal peakPrice;
+    private BigDecimal momentumScore;
+    private BigDecimal mlConfidence;
+    private String entryReason;
+    private Long scannerSignalId;
+    private BigDecimal takeProfitPrice;
+    private BigDecimal stopLossPrice;
+    private LocalDateTime maxHoldUntil;
     private LocalDateTime buyDate;
-    private BigDecimal upProbability;
-    private BigDecimal downProbability;
-    private BigDecimal expectedReturn;
 }

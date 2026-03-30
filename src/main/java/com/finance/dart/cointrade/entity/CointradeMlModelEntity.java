@@ -6,7 +6,6 @@ import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
 import java.math.BigDecimal;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 /**
@@ -32,22 +31,25 @@ public class CointradeMlModelEntity {
     private LocalDateTime trainedAt;
 
     @Column(name = "train_data_start")
-    private LocalDate trainDataStart;
+    private LocalDateTime trainDataStart;
 
     @Column(name = "train_data_end")
-    private LocalDate trainDataEnd;
+    private LocalDateTime trainDataEnd;
 
-    @Column(name = "mse_high", precision = 20, scale = 10)
-    private BigDecimal mseHigh; // 고가 예측 MSE
+    @Column(name = "accuracy", precision = 6, scale = 4)
+    private BigDecimal accuracy;
 
-    @Column(name = "mse_low", precision = 20, scale = 10)
-    private BigDecimal mseLow; // 저가 예측 MSE
+    @Column(name = "auc_roc", precision = 6, scale = 4)
+    private BigDecimal aucRoc;
 
-    @Column(name = "loss_up_prob", precision = 20, scale = 10)
-    private BigDecimal lossUpProb; // 상승 확률 예측 Loss
+    @Column(name = "feature_count")
+    private Integer featureCount;
 
-    @Column(name = "prediction_days")
-    private Integer predictionDays;
+    @Column(name = "train_samples")
+    private Integer trainSamples;
+
+    @Column(name = "candle_unit", length = 10)
+    private String candleUnit;
 
     @Column(name = "model_type", length = 20)
     private String modelType;
