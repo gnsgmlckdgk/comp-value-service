@@ -170,11 +170,11 @@ public class CointradeConfigController {
 
     /**
      * 10. 매수 프로세스 수동 실행
-     * GET /api/cointrade/trade/buy/start
+     * POST /api/cointrade/trade/buy/start
      */
     @EndPointConfig.RequireRole({RoleConstants.ROLE_SUPER_ADMIN})
     @TransactionLogging
-    @GetMapping("/trade/buy/start")
+    @PostMapping("/trade/buy/start")
     public ResponseEntity<CommonResponse<Map<String, Object>>> startBuyProcess() {
         log.info("매수 프로세스 수동 실행 요청");
         Map<String, Object> result = cointradeConfigService.startBuyProcess();
@@ -183,11 +183,11 @@ public class CointradeConfigController {
 
     /**
      * 11. 매도 프로세스 수동 실행
-     * GET /api/cointrade/trade/sell/start
+     * POST /api/cointrade/trade/sell/start
      */
     @EndPointConfig.RequireRole({RoleConstants.ROLE_SUPER_ADMIN})
     @TransactionLogging
-    @GetMapping("/trade/sell/start")
+    @PostMapping("/trade/sell/start")
     public ResponseEntity<CommonResponse<Map<String, Object>>> startSellProcess() {
         log.info("매도 프로세스 수동 실행 요청");
         Map<String, Object> result = cointradeConfigService.startSellProcess();
@@ -200,7 +200,7 @@ public class CointradeConfigController {
      */
     @EndPointConfig.RequireRole({RoleConstants.ROLE_SUPER_ADMIN})
     @TransactionLogging
-    @GetMapping("/trade/stop")
+    @PostMapping("/trade/stop")
     public ResponseEntity<CommonResponse<Map<String, Object>>> stopProcess() {
         log.info("매수/매도 프로세스 수동 중지 요청");
         Map<String, Object> result = cointradeConfigService.stopProcess();
