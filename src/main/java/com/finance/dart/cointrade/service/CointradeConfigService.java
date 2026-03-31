@@ -263,26 +263,22 @@ public class CointradeConfigService {
      */
     @Transactional(readOnly = true)
     public CointradeStatusDto getStatus() {
-        // 스케줄러 상태 조회
-        Boolean buySchedulerEnabled = configRepository.findByParamName("BUY_SCHEDULER_ENABLED")
+        // 스케줄러 상태 조회 (v4.0: SCANNER_ENABLED / SELL_ENABLED)
+        Boolean buySchedulerEnabled = configRepository.findByParamName("SCANNER_ENABLED")
                 .map(entity -> Boolean.parseBoolean(entity.getParamValue()))
                 .orElse(false);
 
-        Boolean sellSchedulerEnabled = configRepository.findByParamName("SELL_SCHEDULER_ENABLED")
+        Boolean sellSchedulerEnabled = configRepository.findByParamName("SELL_ENABLED")
                 .map(entity -> Boolean.parseBoolean(entity.getParamValue()))
                 .orElse(false);
 
-        String buyCheckHours = configRepository.findByParamName("BUY_CHECK_HOURS")
-                .map(entity -> String.valueOf(entity.getParamValue()))
-                .orElse(null);
+        String buyCheckHours = null; // v4.0에서 제거됨
 
         String sellCheckSeconds = configRepository.findByParamName("SELL_CHECK_SECONDS")
                 .map(entity -> String.valueOf(entity.getParamValue()))
                 .orElse(null);
 
-        String priceMonitorSeconds = configRepository.findByParamName("PRICE_MONITOR_SECONDS")
-                .map(entity -> String.valueOf(entity.getParamValue()))
-                .orElse(null);
+        String priceMonitorSeconds = null; // v4.0에서 제거됨
 
 
         // 보유 종목 수
