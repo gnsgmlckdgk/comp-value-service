@@ -235,25 +235,25 @@ public class CointradeConfigService {
      */
     @Transactional
     public void updateBuyScheduler(boolean enabled) {
-        configRepository.findByParamName("BUY_SCHEDULER_ENABLED")
+        configRepository.findByParamName("SCANNER_ENABLED")
                 .ifPresent(entity -> {
                     entity.setParamValue(String.valueOf(enabled));
                     configRepository.save(entity);
-                    log.info("매수 스케줄러 설정 변경: {}", enabled);
+                    log.info("스캐너 설정 변경: {}", enabled);
                 });
         reloadScheduler();
     }
 
     /**
-     * 매도 스케줄러 ON/OFF (DB 설정 변경 후 파이썬 스케줄러 리로드)
+     * 매도 스케줄러 ON/OFF
      */
     @Transactional
     public void updateSellScheduler(boolean enabled) {
-        configRepository.findByParamName("SELL_SCHEDULER_ENABLED")
+        configRepository.findByParamName("SELL_ENABLED")
                 .ifPresent(entity -> {
                     entity.setParamValue(String.valueOf(enabled));
                     configRepository.save(entity);
-                    log.info("매도 스케줄러 설정 변경: {}", enabled);
+                    log.info("매도 설정 변경: {}", enabled);
                 });
         reloadScheduler();
     }
