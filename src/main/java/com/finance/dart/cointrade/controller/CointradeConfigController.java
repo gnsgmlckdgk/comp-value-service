@@ -280,9 +280,9 @@ public class CointradeConfigController {
     @EndPointConfig.RequireRole({RoleConstants.ROLE_SUPER_ADMIN})
     @TransactionLogging
     @GetMapping("/paper/holdings")
-    public ResponseEntity<CommonResponse<Map<String, Object>>> getPaperHoldings() {
+    public ResponseEntity<CommonResponse<Object>> getPaperHoldings() {
         log.info("모의투자 보유 종목 조회 요청");
-        Map<String, Object> result = cointradeConfigService.getPaperHoldings();
+        Object result = cointradeConfigService.getPaperHoldings();
         return new ResponseEntity<>(new CommonResponse<>(result), HttpStatus.OK);
     }
 
@@ -293,10 +293,10 @@ public class CointradeConfigController {
     @EndPointConfig.RequireRole({RoleConstants.ROLE_SUPER_ADMIN})
     @TransactionLogging
     @GetMapping("/paper/history")
-    public ResponseEntity<CommonResponse<Map<String, Object>>> getPaperHistory(
+    public ResponseEntity<CommonResponse<Object>> getPaperHistory(
             @RequestParam(required = false, name = "limit") Integer limit) {
         log.info("모의투자 거래 기록 조회 요청 - limit: {}", limit);
-        Map<String, Object> result = cointradeConfigService.getPaperHistory(limit);
+        Object result = cointradeConfigService.getPaperHistory(limit);
         return new ResponseEntity<>(new CommonResponse<>(result), HttpStatus.OK);
     }
 

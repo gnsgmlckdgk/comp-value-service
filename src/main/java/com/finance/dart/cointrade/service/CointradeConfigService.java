@@ -467,22 +467,22 @@ public class CointradeConfigService {
     /**
      * 모의투자 보유 종목 조회 (CoinTrader 프록시)
      */
-    public Map<String, Object> getPaperHoldings() {
+    public Object getPaperHoldings() {
         String url = buildUrl(CoinTraderProgramConfig.API_URI_PAPER_HOLDINGS);
         log.info("모의투자 보유 종목 조회 요청 - URL: {}", url);
-        return httpClientComponent.exchangeSync(url, HttpMethod.GET, new ParameterizedTypeReference<Map<String, Object>>() {}).getBody();
+        return httpClientComponent.exchangeSync(url, HttpMethod.GET, new ParameterizedTypeReference<Object>() {}).getBody();
     }
 
     /**
      * 모의투자 거래 기록 조회 (CoinTrader 프록시)
      */
-    public Map<String, Object> getPaperHistory(Integer limit) {
+    public Object getPaperHistory(Integer limit) {
         String url = buildUrl(CoinTraderProgramConfig.API_URI_PAPER_HISTORY);
         if (limit != null) {
             url += "?limit=" + limit;
         }
         log.info("모의투자 거래 기록 조회 요청 - URL: {}", url);
-        return httpClientComponent.exchangeSync(url, HttpMethod.GET, new ParameterizedTypeReference<Map<String, Object>>() {}).getBody();
+        return httpClientComponent.exchangeSync(url, HttpMethod.GET, new ParameterizedTypeReference<Object>() {}).getBody();
     }
 
     /**
