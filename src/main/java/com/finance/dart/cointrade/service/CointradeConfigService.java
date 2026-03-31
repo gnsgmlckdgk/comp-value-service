@@ -468,6 +468,36 @@ public class CointradeConfigService {
         return httpClientComponent.exchangeSync(url, HttpMethod.GET, new ParameterizedTypeReference<Map<String, Object>>() {}).getBody();
     }
 
+    /**
+     * 모의투자 보유 종목 조회 (CoinTrader 프록시)
+     */
+    public Map<String, Object> getPaperHoldings() {
+        String url = buildUrl(CoinTraderProgramConfig.API_URI_PAPER_HOLDINGS);
+        log.info("모의투자 보유 종목 조회 요청 - URL: {}", url);
+        return httpClientComponent.exchangeSync(url, HttpMethod.GET, new ParameterizedTypeReference<Map<String, Object>>() {}).getBody();
+    }
+
+    /**
+     * 모의투자 거래 기록 조회 (CoinTrader 프록시)
+     */
+    public Map<String, Object> getPaperHistory(Integer limit) {
+        String url = buildUrl(CoinTraderProgramConfig.API_URI_PAPER_HISTORY);
+        if (limit != null) {
+            url += "?limit=" + limit;
+        }
+        log.info("모의투자 거래 기록 조회 요청 - URL: {}", url);
+        return httpClientComponent.exchangeSync(url, HttpMethod.GET, new ParameterizedTypeReference<Map<String, Object>>() {}).getBody();
+    }
+
+    /**
+     * 모의투자 데이터 초기화 (CoinTrader 프록시)
+     */
+    public Map<String, Object> resetPaperData() {
+        String url = buildUrl(CoinTraderProgramConfig.API_URI_PAPER_RESET);
+        log.info("모의투자 데이터 초기화 요청 - URL: {}", url);
+        return httpClientComponent.exchangeSync(url, HttpMethod.DELETE, new ParameterizedTypeReference<Map<String, Object>>() {}).getBody();
+    }
+
     private String buildUrl(String uri) {
         String baseUrl = isLocal
                 ? CoinTraderProgramConfig.localHost

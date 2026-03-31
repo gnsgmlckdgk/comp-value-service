@@ -81,4 +81,13 @@ public class CoinTraderProgramConfig {
     /** 스캐너 상태 조회 **/
     public static final String API_URI_SCANNER_STATUS = "api/scanner/status";
 
+    /** 모의투자 보유 종목 조회 **/
+    public static final String API_URI_PAPER_HOLDINGS = "api/paper/holdings";
+
+    /** 모의투자 거래 기록 조회 **/
+    public static final String API_URI_PAPER_HISTORY = "api/paper/history";
+
+    /** 모의투자 데이터 초기화 **/
+    public static final String API_URI_PAPER_RESET = "api/paper/reset";
+
 }
