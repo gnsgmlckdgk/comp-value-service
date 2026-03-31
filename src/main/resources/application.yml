@@ -100,7 +100,7 @@ app:
 monitoring:
   prometheus:
     url: ${PROMETHEUS_URL:http://prometheus.monitoring.svc.cluster.local:9090}
-    enabled: ${MONITORING_PROMETHEUS_ENABLED:true}
+    enabled: ${MONITORING_PROMETHEUS_ENABLED:false}
     namespace: ${PROMETHEUS_NAMESPACE:default}
   cointrader:
     url: ${COINTRADER_URL:http://localhost:18082}
