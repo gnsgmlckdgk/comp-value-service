@@ -180,3 +180,32 @@ V8 후처리:
 - FMP API 종목당 10회 이내 유지 (rate limit: 분당 300건)
 - `CompanySharePriceResultDetail`에 필드 추가 시 기본값 설정 필수 (Redis 역직렬화 호환)
 - 섹터 파라미터 변경 시 전체 테스트 regression 확인
+
+---
+
+## 버전 관리 규칙
+
+- **각 버전(V6, V7, V8)은 완전히 독립** — 다른 버전 메서드 호출 금지
+- 현재 버전: V8 (`EvaluationConst.CAL_VALUE_VERSION`)
+- 새 버전 추가 시 `calPerValueVN()`, `getCalParamDataVN()`, `calPerValueListVN()` 전용 메서드 생성
+- 상세: memory 디렉토리의 versioning.md 참조
+
+## FMP API Rate Limit 규칙
+
+- 분당 300건, 종목당 10회 호출 (V8)
+- `Thread.sleep(TRSC_DELAY=10ms)` 필수
+- 프론트 대량조회: 배치 30건, 10초 간격, **순차 호출 필수**
+- 상세: memory 디렉토리의 fmp-rate-limit.md 참조
+
+## API 응답 표준
+
+새 API 작성 시 반드시 아래 포맷을 따를 것:
+
+```json
+{ "success": true, "code": "20000", "message": "정상 처리되었습니다.", "response": <data|null> }
+```
+
+## 코드 스타일
+
+- Java: 표준 Spring Boot, Lombok (@Slf4j, @Data)
+- **동작은 동일, 코드는 짧고 읽기 쉽게, 주석은 동일**
