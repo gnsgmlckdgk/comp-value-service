@@ -64,8 +64,9 @@ public class ExternalApiHealthService {
         if (apiKey == null || apiKey.isBlank()) {
             return ServiceStatusDto.builder().name("DART").status("DOWN").version("No API Key").build();
         }
-        // corpCode.xml은 가장 가벼운 DART 엔드포인트 (응답 존재 여부만 확인)
-        return timedCheck("DART",
+        // corpCode.xml은 ZIP 바이너리 응답 → bodyToMono(String)은 코덱 에러 발생
+        // 응답 본문 없이 HTTP 상태만 확인
+        return timedHeadCheck("DART",
                 "https://opendart.fss.or.kr/api/corpCode.xml?crtfc_key=" + apiKey);
     }
 
@@ -104,27 +105,53 @@ public class ExternalApiHealthService {
 
     private ServiceStatusDto checkSec() {
         // SEC API는 User-Agent 헤더 필수
+        // CIK0000320193.json 응답이 수 MB → bodyToMono(String)은 버퍼 초과
+        // 응답 본문 없이 HTTP 상태만 확인
         long start = System.currentTimeMillis();
         try {
-            String response = webClient.get()
+            webClient.get()
                     .uri("https://data.sec.gov/api/xbrl/companyfacts/CIK0000320193.json")
                     .header("User-Agent", "MyFinanceTool/1.0 (contact: dohauzi@gmail.com)")
                     .retrieve()
                     .onStatus(HttpStatusCode::isError, resp -> Mono.empty())
-                    .bodyToMono(String.class)
+                    .toBodilessEntity()
                     .timeout(Duration.ofSeconds(5))
                     .block();
 
             long elapsed = System.currentTimeMillis() - start;
-            if (response != null) {
-                return ServiceStatusDto.builder().name("SEC").status("UP")
-                        .uptime(elapsed + "ms").build();
-            }
+            return ServiceStatusDto.builder().name("SEC").status("UP")
+                    .uptime(elapsed + "ms").build();
         } catch (Exception e) {
             log.debug("SEC 헬스체크 실패: {}", e.getMessage());
         }
         long elapsed = System.currentTimeMillis() - start;
         return ServiceStatusDto.builder().name("SEC").status("DOWN")
+                .uptime(elapsed + "ms").build();
+    }
+
+    /**
+     * 공통: URL에 GET 요청 보내서 HTTP 상태만 확인 (본문 읽지 않음)
+     * - 바이너리 응답(ZIP 등)이나 대용량 JSON에 적합
+     */
+    private ServiceStatusDto timedHeadCheck(String name, String url) {
+        long start = System.currentTimeMillis();
+        try {
+            webClient.get()
+                    .uri(url)
+                    .retrieve()
+                    .onStatus(HttpStatusCode::isError, resp -> Mono.empty())
+                    .toBodilessEntity()
+                    .timeout(Duration.ofSeconds(5))
+                    .block();
+
+            long elapsed = System.currentTimeMillis() - start;
+            return ServiceStatusDto.builder().name(name).status("UP")
+                    .uptime(elapsed + "ms").build();
+        } catch (Exception e) {
+            log.debug("{} 헬스체크 실패: {}", name, e.getMessage());
+        }
+        long elapsed = System.currentTimeMillis() - start;
+        return ServiceStatusDto.builder().name(name).status("DOWN")
                 .uptime(elapsed + "ms").build();
     }
 
