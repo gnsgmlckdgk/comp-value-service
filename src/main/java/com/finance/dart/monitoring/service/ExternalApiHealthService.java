@@ -3,33 +3,37 @@ package com.finance.dart.monitoring.service;
 import com.finance.dart.common.component.ConfigComponent;
 import com.finance.dart.monitoring.dto.ServiceStatusDto;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.*;
+import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
 import org.springframework.stereotype.Service;
-import org.springframework.web.reactive.function.client.WebClient;
+import org.springframework.web.client.RestTemplate;
 
-import org.springframework.http.HttpStatusCode;
-import reactor.core.publisher.Mono;
-
-import java.time.Duration;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 /**
  * 외부 API 헬스체크 서비스
  * - FMP, DART, Upbit, OpenAI, SEC 각각 경량 요청으로 UP/DOWN + 응답시간 측정
  * - 30초 주기로 호출 (rate limit 부담 최소화)
+ * - RestTemplate 사용 (실제 API 호출과 동일한 HTTP 클라이언트)
  */
 @Slf4j
 @Service
 public class ExternalApiHealthService {
 
-    private final WebClient webClient;
+    private final RestTemplate healthCheckRestTemplate;
     private final ConfigComponent configComponent;
 
     /** 캐시된 결과 — 30초 주기로 갱신 */
     private volatile List<ServiceStatusDto> cachedStatus = List.of();
 
-    public ExternalApiHealthService(WebClient webClient, ConfigComponent configComponent) {
-        this.webClient = webClient;
+    public ExternalApiHealthService(ConfigComponent configComponent) {
+        // 헬스체크 전용 RestTemplate (connectTimeout=5s, readTimeout=10s)
+        HttpComponentsClientHttpRequestFactory factory = new HttpComponentsClientHttpRequestFactory();
+        factory.setConnectTimeout(5000);
+        factory.setReadTimeout(10000);
+        this.healthCheckRestTemplate = new RestTemplate(factory);
         this.configComponent = configComponent;
     }
 
@@ -64,8 +68,7 @@ public class ExternalApiHealthService {
         if (apiKey == null || apiKey.isBlank()) {
             return ServiceStatusDto.builder().name("DART").status("DOWN").version("No API Key").build();
         }
-        // company.json: 단일 기업 정보 조회 (68바이트 JSON 응답, 경량)
-        // corpCode.xml은 수 MB ZIP 반환 → bodyToMono/toBodilessEntity 모두 문제 발생
+        // company.json: 단일 기업 정보 조회 (경량 JSON 응답)
         return timedCheck("DART",
                 "https://opendart.fss.or.kr/api/company.json?crtfc_key=" + apiKey + "&corp_code=00126380");
     }
@@ -79,79 +82,66 @@ public class ExternalApiHealthService {
         if (apiKey == null || apiKey.isBlank()) {
             return ServiceStatusDto.builder().name("OpenAI").status("DOWN").version("No API Key").build();
         }
-        long start = System.currentTimeMillis();
-        try {
-            String response = webClient.get()
-                    .uri("https://api.openai.com/v1/models")
-                    .header("Authorization", "Bearer " + apiKey)
-                    .retrieve()
-                    .onStatus(HttpStatusCode::isError, resp -> Mono.empty())
-                    .bodyToMono(String.class)
-                    .timeout(Duration.ofSeconds(5))
-                    .block();
-
-            long elapsed = System.currentTimeMillis() - start;
-            if (response != null) {
-                return ServiceStatusDto.builder().name("OpenAI").status("UP")
-                        .uptime(elapsed + "ms").build();
-            }
-        } catch (Exception e) {
-            log.debug("OpenAI 헬스체크 실패: {}", e.getMessage());
-        }
-        long elapsed = System.currentTimeMillis() - start;
-        return ServiceStatusDto.builder().name("OpenAI").status("DOWN")
-                .uptime(elapsed + "ms").build();
+        return timedCheckWithHeaders("OpenAI",
+                "https://api.openai.com/v1/models",
+                "Authorization", "Bearer " + apiKey);
     }
 
     private ServiceStatusDto checkSec() {
-        // SEC API는 User-Agent 헤더 필수
         // companyconcept: Apple의 Assets 개념 하나만 조회 (19KB, 경량)
-        // companyfacts는 3.7MB → 버퍼 초과
-        long start = System.currentTimeMillis();
-        try {
-            String response = webClient.get()
-                    .uri("https://data.sec.gov/api/xbrl/companyconcept/CIK0000320193/us-gaap/Assets.json")
-                    .header("User-Agent", "MyFinanceTool/1.0 (contact: dohauzi@gmail.com)")
-                    .retrieve()
-                    .onStatus(HttpStatusCode::isError, resp -> Mono.empty())
-                    .bodyToMono(String.class)
-                    .timeout(Duration.ofSeconds(5))
-                    .block();
-
-            long elapsed = System.currentTimeMillis() - start;
-            if (response != null) {
-                return ServiceStatusDto.builder().name("SEC").status("UP")
-                        .uptime(elapsed + "ms").build();
-            }
-        } catch (Exception e) {
-            log.debug("SEC 헬스체크 실패: {}", e.getMessage());
-        }
-        long elapsed = System.currentTimeMillis() - start;
-        return ServiceStatusDto.builder().name("SEC").status("DOWN")
-                .uptime(elapsed + "ms").build();
+        return timedCheckWithHeaders("SEC",
+                "https://data.sec.gov/api/xbrl/companyconcept/CIK0000320193/us-gaap/Assets.json",
+                "User-Agent", "MyFinanceTool/1.0 (contact: dohauzi@gmail.com)");
     }
 
     /**
-     * 공통: URL에 GET 요청 보내서 응답 시간 측정
+     * 공통: URL에 GET 요청 보내서 응답 시간 측정 (RestTemplate)
      */
     private ServiceStatusDto timedCheck(String name, String url) {
         long start = System.currentTimeMillis();
         try {
-            String response = webClient.get()
-                    .uri(url)
-                    .retrieve()
-                    .onStatus(HttpStatusCode::isError, resp -> Mono.empty())
-                    .bodyToMono(String.class)
-                    .timeout(Duration.ofSeconds(5))
-                    .block();
+            HttpHeaders headers = new HttpHeaders();
+            headers.setAccept(Collections.singletonList(MediaType.APPLICATION_JSON));
+            HttpEntity<String> entity = new HttpEntity<>(headers);
+
+            ResponseEntity<String> response = healthCheckRestTemplate.exchange(
+                    url, HttpMethod.GET, entity, String.class);
 
             long elapsed = System.currentTimeMillis() - start;
-            if (response != null) {
+            if (response.getStatusCode().is2xxSuccessful()) {
                 return ServiceStatusDto.builder().name(name).status("UP")
                         .uptime(elapsed + "ms").build();
             }
         } catch (Exception e) {
-            log.debug("{} 헬스체크 실패: {}", name, e.getMessage());
+            log.warn("{} 헬스체크 실패: [{}] {}", name, e.getClass().getSimpleName(), e.getMessage());
+        }
+        long elapsed = System.currentTimeMillis() - start;
+        return ServiceStatusDto.builder().name(name).status("DOWN")
+                .uptime(elapsed + "ms").build();
+    }
+
+    /**
+     * 커스텀 헤더가 필요한 API 헬스체크 (SEC User-Agent, OpenAI Authorization 등)
+     */
+    private ServiceStatusDto timedCheckWithHeaders(String name, String url,
+                                                   String headerName, String headerValue) {
+        long start = System.currentTimeMillis();
+        try {
+            HttpHeaders headers = new HttpHeaders();
+            headers.setAccept(Collections.singletonList(MediaType.APPLICATION_JSON));
+            headers.set(headerName, headerValue);
+            HttpEntity<String> entity = new HttpEntity<>(headers);
+
+            ResponseEntity<String> response = healthCheckRestTemplate.exchange(
+                    url, HttpMethod.GET, entity, String.class);
+
+            long elapsed = System.currentTimeMillis() - start;
+            if (response.getStatusCode().is2xxSuccessful()) {
+                return ServiceStatusDto.builder().name(name).status("UP")
+                        .uptime(elapsed + "ms").build();
+            }
+        } catch (Exception e) {
+            log.warn("{} 헬스체크 실패: [{}] {}", name, e.getClass().getSimpleName(), e.getMessage());
         }
         long elapsed = System.currentTimeMillis() - start;
         return ServiceStatusDto.builder().name(name).status("DOWN")
