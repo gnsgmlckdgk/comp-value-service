@@ -20,5 +20,6 @@ public class MonitoringSnapshotDto {
     private int holdingsCount;
     private int todayTradeCount;
     private int requestRate;
+    private List<ServiceStatusDto> externalApis;
     private long timestamp;
 }

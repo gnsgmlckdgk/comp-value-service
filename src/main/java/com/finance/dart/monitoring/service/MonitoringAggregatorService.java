@@ -30,6 +30,7 @@ public class MonitoringAggregatorService {
     private final CointraderStatusService cointraderStatusService;
     private final TradeEventDetectorService tradeEventDetectorService;
     private final PrometheusQueryService prometheusQueryService;
+    private final ExternalApiHealthService externalApiHealthService;
     private final MonitoringEventBuffer eventBuffer;
     private final RequestTrafficTracker requestTrafficTracker;
     private final DownstreamTrafficTracker downstreamTrafficTracker;
@@ -70,6 +71,7 @@ public class MonitoringAggregatorService {
                     .buyProcess(buyProcess)
                     .sellProcess(sellProcess)
                     .resources(cachedResources)
+                    .externalApis(externalApiHealthService.getCachedStatus())
                     .holdingsCount(0)
                     .todayTradeCount(todayTradeCount)
                     .timestamp(System.currentTimeMillis())
@@ -79,6 +81,19 @@ public class MonitoringAggregatorService {
 
         } catch (Exception e) {
             log.warn("모니터링 snapshot 수집 실패: {}", e.getMessage(), e);
+        }
+    }
+
+    /**
+     * 30초 주기: 외부 API 헬스체크 (FMP, DART, Upbit, OpenAI, SEC)
+     * rate limit 부담 최소화를 위해 긴 주기 사용
+     */
+    @Scheduled(fixedDelay = 30000)
+    public void refreshExternalApis() {
+        try {
+            externalApiHealthService.refreshAll();
+        } catch (Exception e) {
+            log.debug("외부 API 헬스체크 실패: {}", e.getMessage());
         }
     }
 
