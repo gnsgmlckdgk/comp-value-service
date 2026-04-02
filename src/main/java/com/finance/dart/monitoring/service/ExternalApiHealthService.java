@@ -64,8 +64,9 @@ public class ExternalApiHealthService {
         if (apiKey == null || apiKey.isBlank()) {
             return ServiceStatusDto.builder().name("DART").status("DOWN").version("No API Key").build();
         }
+        // corpCode.xml은 가장 가벼운 DART 엔드포인트 (응답 존재 여부만 확인)
         return timedCheck("DART",
-                "https://opendart.fss.or.kr/api/list.json?crtfc_key=" + apiKey + "&page_count=1&bgn_de=20240101");
+                "https://opendart.fss.or.kr/api/corpCode.xml?crtfc_key=" + apiKey);
     }
 
     private ServiceStatusDto checkUpbit() {
@@ -102,7 +103,29 @@ public class ExternalApiHealthService {
     }
 
     private ServiceStatusDto checkSec() {
-        return timedCheck("SEC", "https://data.sec.gov/api/xbrl/companyfacts/CIK0000320193.json");
+        // SEC API는 User-Agent 헤더 필수
+        long start = System.currentTimeMillis();
+        try {
+            String response = webClient.get()
+                    .uri("https://data.sec.gov/api/xbrl/companyfacts/CIK0000320193.json")
+                    .header("User-Agent", "MyFinanceTool/1.0 (contact: dohauzi@gmail.com)")
+                    .retrieve()
+                    .onStatus(HttpStatusCode::isError, resp -> Mono.empty())
+                    .bodyToMono(String.class)
+                    .timeout(Duration.ofSeconds(5))
+                    .block();
+
+            long elapsed = System.currentTimeMillis() - start;
+            if (response != null) {
+                return ServiceStatusDto.builder().name("SEC").status("UP")
+                        .uptime(elapsed + "ms").build();
+            }
+        } catch (Exception e) {
+            log.debug("SEC 헬스체크 실패: {}", e.getMessage());
+        }
+        long elapsed = System.currentTimeMillis() - start;
+        return ServiceStatusDto.builder().name("SEC").status("DOWN")
+                .uptime(elapsed + "ms").build();
     }
 
     /**
