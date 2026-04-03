@@ -90,4 +90,7 @@ public class CoinTraderProgramConfig {
     /** 모의투자 데이터 초기화 **/
     public static final String API_URI_PAPER_RESET = "api/paper/reset";
 
+    /** 통합 모델 상태 조회 **/
+    public static final String API_URI_MODEL_STATUS = "api/model-status";
+
 }

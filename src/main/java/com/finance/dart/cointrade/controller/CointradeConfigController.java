@@ -313,4 +313,16 @@ public class CointradeConfigController {
         return new ResponseEntity<>(new CommonResponse<>(result), HttpStatus.OK);
     }
 
+    /**
+     * 20. 통합 모델 상태 조회
+     * GET /api/cointrade/model-status
+     */
+    @EndPointConfig.RequireRole({RoleConstants.ROLE_SUPER_ADMIN})
+    @TransactionLogging
+    @GetMapping("/model-status")
+    public ResponseEntity<CommonResponse<Map<String, Object>>> getModelStatus() {
+        Map<String, Object> result = cointradeConfigService.getModelStatus();
+        return new ResponseEntity<>(new CommonResponse<>(result), HttpStatus.OK);
+    }
+
 }

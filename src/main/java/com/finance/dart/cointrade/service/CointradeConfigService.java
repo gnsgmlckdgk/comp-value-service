@@ -494,6 +494,14 @@ public class CointradeConfigService {
         return httpClientComponent.exchangeSync(url, HttpMethod.DELETE, new ParameterizedTypeReference<Map<String, Object>>() {}).getBody();
     }
 
+    /**
+     * 통합 모델 상태 조회 (CoinTrader 프록시)
+     */
+    public Map<String, Object> getModelStatus() {
+        String url = buildUrl(CoinTraderProgramConfig.API_URI_MODEL_STATUS);
+        return httpClientComponent.exchangeSync(url, HttpMethod.GET, new ParameterizedTypeReference<Map<String, Object>>() {}).getBody();
+    }
+
     private String buildUrl(String uri) {
         String baseUrl = isLocal
                 ? CoinTraderProgramConfig.localHost
