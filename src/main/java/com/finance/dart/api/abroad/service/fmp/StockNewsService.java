@@ -22,10 +22,15 @@ public class StockNewsService {
      * 종목별 최신 뉴스 조회
      */
     public List<StockNewsResDto> findStockNews(StockNewsReqDto reqDto) {
-        return fmpClientComponent.sendGet(
+        log.info("종목 뉴스 조회 요청 - tickers: {}, limit: {}", reqDto.getTickers(), reqDto.getLimit());
+        List<StockNewsResDto> result = fmpClientComponent.sendGet(
                 FmpApiList.StockNews,
                 reqDto,
                 new ParameterizedTypeReference<>() {}
         );
+        log.info("종목 뉴스 조회 결과 - {}건 (첫 기사 symbol: {})",
+                result != null ? result.size() : 0,
+                result != null && !result.isEmpty() ? result.get(0).getSymbol() : "N/A");
+        return result;
     }
 }
