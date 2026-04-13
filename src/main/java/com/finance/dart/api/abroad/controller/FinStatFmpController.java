@@ -22,6 +22,8 @@ import com.finance.dart.api.abroad.dto.fmp.quote.*;
 import com.finance.dart.api.abroad.dto.fmp.ratiosttm.RatiosTtmArrReqDto;
 import com.finance.dart.api.abroad.dto.fmp.ratiosttm.RatiosTtmReqDto;
 import com.finance.dart.api.abroad.dto.fmp.ratiosttm.RatiosTtmResDto;
+import com.finance.dart.api.abroad.dto.fmp.stocknews.StockNewsReqDto;
+import com.finance.dart.api.abroad.dto.fmp.stocknews.StockNewsResDto;
 import com.finance.dart.api.abroad.dto.fmp.stockscreener.StockScreenerReqDto;
 import com.finance.dart.api.abroad.dto.fmp.stockscreener.StockScreenerResDto;
 import com.finance.dart.api.abroad.service.fmp.*;
@@ -57,6 +59,7 @@ public class FinStatFmpController {
     private final AfterTradeService afterTradeService;                          // 애프터마켓 시세 조회 서비스
     private final StockScreenerService stockScreenerService;                    // 주식 스크리너 서비스
     private final RatiosTtmService ratiosTtmService;                            // 최근 12개월 재무 비율 조회 서비스
+    private final StockNewsService stockNewsService;                            // 종목별 뉴스 조회 서비스
 
 
     /**
@@ -272,6 +275,20 @@ public class FinStatFmpController {
     public ResponseEntity<CommonResponse<Map<String, List<RatiosTtmResDto>>>> ratiosTTMArr(@RequestBody RatiosTtmArrReqDto requestDto) {
 
         Map<String, List<RatiosTtmResDto>> response = ratiosTtmService.findRatiosTTM(requestDto);
+
+        return new ResponseEntity<>(new CommonResponse<>(response), HttpStatus.OK);
+    }
+
+    /**
+     * 종목별 최신 뉴스 조회
+     * @param requestDto tickers(심볼), limit(건수)
+     * @return 뉴스 목록
+     */
+    @TransactionLogging
+    @PostMapping("/stockNews")
+    public ResponseEntity<CommonResponse<List<StockNewsResDto>>> stockNews(@RequestBody StockNewsReqDto requestDto) {
+
+        List<StockNewsResDto> response = stockNewsService.findStockNews(requestDto);
 
         return new ResponseEntity<>(new CommonResponse<>(response), HttpStatus.OK);
     }

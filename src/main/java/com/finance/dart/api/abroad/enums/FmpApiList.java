@@ -224,6 +224,15 @@ public enum FmpApiList {
             "애널리스트 추정치 조회 API (Forward EPS/매출 컨센서스)"
     ),
 
+    /** 종목별 뉴스 조회 **/
+    StockNews(
+            "Stock News API",
+            "https://financialmodelingprep.com/stable/news/stock",
+            HttpMethod.GET,
+            "https://site.financialmodelingprep.com/developer/docs/stable/stock-news",
+            "종목별 최신 뉴스 조회 API"
+    ),
+
     /** 거래소별 차트 조회 **/
     HistoricalIndexFullChart(
             "Historical Index Full Chart API",

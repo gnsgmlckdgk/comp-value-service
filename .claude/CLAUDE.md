@@ -177,7 +177,7 @@ V8 후처리:
 ## 변경 시 주의사항
 
 - 새 버전 추가 시 반드시 독립 메서드 세트 생성 (버전 간 메서드 호출 금지)
-- FMP API 종목당 10회 이내 유지 (rate limit: 분당 300건)
+- FMP API 종목당 12회 이내 유지 (rate limit: 분당 300건)
 - `CompanySharePriceResultDetail`에 필드 추가 시 기본값 설정 필수 (Redis 역직렬화 호환)
 - 섹터 파라미터 변경 시 전체 테스트 regression 확인
 
@@ -192,9 +192,9 @@ V8 후처리:
 
 ## FMP API Rate Limit 규칙
 
-- 분당 300건, 종목당 10회 호출 (V8)
-- `Thread.sleep(TRSC_DELAY=10ms)` 필수
-- 프론트 대량조회: 배치 30건, 10초 간격, **순차 호출 필수**
+- 분당 300건, 종목당 12회 호출 (V8 11회 + AnalystEstimates 1회)
+- `FmpRateLimiter` 중앙 rate limiter로 관리 (TRSC_DELAY sleep은 주석 처리됨)
+- 프론트 대량조회: 배치 30건, 1초 간격, **순차 호출 필수**
 - 상세: memory 디렉토리의 fmp-rate-limit.md 참조
 
 ## API 응답 표준
