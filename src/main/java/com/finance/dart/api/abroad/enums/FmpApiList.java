@@ -224,12 +224,12 @@ public enum FmpApiList {
             "애널리스트 추정치 조회 API (Forward EPS/매출 컨센서스)"
     ),
 
-    /** 종목별 뉴스 조회 **/
+    /** 종목별 뉴스 조회 (stable API는 tickers 필터 미동작하여 v3 사용) **/
     StockNews(
             "Stock News API",
-            "https://financialmodelingprep.com/stable/news/stock",
+            "https://financialmodelingprep.com/api/v3/stock_news",
             HttpMethod.GET,
-            "https://site.financialmodelingprep.com/developer/docs/stable/stock-news",
+            "https://site.financialmodelingprep.com/developer/docs/stock-news-api",
             "종목별 최신 뉴스 조회 API"
     ),
 
