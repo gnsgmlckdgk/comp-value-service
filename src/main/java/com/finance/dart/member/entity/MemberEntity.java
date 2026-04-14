@@ -65,4 +65,8 @@ public class MemberEntity {
     @JsonIgnore
     @OneToMany(mappedBy = "member", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
     private List<com.finance.dart.board.entity.SellRecordEntity> sellRecords = new ArrayList<>();
+
+    @JsonIgnore
+    @OneToMany(mappedBy = "member", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<com.finance.dart.board.entity.MemoEntity> memos = new ArrayList<>();
 }
