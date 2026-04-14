@@ -325,4 +325,16 @@ public class CointradeConfigController {
         return new ResponseEntity<>(new CommonResponse<>(result), HttpStatus.OK);
     }
 
+    /**
+     * 21. 재학습 진행률 상태 조회
+     * GET /api/cointrade/retrain/status
+     */
+    @EndPointConfig.RequireRole({RoleConstants.ROLE_SUPER_ADMIN})
+    @TransactionLogging
+    @GetMapping("/retrain/status")
+    public ResponseEntity<CommonResponse<Map<String, Object>>> getRetrainStatus() {
+        Map<String, Object> result = cointradeConfigService.getRetrainStatus();
+        return new ResponseEntity<>(new CommonResponse<>(result), HttpStatus.OK);
+    }
+
 }

@@ -93,4 +93,7 @@ public class CoinTraderProgramConfig {
     /** 통합 모델 상태 조회 **/
     public static final String API_URI_MODEL_STATUS = "api/model-status";
 
+    /** 재학습 진행률 상태 조회 **/
+    public static final String API_URI_RETRAIN_STATUS = "api/retrain/status";
+
 }

@@ -502,6 +502,14 @@ public class CointradeConfigService {
         return httpClientComponent.exchangeSync(url, HttpMethod.GET, new ParameterizedTypeReference<Map<String, Object>>() {}).getBody();
     }
 
+    /**
+     * 재학습 진행률 상태 조회 (CoinTrader 프록시)
+     */
+    public Map<String, Object> getRetrainStatus() {
+        String url = buildUrl(CoinTraderProgramConfig.API_URI_RETRAIN_STATUS);
+        return httpClientComponent.exchangeSync(url, HttpMethod.GET, new ParameterizedTypeReference<Map<String, Object>>() {}).getBody();
+    }
+
     private String buildUrl(String uri) {
         String baseUrl = isLocal
                 ? CoinTraderProgramConfig.localHost
