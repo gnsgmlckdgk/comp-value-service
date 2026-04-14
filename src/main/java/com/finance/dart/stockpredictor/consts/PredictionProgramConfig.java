@@ -23,4 +23,9 @@ public class PredictionProgramConfig {
     public static final String API_URI_logs_latest = "logs/latest";
     public static final String API_URI_logs_stream_latest = "logs/stream/latest";
 
+    /** 재학습 API URI **/
+    public static final String API_URI_retrain = "retrain";
+    public static final String API_URI_retrain_status = "retrain/status";
+    public static final String API_URI_retrain_targets = "retrain/targets";
+
 }

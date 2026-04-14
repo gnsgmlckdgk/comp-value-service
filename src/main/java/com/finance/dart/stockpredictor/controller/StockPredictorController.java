@@ -14,6 +14,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -86,6 +87,90 @@ public class StockPredictorController {
 
             CommonResponse<PredictionResponseDto> errorResponse = new CommonResponse<>();
             errorResponse.setMessage("AI 예측 조회 실패: " + e.getMessage());
+
+            return new ResponseEntity<>(errorResponse, HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    /**
+     * 수동 재학습 시작
+     * @return 재학습 시작 결과
+     */
+    @TransactionLogging
+    @PostMapping("/retrain")
+    public ResponseEntity<CommonResponse<String>> startRetrain() {
+
+        if(log.isDebugEnabled()) log.debug("/ml/retrain 재학습 시작 요청");
+
+        try {
+            String result = mlService.startRetrain();
+
+            CommonResponse<String> response = new CommonResponse<>(result);
+            response.setMessage("재학습 시작 요청 성공");
+
+            return new ResponseEntity<>(response, HttpStatus.OK);
+
+        } catch (Exception e) {
+            log.error("재학습 시작 요청 실패 - error: {}", e.getMessage(), e);
+
+            CommonResponse<String> errorResponse = new CommonResponse<>();
+            errorResponse.setMessage("재학습 시작 요청 실패: " + e.getMessage());
+
+            return new ResponseEntity<>(errorResponse, HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    /**
+     * 재학습 상태 조회
+     * @return 재학습 진행 상황
+     */
+    @TransactionLogging
+    @GetMapping("/retrain/status")
+    public ResponseEntity<CommonResponse<String>> getRetrainStatus() {
+
+        if(log.isDebugEnabled()) log.debug("/ml/retrain/status 재학습 상태 조회 요청");
+
+        try {
+            String result = mlService.getRetrainStatus();
+
+            CommonResponse<String> response = new CommonResponse<>(result);
+            response.setMessage("재학습 상태 조회 성공");
+
+            return new ResponseEntity<>(response, HttpStatus.OK);
+
+        } catch (Exception e) {
+            log.error("재학습 상태 조회 실패 - error: {}", e.getMessage(), e);
+
+            CommonResponse<String> errorResponse = new CommonResponse<>();
+            errorResponse.setMessage("재학습 상태 조회 실패: " + e.getMessage());
+
+            return new ResponseEntity<>(errorResponse, HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    /**
+     * 재학습 대상 종목 조회 (섹터별 시총 상위)
+     * @return 섹터별 종목 목록
+     */
+    @TransactionLogging
+    @GetMapping("/retrain/targets")
+    public ResponseEntity<CommonResponse<String>> getRetrainTargets() {
+
+        if(log.isDebugEnabled()) log.debug("/ml/retrain/targets 재학습 대상 종목 조회 요청");
+
+        try {
+            String result = mlService.getRetrainTargets();
+
+            CommonResponse<String> response = new CommonResponse<>(result);
+            response.setMessage("재학습 대상 종목 조회 성공");
+
+            return new ResponseEntity<>(response, HttpStatus.OK);
+
+        } catch (Exception e) {
+            log.error("재학습 대상 종목 조회 실패 - error: {}", e.getMessage(), e);
+
+            CommonResponse<String> errorResponse = new CommonResponse<>();
+            errorResponse.setMessage("재학습 대상 종목 조회 실패: " + e.getMessage());
 
             return new ResponseEntity<>(errorResponse, HttpStatus.INTERNAL_SERVER_ERROR);
         }

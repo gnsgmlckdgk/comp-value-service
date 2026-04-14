@@ -252,6 +252,115 @@ public class MlService {
     }
 
     /**
+     * 수동 재학습 시작 (ML 서비스에 POST /retrain 호출)
+     *
+     * @return ML 서비스 응답 (JSON 문자열)
+     */
+    public String startRetrain() {
+        String baseUrl = isLocal
+                ? PredictionProgramConfig.localHost
+                : PredictionProgramConfig.prodHost;
+
+        String url = String.format("%s/%s", baseUrl, PredictionProgramConfig.API_URI_retrain);
+
+        if (log.isDebugEnabled()) {
+            log.debug("재학습 시작 API 호출 - URL: {}", url);
+        }
+
+        try {
+            RestTemplate restTemplate = createMlRestTemplate();
+            URI uri = URI.create(url);
+            ResponseEntity<String> response = restTemplate.exchange(
+                    uri,
+                    HttpMethod.POST,
+                    null,
+                    new ParameterizedTypeReference<String>() {}
+            );
+
+            String body = response.getBody();
+            log.info("재학습 시작 요청 완료 - response: {}", body);
+            return body;
+
+        } catch (org.springframework.web.client.HttpClientErrorException e) {
+            // 409 Conflict 등 ML 서비스의 4xx 응답 처리
+            String responseBody = e.getResponseBodyAsString();
+            log.warn("재학습 시작 요청 거부 - status: {}, body: {}", e.getStatusCode(), responseBody);
+            throw new RuntimeException(responseBody);
+        } catch (Exception e) {
+            log.error("재학습 시작 요청 실패 - error: {}", e.getMessage(), e);
+            throw new RuntimeException("Failed to start retrain", e);
+        }
+    }
+
+    /**
+     * 재학습 상태 조회 (ML 서비스에 GET /retrain/status 호출)
+     *
+     * @return ML 서비스 상태 응답 (JSON 문자열)
+     */
+    public String getRetrainStatus() {
+        String baseUrl = isLocal
+                ? PredictionProgramConfig.localHost
+                : PredictionProgramConfig.prodHost;
+
+        String url = String.format("%s/%s", baseUrl, PredictionProgramConfig.API_URI_retrain_status);
+
+        if (log.isDebugEnabled()) {
+            log.debug("재학습 상태 조회 API 호출 - URL: {}", url);
+        }
+
+        try {
+            RestTemplate restTemplate = createMlRestTemplate();
+            URI uri = URI.create(url);
+            ResponseEntity<String> response = restTemplate.exchange(
+                    uri,
+                    HttpMethod.GET,
+                    null,
+                    new ParameterizedTypeReference<String>() {}
+            );
+
+            return response.getBody();
+
+        } catch (Exception e) {
+            log.error("재학습 상태 조회 실패 - error: {}", e.getMessage(), e);
+            throw new RuntimeException("Failed to get retrain status", e);
+        }
+    }
+
+    /**
+     * 재학습 대상 종목 조회 (ML 서비스에 GET /retrain/targets 호출)
+     *
+     * @return ML 서비스 응답 (JSON 문자열)
+     */
+    public String getRetrainTargets() {
+        String baseUrl = isLocal
+                ? PredictionProgramConfig.localHost
+                : PredictionProgramConfig.prodHost;
+
+        String url = String.format("%s/%s", baseUrl, PredictionProgramConfig.API_URI_retrain_targets);
+
+        if (log.isDebugEnabled()) {
+            log.debug("재학습 대상 종목 조회 API 호출 - URL: {}", url);
+        }
+
+        try {
+            RestTemplate restTemplate = createMlRestTemplate();
+            URI uri = URI.create(url);
+            ResponseEntity<String> response = restTemplate.exchange(
+                    uri,
+                    HttpMethod.GET,
+                    null,
+                    new ParameterizedTypeReference<String>() {}
+            );
+
+            return response.getBody();
+
+        } catch (Exception e) {
+            log.error("재학습 대상 종목 조회 실패 - error: {}", e.getMessage(), e);
+            throw new RuntimeException("Failed to get retrain targets", e);
+        }
+    }
+
+    /**
      * 로그 파일 목록 조회
      *
      * @return 로그 파일 목록
