@@ -15,9 +15,14 @@ import com.finance.dart.board.dto.TranRecordDto;
 import com.finance.dart.board.dto.TranRecordFxRateResDto;
 import com.finance.dart.board.entity.TranRecordEntity;
 import com.finance.dart.board.repository.TranRecordRepository;
+import com.finance.dart.api.common.constants.EvaluationConst;
+import com.finance.dart.api.common.dto.CompanySharePriceResult;
+import com.finance.dart.common.component.RedisComponent;
+import com.finance.dart.common.component.RedisKeyGenerator;
 import com.finance.dart.common.util.ConvertUtil;
 import com.finance.dart.common.util.DateUtil;
 import com.finance.dart.common.util.StringUtil;
+import com.google.gson.Gson;
 import com.finance.dart.member.dto.Member;
 import com.finance.dart.member.entity.MemberEntity;
 import com.finance.dart.member.service.MemberService;
@@ -41,10 +46,13 @@ public class TranRecordService {
     private final TranRecordRepository tranRecordRepository;
 
     private final MemberService memberService;
+    private final RedisComponent redisComponent;                                // Redis 컴포넌트
     private final CompanyProfileSearchService companyProfileSearchService;      // 기업 프로파일 검색 서비스
     private final ForexQuoteService forexQuoteService;                          // 외환시세 조회 서비스
     private final StockQuoteService stockQuoteService;                          // 주식시세조회(간소화)
     private final AfterTradeService afterTradeService;                          // 애프터마켓 시세 조회 서비스
+
+    private final Gson gson = new Gson();
 
     // 병렬 처리용 스레드 풀 (최대 10개 동시 실행)
     private final ExecutorService executorService = Executors.newFixedThreadPool(10);
@@ -96,6 +104,7 @@ public class TranRecordService {
         if(updateDto.getBuyPrice() != null) data.setBuyPrice(updateDto.getBuyPrice());
         if(updateDto.getTotalBuyAmount() != null) data.setTotalBuyAmount(updateDto.getTotalBuyAmount());
         if(updateDto.getTargetPrice() != null) data.setTargetPrice(updateDto.getTargetPrice());
+        if(updateDto.getTargetPriceSync() != null) data.setTargetPriceSync(updateDto.getTargetPriceSync());
         if(updateDto.getBuyExchangeRateAtTrade() != null) data.setBuyExchangeRateAtTrade(updateDto.getBuyExchangeRateAtTrade());
         if(updateDto.getRmk() != null) data.setRmk(updateDto.getRmk());
         data.setUpdatedAt(LocalDateTime.now());
@@ -153,10 +162,30 @@ public class TranRecordService {
             }
         }
 
-        // 현재가 세팅
+        // 목표매도가 동기화 대상 심볼 수집
+        Set<String> syncSymbols = new LinkedHashSet<>();
+        for(TranRecordEntity entity : tranRecordEntityList) {
+            if(Boolean.TRUE.equals(entity.getTargetPriceSync())) {
+                syncSymbols.add(entity.getSymbol());
+            }
+        }
+
+        // Redis에서 목표매도가 조회 (심볼별 캐시)
+        Map<String, Double> sellTargetMap = getSellTargetPrices(syncSymbols);
+
+        // 현재가 + 목표매도가 동기화 세팅
         for(TranRecordEntity tranRecordEntity : tranRecordEntityList) {
             TranRecordDto tranRecordDto = ConvertUtil.parseObject(tranRecordEntity, TranRecordDto.class);
             tranRecordDto.setCurrentPrice(tickerValueMap.getOrDefault(tranRecordDto.getSymbol(), 0.0));
+
+            // 동기화 ON인 종목: Redis에서 조회된 목표매도가로 덮어쓰기
+            if(Boolean.TRUE.equals(tranRecordDto.getTargetPriceSync())) {
+                Double sellTarget = sellTargetMap.get(tranRecordDto.getSymbol());
+                if(sellTarget != null && sellTarget > 0) {
+                    tranRecordDto.setTargetPrice(sellTarget);
+                }
+            }
+
             tranRecordDtoList.add(tranRecordDto);
         }
 
@@ -279,6 +308,35 @@ public class TranRecordService {
 
         result.setRate(forexQuoteResDto.getPrice());
         result.setUpdatedAt(DateUtil.getToday("yyyy-MM-dd HH:mm:ss"));
+
+        return result;
+    }
+
+    /**
+     * Redis에서 심볼별 목표매도가 조회
+     * Redis 키: compvalue:abroad:calvalue:v8:{symbol}
+     * @param symbols 조회할 심볼 셋
+     * @return 심볼별 목표매도가 맵
+     */
+    private Map<String, Double> getSellTargetPrices(Set<String> symbols) {
+        Map<String, Double> result = new HashMap<>();
+        if(symbols == null || symbols.isEmpty()) return result;
+
+        for(String symbol : symbols) {
+            try {
+                String redisKey = RedisKeyGenerator.genAbroadCompValueRstData(symbol, EvaluationConst.CAL_VALUE_VERSION);
+                String cachedData = redisComponent.getValue(redisKey);
+                if(!StringUtil.isStringEmpty(cachedData)) {
+                    CompanySharePriceResult priceResult = gson.fromJson(cachedData, CompanySharePriceResult.class);
+                    String sellTarget = priceResult.get목표매도가();
+                    if(!StringUtil.isStringEmpty(sellTarget)) {
+                        result.put(symbol, Double.parseDouble(sellTarget));
+                    }
+                }
+            } catch (Exception e) {
+                log.warn("심볼 {} 목표매도가 Redis 조회 실패: {}", symbol, e.getMessage());
+            }
+        }
 
         return result;
     }
