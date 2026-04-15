@@ -112,7 +112,18 @@ public class TranRecordService {
         TranRecordEntity savedEntity = tranRecordRepository.save(data);
 
         // Entity -> DTO 변환하여 반환
-        return ConvertUtil.parseObject(savedEntity, TranRecordDto.class);
+        TranRecordDto resultDto = ConvertUtil.parseObject(savedEntity, TranRecordDto.class);
+
+        // 동기화 ON이면 Redis에서 목표매도가를 조회하여 응답 DTO에 세팅
+        if(Boolean.TRUE.equals(savedEntity.getTargetPriceSync())) {
+            Map<String, Double> sellTargetMap = getSellTargetPrices(Set.of(savedEntity.getSymbol()));
+            Double sellTarget = sellTargetMap.get(savedEntity.getSymbol());
+            if(sellTarget != null && sellTarget > 0) {
+                resultDto.setTargetPrice(sellTarget);
+            }
+        }
+
+        return resultDto;
     }
 
     /**
