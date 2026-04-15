@@ -27,8 +27,14 @@ public class PredictionResponseDto {
     /** 예측 최고가 (USD) */
     private BigDecimal predictedHigh;
 
+    /** 예측 최저가 (USD) */
+    private BigDecimal predictedLow;
+
     /** 예측 시점 현재가 (USD) */
     private BigDecimal currentPrice;
+
+    /** 7일 후 상승 확률 (0~1) */
+    private String upProbability;
 
     /** 상승 여력 (%) */
     private String upsidePercent;

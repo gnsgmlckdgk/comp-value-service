@@ -36,8 +36,14 @@ public class StockPredictionEntity {
     @Column(name = "predicted_high", nullable = false, precision = 15, scale = 4)
     private BigDecimal predictedHigh;
 
+    @Column(name = "predicted_low", precision = 15, scale = 4)
+    private BigDecimal predictedLow;
+
     @Column(name = "current_price", precision = 15, scale = 4)
     private BigDecimal currentPrice;
+
+    @Column(name = "up_probability", precision = 5, scale = 4)
+    private BigDecimal upProbability;
 
     @Column(name = "prediction_date", nullable = false)
     private LocalDate predictionDate;

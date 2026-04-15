@@ -195,7 +195,9 @@ public class MlService {
                 .companyName(entity.getCompanyName())
                 .exchange(entity.getExchange())
                 .predictedHigh(entity.getPredictedHigh())
+                .predictedLow(entity.getPredictedLow())
                 .currentPrice(entity.getCurrentPrice())
+                .upProbability(entity.getUpProbability() != null ? entity.getUpProbability().toString() : null)
                 .upsidePercent(upsidePercent)
                 .predictionDate(DateUtil.convertLocaleDateToString(entity.getPredictionDate(), "yyyy-MM-dd"))
                 .targetStartDate(DateUtil.convertLocaleDateToString(entity.getTargetStartDate(), "yyyy-MM-dd"))
@@ -221,10 +223,16 @@ public class MlService {
                 ? new BigDecimal(externalResponse.getPredictedHigh1w())
                 : null;
 
+        BigDecimal predictedLow = StringUtils.hasText(externalResponse.getPredictedLow1w())
+                ? new BigDecimal(externalResponse.getPredictedLow1w())
+                : null;
+
         return PredictionResponseDto.builder()
                 .ticker(externalResponse.getTicker())
                 .predictedHigh(predictedHigh)
+                .predictedLow(predictedLow)
                 .currentPrice(currentPrice)
+                .upProbability(externalResponse.getUpProbability())
                 .upsidePercent(externalResponse.getUpsidePercent())
                 .source(externalResponse.getSource())
                 .build();

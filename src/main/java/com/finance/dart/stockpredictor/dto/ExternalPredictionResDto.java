@@ -24,6 +24,14 @@ public class ExternalPredictionResDto {
     @JsonProperty("predicted_high_1w")
     private String predictedHigh1w;
 
+    /** 1주일 내 예측 최저가 */
+    @JsonProperty("predicted_low_1w")
+    private String predictedLow1w;
+
+    /** 7일 후 상승 확률 (0~1) */
+    @JsonProperty("up_probability")
+    private String upProbability;
+
     /** 상승 여력 (%) */
     @JsonProperty("upside_percent")
     private String upsidePercent;
