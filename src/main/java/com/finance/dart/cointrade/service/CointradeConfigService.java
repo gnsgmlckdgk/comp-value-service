@@ -449,10 +449,10 @@ public class CointradeConfigService {
     /**
      * 스캐너 시그널 목록 조회 (CoinTrader 프록시)
      */
-    public Map<String, Object> getScannerSignals() {
+    public List<Map<String, Object>> getScannerSignals() {
         String url = buildUrl(CoinTraderProgramConfig.API_URI_SCANNER_SIGNALS);
         log.info("스캐너 시그널 목록 조회 요청 - URL: {}", url);
-        return httpClientComponent.exchangeSync(url, HttpMethod.GET, new ParameterizedTypeReference<Map<String, Object>>() {}).getBody();
+        return httpClientComponent.exchangeSync(url, HttpMethod.GET, new ParameterizedTypeReference<List<Map<String, Object>>>() {}).getBody();
     }
 
     /**

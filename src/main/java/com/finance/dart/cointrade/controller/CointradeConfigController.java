@@ -241,9 +241,9 @@ public class CointradeConfigController {
     @EndPointConfig.RequireRole({RoleConstants.ROLE_SUPER_ADMIN})
     @TransactionLogging
     @GetMapping("/scanner/signals")
-    public ResponseEntity<CommonResponse<Map<String, Object>>> getScannerSignals() {
+    public ResponseEntity<CommonResponse<List<Map<String, Object>>>> getScannerSignals() {
         log.info("스캐너 시그널 목록 조회 요청");
-        Map<String, Object> result = cointradeConfigService.getScannerSignals();
+        List<Map<String, Object>> result = cointradeConfigService.getScannerSignals();
         return new ResponseEntity<>(new CommonResponse<>(result), HttpStatus.OK);
     }
 
