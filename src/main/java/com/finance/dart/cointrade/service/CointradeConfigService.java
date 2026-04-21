@@ -457,6 +457,31 @@ public class CointradeConfigService {
     }
 
     /**
+     * 먼지(dust) 잔량 조회 (CoinTrader 프록시)
+     * @param status 'ACTIVE' | 'RESOLVED' | 'ALL' | null(=ACTIVE)
+     */
+    public List<Map<String, Object>> getDustBalances(String status) {
+        String base = buildUrl(CoinTraderProgramConfig.API_URI_DUST_LIST);
+        String url = (status == null || status.isBlank()) ? base : base + "?status=" + status;
+        log.info("먼지 잔량 조회 요청 - URL: {}", url);
+        return httpClientComponent.exchangeSync(url, HttpMethod.GET, new ParameterizedTypeReference<List<Map<String, Object>>>() {}).getBody();
+    }
+
+    /**
+     * 먼지 정리완료 처리 (CoinTrader 프록시)
+     */
+    public Map<String, Object> resolveDust(int dustId, String note) {
+        String url = buildUrl(String.format(CoinTraderProgramConfig.API_URI_DUST_RESOLVE_FORMAT, dustId));
+        log.info("먼지 정리완료 요청 - URL: {}, note: {}", url, note);
+
+        Map<String, Object> body = new LinkedHashMap<>();
+        if (note != null && !note.isBlank()) {
+            body.put("note", note);
+        }
+        return httpClientComponent.exchangeSync(url, HttpMethod.POST, null, body, new ParameterizedTypeReference<Map<String, Object>>() {}).getBody();
+    }
+
+    /**
      * 스캐너 시그널 목록 조회 (CoinTrader 프록시)
      */
     public List<Map<String, Object>> getScannerSignals() {

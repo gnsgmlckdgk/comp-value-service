@@ -288,6 +288,38 @@ public class CointradeConfigController {
     }
 
     /**
+     * 16-2. 먼지(dust) 잔량 조회
+     * GET /api/cointrade/dust?status=ACTIVE|RESOLVED|ALL
+     * - 업비트 최소 주문금액(5,000원) 미만으로 API 매도 불가한 격리 잔량 목록
+     */
+    @EndPointConfig.RequireRole({RoleConstants.ROLE_SUPER_ADMIN})
+    @TransactionLogging
+    @GetMapping("/dust")
+    public ResponseEntity<CommonResponse<List<Map<String, Object>>>> getDustBalances(
+            @RequestParam(value = "status", required = false) String status) {
+        log.info("먼지 잔량 조회 요청 - status: {}", status);
+        List<Map<String, Object>> result = cointradeConfigService.getDustBalances(status);
+        return new ResponseEntity<>(new CommonResponse<>(result), HttpStatus.OK);
+    }
+
+    /**
+     * 16-3. 먼지 정리완료 처리
+     * POST /api/cointrade/dust/{dustId}/resolve
+     * - 사용자가 수동 정리 후 상태를 RESOLVED 로 변경
+     */
+    @EndPointConfig.RequireRole({RoleConstants.ROLE_SUPER_ADMIN})
+    @TransactionLogging
+    @PostMapping("/dust/{dustId}/resolve")
+    public ResponseEntity<CommonResponse<Map<String, Object>>> resolveDust(
+            @PathVariable("dustId") int dustId,
+            @RequestBody(required = false) Map<String, String> body) {
+        String note = (body != null) ? body.get("note") : null;
+        log.info("먼지 정리완료 요청 - dustId: {}, note: {}", dustId, note);
+        Map<String, Object> result = cointradeConfigService.resolveDust(dustId, note);
+        return new ResponseEntity<>(new CommonResponse<>(result), HttpStatus.OK);
+    }
+
+    /**
      * 17. 모의투자 보유 종목 조회
      * GET /api/cointrade/paper/holdings
      */

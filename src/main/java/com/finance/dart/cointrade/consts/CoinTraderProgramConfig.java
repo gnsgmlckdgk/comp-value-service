@@ -78,6 +78,12 @@ public class CoinTraderProgramConfig {
     /** 보유 종목 매도 **/
     public static final String API_URI_HOLDINGS_SELL = "api/holdings/sell";
 
+    /** 먼지(dust) 잔량 조회 **/
+    public static final String API_URI_DUST_LIST = "api/dust";
+
+    /** 먼지 정리완료 처리 (경로 포맷에 id 삽입) **/
+    public static final String API_URI_DUST_RESOLVE_FORMAT = "api/dust/%d/resolve";
+
     /** 스캐너 시그널 목록 조회 **/
     public static final String API_URI_SCANNER_SIGNALS = "api/scanner/signals";
 
