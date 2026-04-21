@@ -72,6 +72,9 @@ public class CoinTraderProgramConfig {
     /** 업비트 KRW 잔액 조회 **/
     public static final String API_URI_ACCOUNT_BALANCE = "api/account/balance";
 
+    /** 업비트 전체 계좌 조회 (KRW + 모든 보유 코인) **/
+    public static final String API_URI_ACCOUNT_BALANCES = "api/account/balances";
+
     /** 보유 종목 매도 **/
     public static final String API_URI_HOLDINGS_SELL = "api/holdings/sell";
 

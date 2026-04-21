@@ -274,6 +274,20 @@ public class CointradeConfigController {
     }
 
     /**
+     * 16-1. 업비트 전체 계좌 조회 (KRW + 모든 보유 코인)
+     * GET /api/cointrade/account/balances
+     * - DB 보유종목(CointradeHoldingEntity)과 대조해 수량 불일치/미추적 코인을 UI에 경고 표시
+     */
+    @EndPointConfig.RequireRole({RoleConstants.ROLE_SUPER_ADMIN})
+    @TransactionLogging
+    @GetMapping("/account/balances")
+    public ResponseEntity<CommonResponse<Map<String, Object>>> getAccountBalances() {
+        log.info("업비트 전체 계좌 조회 요청");
+        Map<String, Object> result = cointradeConfigService.getAccountBalances();
+        return new ResponseEntity<>(new CommonResponse<>(result), HttpStatus.OK);
+    }
+
+    /**
      * 17. 모의투자 보유 종목 조회
      * GET /api/cointrade/paper/holdings
      */

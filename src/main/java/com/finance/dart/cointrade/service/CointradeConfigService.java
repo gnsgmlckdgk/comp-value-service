@@ -424,6 +424,16 @@ public class CointradeConfigService {
     }
 
     /**
+     * 업비트 전체 계좌 조회 (KRW + 모든 보유 코인)
+     * DB holdings 테이블과 대조해 수량 불일치를 UI에서 경고 표시하는 용도.
+     */
+    public Map<String, Object> getAccountBalances() {
+        String url = buildUrl(CoinTraderProgramConfig.API_URI_ACCOUNT_BALANCES);
+        log.info("업비트 전체 계좌 조회 요청 - URL: {}", url);
+        return httpClientComponent.exchangeSync(url, HttpMethod.GET, new ParameterizedTypeReference<Map<String, Object>>() {}).getBody();
+    }
+
+    /**
      * 보유 종목 매도
      */
     public CointradeSellResponseDto sellHoldings(CointradeSellRequestDto request) {
