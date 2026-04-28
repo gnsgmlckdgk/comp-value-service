@@ -278,6 +278,7 @@ public class TranRecordService {
         } else {
             StockQuoteResDto stockQuoteResDto = stockQuoteResDtoList.get(0);
             tranRecordCurValueResDto.setCurrentPrice(stockQuoteResDto.getPrice());
+            tranRecordCurValueResDto.setPreviousClose(stockQuoteResDto.getPreviousClose());
 
             // 애프터장 데이터가 있고 더 최신이면 업데이트
             if(afterTradeResDtoList != null && !afterTradeResDtoList.isEmpty()) {

@@ -18,6 +18,7 @@ public class TranRecordCurValueResDto {
 
     private String symbol;          // 티커
     private Double currentPrice;    // 현재가
+    private Double previousClose;   // 전일 종가 (FMP quote 기준)
     private String updatedAt;       // 갱신시간(yyyy-MM-dd HH:mm:ss)
 
 }
