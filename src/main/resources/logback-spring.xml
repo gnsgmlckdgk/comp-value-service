@@ -1,5 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <configuration>
+    <!-- 스케줄러 스레드(@Scheduled) 발 DEBUG/TRACE 스팸 차단 (모니터링 주기 조회의 Hibernate 로그 등) -->
+    <turboFilter class="com.finance.dart.common.logging.SchedulerNoiseFilter" />
+
     <!-- 콘솔 출력 Appender -->
     <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
         <encoder>
@@ -15,6 +18,7 @@
     <springProperty scope="context" name="LOG_FILE" source="logging.file.name" defaultValue="./logs/app.log"/>
     <springProperty scope="context" name="LOG_PATTERN" source="logging.logback.rollingpolicy.file-name-pattern" defaultValue="./logs/app.%d{yyyy-MM-dd}.log"/>
     <springProperty scope="context" name="MAX_HISTORY" source="logging.logback.rollingpolicy.max-history" defaultValue="3"/>
+    <springProperty scope="context" name="MONITORING_LOG_LEVEL" source="monitoring.log.level" defaultValue="INFO"/>
 
     <!-- 파일 출력 Appender -->
     <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
@@ -56,6 +60,21 @@
     </root>
 
     <!-- 특정 패키지 로그 레벨 설정 -->
+    <!-- 모니터링 주기 스케줄러 로그: 기본 INFO(스팸 차단, 실패 WARN/ERROR만), 로컬에서 보려면 DEBUG -->
+    <logger name="com.finance.dart.monitoring" level="${MONITORING_LOG_LEVEL}" />
+
+    <!-- WebClient(Reactor Netty)/Redis(Lettuce) 인프라 클라이언트 DEBUG 노이즈 차단.
+         모니터링 헬스체크(cointrader/stock-predictor 연결 실패, Redis PING 추적 등)가
+         reactor/lettuce 자체 이벤트루프 스레드에서 찍는 로그라 스레드 필터로는 못 막음. 진짜 에러는 WARN+로 보존 -->
+    <logger name="reactor.netty" level="INFO" />
+    <logger name="io.lettuce.core" level="INFO" />
+
+    <!-- WebClient 요청/응답·바디 디코딩 DEBUG 노이즈 차단 (web 헬스체크의 404 응답 디코딩 등). 진짜 에러는 WARN+로 보존 -->
+    <logger name="org.springframework.web.reactive.function.client" level="INFO" />
+    <logger name="org.springframework.core.codec" level="INFO" />
+    <!-- HTTP 페이로드 공용 로거. 코덱 로거를 막으면 Spring이 이쪽으로 폴백해 찍으므로 함께 차단 -->
+    <logger name="org.springframework.web.HttpLogging" level="INFO" />
+
     <logger name="org.testcontainers" level="DEBUG" additivity="false">
         <appender-ref ref="CONSOLE" />
         <appender-ref ref="MEMORY_BUFFER" />

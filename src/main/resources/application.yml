@@ -41,7 +41,7 @@ spring:
       naming:
         # 물리명그대로 사용하기
         physical-strategy: org.hibernate.boot.model.naming.PhysicalNamingStrategyStandardImpl
-    show-sql: true  # SQL 쿼리 출력
+    show-sql: false  # System.out 직접 출력이라 logback 필터로 못 막음. SQL은 org.hibernate.SQL DEBUG 로거로 확인(스케줄러 스팸은 SchedulerNoiseFilter가 차단)
     properties:
       hibernate:
         format_sql: true  # SQL 포맷팅
@@ -98,6 +98,8 @@ app:
   local: true
 
 monitoring:
+  log:
+    level: ${MONITORING_LOG_LEVEL:INFO}  # 모니터링 패키지 로그레벨. 로컬에서 주기 로그 보려면 DEBUG
   prometheus:
     url: ${PROMETHEUS_URL:http://prometheus.monitoring.svc.cluster.local:9090}
     enabled: ${MONITORING_PROMETHEUS_ENABLED:false}
