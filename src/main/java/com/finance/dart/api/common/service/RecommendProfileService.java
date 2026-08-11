@@ -206,6 +206,7 @@ public class RecommendProfileService {
         if (dto.getExchange() != null) configEntity.setExchange(dto.getExchange());
         if (dto.getScreenerLimit() != null) configEntity.setScreenerLimit(dto.getScreenerLimit());
         if (dto.getExcludeNonCommonStock() != null) configEntity.setExcludeNonCommonStock(dto.getExcludeNonCommonStock());
+        configEntity.setSectorQuotaPct(dto.getSectorQuotaPct());  // 슬라이더류 필드 - null 허용 (비활성 시 클리어)
         if (dto.getSector() != null) configEntity.setSector(dto.getSector());
         if (dto.getIndustry() != null) configEntity.setIndustry(dto.getIndustry());
         if (dto.getCountry() != null) configEntity.setCountry(dto.getCountry());
@@ -254,6 +255,7 @@ public class RecommendProfileService {
             dto.setExchange(config.getExchange());
             dto.setScreenerLimit(config.getScreenerLimit());
             dto.setExcludeNonCommonStock(config.getExcludeNonCommonStock());
+            dto.setSectorQuotaPct(config.getSectorQuotaPct());
             dto.setPriceMin(config.getPriceMin());
             dto.setPriceMax(config.getPriceMax());
             dto.setBetaMin(config.getBetaMin());

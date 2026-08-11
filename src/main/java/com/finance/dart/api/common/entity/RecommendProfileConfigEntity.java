@@ -83,6 +83,9 @@ public class RecommendProfileConfigEntity {
     @Column(name = "exclude_non_common_stock", length = 1)
     private String excludeNonCommonStock = "Y"; // 비일반주식 제외 (워런트/우선주/CVR/채권 등)
 
+    @Column(name = "sector_quota_pct")
+    private Integer sectorQuotaPct;         // 섹터당 결과 비중 상한 % (예: 30 = 한 섹터가 결과의 30% 초과 금지, NULL = 미적용)
+
     // ========== 저평가 필터링 조건 ==========
 
     @Column(name = "pe_ratio_min", precision = 10, scale = 2)

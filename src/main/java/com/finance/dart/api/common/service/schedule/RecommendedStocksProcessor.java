@@ -193,7 +193,15 @@ public class RecommendedStocksProcessor {
             log.info("[추천 종목] 프로파일 '{}' 필터링 완료 - 총 저평가 종목: {}건",
                     profile.getProfileName(), undervaluedStocks.size());
 
-            // 3. Redis에 프로파일별로 저장
+            // 3. 섹터 쿼터 적용 (특정 섹터 편중 방지)
+            int beforeQuotaSize = undervaluedStocks.size();
+            undervaluedStocks = applySectorQuota(undervaluedStocks, config.getSectorQuotaPct());
+            if (undervaluedStocks.size() != beforeQuotaSize) {
+                log.info("[추천 종목] 프로파일 '{}' 섹터 쿼터 적용 완료: {}건 → {}건",
+                        profile.getProfileName(), beforeQuotaSize, undervaluedStocks.size());
+            }
+
+            // 4. Redis에 프로파일별로 저장
             saveToRedis(profile.getProfileName(), undervaluedStocks);
 
         } catch (InterruptedException e) {
@@ -225,7 +233,7 @@ public class RecommendedStocksProcessor {
         }
 
         // 비일반주식 제외 필터링 (워런트/우선주/CVR/채권 등)
-        if (results != null && "Y".equals(config.getExcludeNonCommonStock())) {
+        if (results != null && isExcludeNonCommonStockEnabled(config)) {
             int beforeSize = results.size();
             results = results.stream()
                     .filter(dto -> !isNonCommonStock(dto.getSymbol(), dto.getCompanyName()))
@@ -237,6 +245,14 @@ public class RecommendedStocksProcessor {
         }
 
         return results;
+    }
+
+    /**
+     * 비일반주식 제외 필터 활성화 여부 (명시적으로 'N'일 때만 비활성화, NULL은 기본값 'Y' 취급)
+     * - 컬럼 추가(2026-03-07) 이전에 생성된 프로파일은 NULL이므로 기본 활성화로 방어
+     */
+    static boolean isExcludeNonCommonStockEnabled(RecommendProfileConfigEntity config) {
+        return !"N".equals(config.getExcludeNonCommonStock());
     }
 
     /**
@@ -542,6 +558,56 @@ public class RecommendedStocksProcessor {
                 .toList();
         if (values.isEmpty()) return null;
         return values.stream().mapToDouble(Double::doubleValue).average().orElse(0.0);
+    }
+
+    /**
+     * 섹터 쿼터 적용
+     * - 한 섹터가 결과의 quotaPct%를 초과하지 않도록, 초과 섹터는 저평가 순(PER 오름차순)으로 상한까지만 유지
+     * - PER이 없거나 0 이하(적자)인 종목은 후순위
+     * - quotaPct가 NULL이거나 0 이하/100 이상이면 미적용
+     */
+    static Map<String, RecommendedStockData> applySectorQuota(
+            Map<String, RecommendedStockData> stocks, Integer quotaPct) {
+
+        if (quotaPct == null || quotaPct <= 0 || quotaPct >= 100 || stocks.isEmpty()) {
+            return stocks;
+        }
+
+        int limitPerSector = Math.max(1, (int) Math.ceil(stocks.size() * quotaPct / 100.0));
+
+        // 섹터별 그룹핑 (섹터 없음은 미분류로 묶어 동일 규칙 적용)
+        Map<String, List<RecommendedStockData>> bySector = new LinkedHashMap<>();
+        for (RecommendedStockData data : stocks.values()) {
+            String sector = (data.sector() == null || data.sector().isBlank()) ? "(미분류)" : data.sector();
+            bySector.computeIfAbsent(sector, k -> new ArrayList<>()).add(data);
+        }
+
+        // 초과 섹터는 PER 낮은 순으로 상한까지만 유지
+        Set<String> keepSymbols = new HashSet<>();
+        for (Map.Entry<String, List<RecommendedStockData>> entry : bySector.entrySet()) {
+            List<RecommendedStockData> sectorStocks = entry.getValue();
+            if (sectorStocks.size() > limitPerSector) {
+                log.info("[추천 종목] 섹터 쿼터({}%) 초과: '{}' {}건 → {}건 (PER 낮은 순 유지)",
+                        quotaPct, entry.getKey(), sectorStocks.size(), limitPerSector);
+                sectorStocks = sectorStocks.stream()
+                        .sorted(Comparator.comparingDouble(d ->
+                                (d.peRatioTTM() == null || d.peRatioTTM() <= 0) ? Double.MAX_VALUE : d.peRatioTTM()))
+                        .limit(limitPerSector)
+                        .toList();
+            }
+            for (RecommendedStockData d : sectorStocks) {
+                keepSymbols.add(d.symbol());
+            }
+        }
+
+        // 원래 순서를 유지하며 재구성
+        Map<String, RecommendedStockData> result = new LinkedHashMap<>();
+        for (Map.Entry<String, RecommendedStockData> e : stocks.entrySet()) {
+            if (keepSymbols.contains(e.getKey())) {
+                result.put(e.getKey(), e.getValue());
+            }
+        }
+        return result;
     }
 
     /**

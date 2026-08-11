@@ -107,4 +107,31 @@ public class EvaluationConst {
     public static final int FORWARD_PER_SEVERE_PENALTY = 5;
     public static final int FORWARD_PER_WARNING_PENALTY = 3;
 
+    /**
+     * 가치×타이밍 2축 분리 (2-1)
+     * 가치등급: Step1~5 펀더멘털 합(최대 82점)을 100점 환산하여 산정 (게이트/타이밍 감점 없음)
+     */
+    public static final int VALUE_SCORE_MAX = STEP1_WEIGHT + STEP2_WEIGHT + STEP3_WEIGHT
+            + STEP4_WEIGHT + STEP5_WEIGHT;  // 82점 (펀더멘털 Step1~5 만점)
+
+    /** 투자판정 라벨 (가치등급 × 타이밍신호 매트릭스) */
+    public static final String INVEST_SIGNAL_BUY = "매수 후보";       // 가치 양호 + 타이밍 양호
+    public static final String INVEST_SIGNAL_WATCH = "관심목록";      // 가치 양호 + 타이밍 미흡
+    public static final String INVEST_SIGNAL_HOLD = "관망";           // 가치 미흡
+
+    /** 투자판정 색상 (색각이상 친화: 파랑/노랑/회색) */
+    public static final String INVEST_COLOR_BUY = "blue";
+    public static final String INVEST_COLOR_WATCH = "yellow";
+    public static final String INVEST_COLOR_HOLD = "gray";
+
+    /** 타이밍 신호 라벨 (entryTiming.signal → 표준화) */
+    public static final String TIMING_GOOD = "양호";
+    public static final String TIMING_WAIT = "대기";
+    public static final String TIMING_DOWN = "하락";
+    public static final String TIMING_NEUTRAL = "관망";
+
+    /** entryTiming 없을 때 step6 점수 기반 타이밍 판정 임계값 (18점 만점) */
+    public static final double TIMING_FALLBACK_GOOD_STEP6 = 13.0;
+    public static final double TIMING_FALLBACK_WAIT_STEP6 = 9.0;
+
 }

@@ -33,6 +33,7 @@ public class RecommendProfileDto {
     private String exchange;                // 거래소 (콤마구분, 예: NYSE,NASDAQ)
     private Integer screenerLimit;          // 스크리너 조회 제한 건수
     private String excludeNonCommonStock;  // 비일반주식 제외 (워런트/우선주/CVR/채권 등, Y/N)
+    private Integer sectorQuotaPct;        // 섹터당 결과 비중 상한 % (예: 30, NULL = 미적용)
 
     private BigDecimal priceMin;            // 주가 최소값
     private BigDecimal priceMax;            // 주가 최대값

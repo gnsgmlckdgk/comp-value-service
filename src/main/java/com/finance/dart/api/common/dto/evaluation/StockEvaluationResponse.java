@@ -20,6 +20,8 @@ import java.util.List;
     "priceGapPercent", "totalScore", "grade", "recommendation",
     "purchasePrice", "sellTarget", "stopLossPrice",
     "peg", "per", "sector", "industry", "beta", "exchange", "country", "marketCap", "averageVolume",
+    "investmentSignal", "investmentSignalColor", "valueScore", "valueGrade",
+    "timingSignal", "timingScore",
     "step1Score", "step2Score", "step3Score", "step4Score", "step5Score", "step6Score",
     "momentumGatePass", "entryTiming", "stepDetails", "resultDetail"
 })
@@ -209,5 +211,37 @@ public class StockEvaluationResponse {
      */
     @Builder.Default
     private String calVersion = "";
+
+    // ========== 가치×타이밍 2축 분리 (2-1) ==========
+
+    /**
+     * 투자판정 (가치등급 × 타이밍 매트릭스): "매수 후보" / "관심목록" / "관망"
+     */
+    private String investmentSignal;
+
+    /**
+     * 투자판정 색상: "blue"(매수후보) / "yellow"(관심목록) / "gray"(관망)
+     */
+    private String investmentSignalColor;
+
+    /**
+     * 가치 점수 (Step1~5 펀더멘털 합을 100점 환산, 게이트 없음)
+     */
+    private double valueScore;
+
+    /**
+     * 가치 등급 (S/A/B/C/D/F, 펀더멘털만 반영)
+     */
+    private String valueGrade;
+
+    /**
+     * 타이밍 신호: "양호" / "대기" / "하락" / "관망"
+     */
+    private String timingSignal;
+
+    /**
+     * 타이밍 점수 (0~100, 진입 타이밍 분석 기반)
+     */
+    private Integer timingScore;
 
 }

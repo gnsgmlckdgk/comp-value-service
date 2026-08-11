@@ -249,9 +249,20 @@ public class StockEvaluationService {
         String priceDifference = calculatePriceDifference(currentPrice, fairValue);
         String priceGapPercent = calculatePriceGapPercent(currentPrice, fairValue);
 
-        // 6. 등급 및 추천도 산정
+        // 6. 등급 및 추천도 산정 (기존 게이트 적용 총점 기반 - 하위호환 유지)
         String grade = calculateGrade(totalScore);
         String recommendation = generateRecommendation(totalScore, detail);
+
+        // 6-1. [2-1] 가치×타이밍 2축 분리
+        //  - 가치등급: Step1~5 펀더멘털 합(82점)을 100점 환산 (게이트/타이밍 감점 없음)
+        //  - 타이밍신호: 진입 타이밍 분석(entryTiming) → 표준 라벨, 없으면 step6 점수로 폴백
+        //  - 투자판정: 가치등급 × 타이밍 매트릭스
+        double valueScore = calculateValueScore(step1Score, step2Score, step3Score, step4Score, step5Score);
+        String valueGrade = calculateGrade(valueScore);
+        String timingSignal = resolveTimingSignal(entryTiming, step6Score);
+        Integer timingScore = (entryTiming != null) ? entryTiming.getTimingScore() : null;
+        String investmentSignal = resolveInvestmentSignal(valueGrade, timingSignal);
+        String investmentSignalColor = resolveInvestmentSignalColor(investmentSignal);
 
         // 7. 응답 DTO 생성
         return StockEvaluationResponse.builder()
@@ -289,6 +300,12 @@ public class StockEvaluationService {
                 .high52wDropPercent(high52wDropPercent)
                 .forwardPer(forwardPer)
                 .forwardPerWarning(forwardPerWarning)
+                .valueScore(valueScore)
+                .valueGrade(valueGrade)
+                .timingSignal(timingSignal)
+                .timingScore(timingScore)
+                .investmentSignal(investmentSignal)
+                .investmentSignalColor(investmentSignalColor)
                 .stepDetails(stepDetails)
                 .resultDetail(detail)
                 .calVersion(result.get버전())
@@ -914,6 +931,63 @@ public class StockEvaluationService {
             log.warn("[Step6] {} - 가격 히스토리 조회 실패: {}", symbol, e.getMessage());
         }
         return null;
+    }
+
+    /**
+     * [2-1] 가치 점수 계산 (Step1~5 펀더멘털 합을 100점 환산)
+     * - 게이트/타이밍 감점을 반영하지 않는 순수 펀더멘털 점수
+     * @return 0~100 환산 점수
+     */
+    static double calculateValueScore(double step1, double step2, double step3, double step4, double step5) {
+        double sum = step1 + step2 + step3 + step4 + step5;
+        double normalized = sum / EvaluationConst.VALUE_SCORE_MAX * 100.0;
+        return Math.max(0.0, Math.min(100.0, normalized));
+    }
+
+    /**
+     * [2-1] 타이밍 신호 표준화
+     * - 진입 타이밍 분석(entryTiming.signal) 우선, 없으면 step6 점수로 폴백
+     * @return "양호" / "대기" / "하락" / "관망"
+     */
+    static String resolveTimingSignal(EntryTimingAnalysis entryTiming, double step6Score) {
+        if (entryTiming != null && entryTiming.getSignal() != null) {
+            switch (entryTiming.getSignal()) {
+                case "매수 적기": return EvaluationConst.TIMING_GOOD;
+                case "대기 권장": return EvaluationConst.TIMING_WAIT;
+                case "하락 구간": return EvaluationConst.TIMING_DOWN;
+                default:          return EvaluationConst.TIMING_NEUTRAL;  // "관망" 등
+            }
+        }
+        // entryTiming 분석 실패 시 step6(모멘텀) 점수로 폴백
+        if (step6Score >= EvaluationConst.TIMING_FALLBACK_GOOD_STEP6) return EvaluationConst.TIMING_GOOD;
+        if (step6Score >= EvaluationConst.TIMING_FALLBACK_WAIT_STEP6) return EvaluationConst.TIMING_WAIT;
+        return EvaluationConst.TIMING_DOWN;
+    }
+
+    /**
+     * [2-1] 투자판정 (가치등급 × 타이밍 매트릭스)
+     * - 가치등급 S/A/B(가치 양호) + 타이밍 양호 → 매수 후보
+     * - 가치 양호 + 타이밍 미흡(대기/하락/관망) → 관심목록
+     * - 가치 미흡(C/D/F) → 관망 (타이밍 무관, 펀더멘털 부족)
+     */
+    static String resolveInvestmentSignal(String valueGrade, String timingSignal) {
+        boolean valueOk = "S".equals(valueGrade) || "A".equals(valueGrade) || "B".equals(valueGrade);
+        if (!valueOk) {
+            return EvaluationConst.INVEST_SIGNAL_HOLD;
+        }
+        if (EvaluationConst.TIMING_GOOD.equals(timingSignal)) {
+            return EvaluationConst.INVEST_SIGNAL_BUY;
+        }
+        return EvaluationConst.INVEST_SIGNAL_WATCH;
+    }
+
+    /**
+     * [2-1] 투자판정 색상 (색각이상 친화: 파랑/노랑/회색)
+     */
+    static String resolveInvestmentSignalColor(String investmentSignal) {
+        if (EvaluationConst.INVEST_SIGNAL_BUY.equals(investmentSignal)) return EvaluationConst.INVEST_COLOR_BUY;
+        if (EvaluationConst.INVEST_SIGNAL_WATCH.equals(investmentSignal)) return EvaluationConst.INVEST_COLOR_WATCH;
+        return EvaluationConst.INVEST_COLOR_HOLD;
     }
 
     /**

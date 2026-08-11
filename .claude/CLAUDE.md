@@ -126,6 +126,15 @@
     - Forward PER / TTM PER >= 1.3: -3점, >= 1.5: -5점
     - 시장이 예상하는 미래 실적 악화 반영
 
+15. **가치×타이밍 2축 분리** (2026-08-11)
+    - **배경**: 게이트(타이밍/SMA200/52주하락)가 단일 총점을 눌러 펀더멘털 우수 종목도 C등급으로 뭉개짐. 가치 스크리닝(하락 종목)과 타이밍 게이트가 서로 모순 → 추천 0건/신뢰 저하
+    - **가치등급**: Step1~5 펀더멘털 합(최대 82점)을 100점 환산 → 기존 등급 임계값 재사용. **게이트/타이밍 감점 미반영** (4중 감점 문제를 가치축에서 해소)
+    - **타이밍신호**: 기존 `entryTiming.signal`을 양호/대기/하락/관망으로 표준화 (매수적기→양호, 대기권장→대기, 하락구간→하락). null이면 step6 점수로 폴백
+    - **투자판정 매트릭스**: 가치 S/A/B + 타이밍 양호 → "매수 후보", 가치 S/A/B + 타이밍 미흡 → "관심목록", 가치 C/D/F → "관망"
+    - **하위호환**: 기존 totalScore/grade/recommendation(게이트 적용본) 그대로 유지, 프론트 화면에서만 숨김(엑셀/CSV 레거시 컬럼 유지)
+    - **파일**: `StockEvaluationService`(정적 헬퍼 calculateValueScore/resolveTimingSignal/resolveInvestmentSignal/resolveInvestmentSignalColor), `EvaluationConst`(VALUE_SCORE_MAX, INVEST_SIGNAL_*, TIMING_* 상수), `StockEvaluationResponse`(investmentSignal/valueScore/valueGrade/timingSignal/timingScore 필드), 프론트 `InvestmentEvaluation.jsx`
+    - **추가 필드**: investmentSignal, investmentSignalColor, valueScore, valueGrade, timingSignal, timingScore
+
 - **추가 필드**: high52wDropPercent, forwardPer, forwardPerWarning
 
 ---
