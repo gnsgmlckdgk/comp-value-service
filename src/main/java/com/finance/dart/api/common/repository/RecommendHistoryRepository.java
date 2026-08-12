@@ -2,6 +2,9 @@ package com.finance.dart.api.common.repository;
 
 import com.finance.dart.api.common.entity.RecommendHistoryEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -19,8 +22,11 @@ public interface RecommendHistoryRepository extends JpaRepository<RecommendHisto
 
     /**
      * 같은 날 재실행 시 기존 스냅샷 삭제 (멱등 저장용)
+     * - 벌크 DELETE로 즉시 실행 → 이어지는 insert보다 먼저 수행 (Hibernate insert-before-delete 순서 이슈 회피)
      */
-    void deleteBySnapshotDateAndProfileName(LocalDate snapshotDate, String profileName);
+    @Modifying
+    @Query("DELETE FROM RecommendHistoryEntity h WHERE h.snapshotDate = :snapshotDate AND h.profileName = :profileName")
+    void deleteSnapshot(@Param("snapshotDate") LocalDate snapshotDate, @Param("profileName") String profileName);
 
     /**
      * 프로파일의 최신 스냅샷 1행 (최신 일자 판별용)

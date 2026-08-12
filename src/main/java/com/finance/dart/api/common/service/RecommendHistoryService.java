@@ -40,7 +40,8 @@ public class RecommendHistoryService {
         LocalDate today = LocalDate.now();
 
         // 같은 날 동일 프로파일 기존 스냅샷 제거 (멱등 보장)
-        recommendHistoryRepository.deleteBySnapshotDateAndProfileName(today, profileName);
+        // 벌크 DELETE는 즉시 DB에 반영 → 이어지는 insert보다 먼저 실행되어 유니크 충돌 방지
+        recommendHistoryRepository.deleteSnapshot(today, profileName);
 
         List<RecommendHistoryEntity> entities = new ArrayList<>();
         for (RecommendedStockData data : stocks.values()) {

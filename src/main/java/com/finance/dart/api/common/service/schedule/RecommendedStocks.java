@@ -24,6 +24,7 @@ public class RecommendedStocks {
     private final ExecutorService executorService = Executors.newSingleThreadExecutor();
 
     private final RecommendedStocksProcessor recommendedStocksProcessor;
+    private final RecommendedStocksEvaluator recommendedStocksEvaluator;
 
     @TransactionLogging
     @Scheduled(cron = "0 0 0 * * *") // 24시간 형식, 초 분 시 일 월 요일, 00시(오전12시) 시작
@@ -36,12 +37,16 @@ public class RecommendedStocks {
      * @param maxCount 최대 처리 건수 (0이면 전체)
      */
     public void startScheduledTask(int maxCount) {
-        executorService.submit(() -> recommendedStocksProcessor.process(maxCount));
+        executorService.submit(() -> {
+            recommendedStocksProcessor.process(maxCount);
+            recommendedStocksEvaluator.evaluateAll();  // 추천 완료 후 전수 평가 (2-2)
+        });
     }
 
     private void processDataInBackground() {
         log.info("[추천 종목] 처리 시작");
         recommendedStocksProcessor.process();
+        recommendedStocksEvaluator.evaluateAll();  // 추천 완료 후 전수 평가 (2-2)
     }
 
     @PreDestroy

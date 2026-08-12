@@ -7,6 +7,8 @@ import com.finance.dart.api.common.dto.CompanySharePriceResult;
 import com.finance.dart.api.common.dto.RecommendedStocksReqDto;
 import com.finance.dart.api.common.dto.evaluation.StockEvaluationRequest;
 import com.finance.dart.api.common.dto.evaluation.StockEvaluationResponse;
+import com.finance.dart.api.common.entity.EvaluationHistoryEntity;
+import com.finance.dart.api.common.service.EvaluationHistoryService;
 import com.finance.dart.api.common.service.PerShareValueCalculationService;
 import com.finance.dart.api.common.service.RecommendedCompanyService;
 import com.finance.dart.api.common.service.StockEvaluationService;
@@ -45,7 +47,12 @@ public class MainController {
     private final PerShareValueCalculationService perShareValueCalculationService;  // 가치계산 서비스
     private final RecommendedCompanyService recommendedCompanyService;              // 기업추천 서비스
     private final StockEvaluationService stockEvaluationService;                    // 종목평가 서비스
+    private final EvaluationHistoryService evaluationHistoryService;                // 평가 이력 서비스 (2-2)
     private final RedisComponent redisComponent;
+
+    /** 투자판정 정렬 우선순위 (높을수록 상위) */
+    private static final Map<String, Integer> INVEST_SIGNAL_RANK = Map.of(
+            "매수 후보", 3, "관심목록", 2, "관망", 1);
 
 
     /**
@@ -200,6 +207,33 @@ public class MainController {
         List<StockEvaluationResponse> responseBody = stockEvaluationService.evaluateStocks(request);
 
         return new ResponseEntity<>(new CommonResponse<>(responseBody), HttpStatus.OK);
+    }
+
+    /**
+     * 야간 자동 전수 평가 결과 조회 (2-2) - 아침 매수후보 목록
+     * @param date 조회 일자 (yyyy-MM-dd, 미지정 시 최신 일자)
+     * @return 투자판정(매수후보>관심목록>관망) → 가치점수 내림차순 정렬 목록
+     */
+    @TransactionLogging
+    @GetMapping("/evaluation/daily")
+    public ResponseEntity<CommonResponse<List<EvaluationHistoryEntity>>> getDailyEvaluation(
+            @RequestParam(value = "date", required = false) String date) {
+
+        java.time.LocalDate targetDate = null;
+        if (date != null && !date.isEmpty()) {
+            targetDate = java.time.LocalDate.parse(date);
+        }
+
+        List<EvaluationHistoryEntity> list = evaluationHistoryService.getSnapshot(targetDate);
+
+        // 투자판정 우선순위 → 가치점수 내림차순 정렬
+        list.sort(Comparator
+                .comparingInt((EvaluationHistoryEntity e) ->
+                        INVEST_SIGNAL_RANK.getOrDefault(e.getInvestmentSignal(), 0)).reversed()
+                .thenComparing(e -> e.getValueScore() == null ? 0.0 : e.getValueScore(),
+                        Comparator.reverseOrder()));
+
+        return new ResponseEntity<>(new CommonResponse<>(list), HttpStatus.OK);
     }
 
     private static final int MAX_RECENT_QUERIES = 3;
