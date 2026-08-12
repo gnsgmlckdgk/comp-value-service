@@ -13,6 +13,7 @@ import com.finance.dart.api.abroad.service.fmp.StockScreenerService;
 import com.finance.dart.api.common.entity.RecommendProfileConfigEntity;
 import com.finance.dart.api.common.entity.RecommendProfileEntity;
 import com.finance.dart.api.common.repository.RecommendProfileRepository;
+import com.finance.dart.api.common.service.RecommendHistoryService;
 import com.finance.dart.common.component.RedisComponent;
 import com.finance.dart.common.component.RedisKeyGenerator;
 import com.finance.dart.common.util.DateUtil;
@@ -81,6 +82,7 @@ public class RecommendedStocksProcessor {
     private final RedisComponent redisComponent;
     private final ObjectMapper objectMapper;
     private final RecommendProfileRepository recommendProfileRepository;
+    private final RecommendHistoryService recommendHistoryService;
 
     /**
      * 추천 종목 처리 실행
@@ -201,8 +203,17 @@ public class RecommendedStocksProcessor {
                         profile.getProfileName(), beforeQuotaSize, undervaluedStocks.size());
             }
 
-            // 4. Redis에 프로파일별로 저장
+            // 4. Redis에 프로파일별로 저장 (빠른 조회용 캐시)
             saveToRedis(profile.getProfileName(), undervaluedStocks);
+
+            // 5. DB에 일자별 스냅샷 영속화 (서버 재시작 보존 + 수익률 추적 기반)
+            //    실패해도 Redis 저장 경로엔 영향 없도록 격리
+            try {
+                recommendHistoryService.saveSnapshot(profile.getProfileName(), undervaluedStocks);
+            } catch (Exception e) {
+                log.error("[추천 종목] 프로파일 '{}' DB 이력 저장 실패 (Redis는 정상 저장됨)",
+                        profile.getProfileName(), e);
+            }
 
         } catch (InterruptedException e) {
             log.error("[추천 종목] 프로파일 '{}' 처리 중단됨", profile.getProfileName(), e);

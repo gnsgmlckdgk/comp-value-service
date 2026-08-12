@@ -18,12 +18,13 @@ import java.util.Map;
 public class RecommendedCompanyService {
 
     private final RedisComponent redisComponent;
+    private final RecommendHistoryService recommendHistoryService;
 
 
     /**
      * <pre>
      * 추천 해외기업 조회 (프로파일별)
-     * - Redis 저장값 조회
+     * - Redis 우선 조회, miss 시 DB 최신 스냅샷으로 폴백 (서버 재시작에도 추천 목록 유지)
      * </pre>
      * @param profileName 프로파일명
      * @return
@@ -37,8 +38,15 @@ public class RecommendedCompanyService {
         String value = redisComponent.getValue(redisKey);
 
         if (value == null || value.isEmpty()) {
-            log.debug("프로파일 '{}' 에 대한 추천 종목 데이터가 없습니다. Redis Key: {}", profileName, redisKey);
-            return response;
+            // Redis miss → DB 최신 스냅샷으로 폴백 (Redis 소실/서버 재시작 대비)
+            List<RecommendedStocksProcessor.RecommendedStockData> fallback =
+                    recommendHistoryService.loadLatestSnapshot(profileName);
+            if (!fallback.isEmpty()) {
+                log.info("프로파일 '{}' Redis miss → DB 스냅샷 폴백 {}건", profileName, fallback.size());
+            } else {
+                log.debug("프로파일 '{}' 에 대한 추천 종목 데이터가 없습니다. Redis Key: {}", profileName, redisKey);
+            }
+            return fallback;
         }
 
         Map<String, Object> dataMap = ConvertUtil.parseObject(value, Map.class);
