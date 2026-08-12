@@ -9,6 +9,7 @@ import com.finance.dart.api.common.dto.evaluation.StockEvaluationRequest;
 import com.finance.dart.api.common.dto.evaluation.StockEvaluationResponse;
 import com.finance.dart.api.common.entity.EvaluationHistoryEntity;
 import com.finance.dart.api.common.service.EvaluationHistoryService;
+import com.finance.dart.api.common.service.EvaluationPerformanceService;
 import com.finance.dart.api.common.service.PerShareValueCalculationService;
 import com.finance.dart.api.common.service.RecommendedCompanyService;
 import com.finance.dart.api.common.service.StockEvaluationService;
@@ -48,6 +49,7 @@ public class MainController {
     private final RecommendedCompanyService recommendedCompanyService;              // 기업추천 서비스
     private final StockEvaluationService stockEvaluationService;                    // 종목평가 서비스
     private final EvaluationHistoryService evaluationHistoryService;                // 평가 이력 서비스 (2-2)
+    private final EvaluationPerformanceService evaluationPerformanceService;        // 수익률 추적 서비스 (2-4)
     private final RedisComponent redisComponent;
 
     /** 투자판정 정렬 우선순위 (높을수록 상위) */
@@ -234,6 +236,22 @@ public class MainController {
                         Comparator.reverseOrder()));
 
         return new ResponseEntity<>(new CommonResponse<>(list), HttpStatus.OK);
+    }
+
+    /**
+     * 수익률 추적 (2-4) - 기준일의 투자판정/가치등급별 이후 실제 수익률 집계
+     * @param from 기준일 (yyyy-MM-dd, 필수)
+     * @return 투자판정별·가치등급별 평균수익률/승률 집계
+     */
+    @TransactionLogging
+    @GetMapping("/evaluation/performance")
+    public ResponseEntity<CommonResponse<Map<String, Object>>> getEvaluationPerformance(
+            @RequestParam("from") String from) {
+
+        java.time.LocalDate fromDate = java.time.LocalDate.parse(from);
+        Map<String, Object> result = evaluationPerformanceService.computePerformance(fromDate);
+
+        return new ResponseEntity<>(new CommonResponse<>(result), HttpStatus.OK);
     }
 
     private static final int MAX_RECENT_QUERIES = 3;
