@@ -1,5 +1,6 @@
 package com.finance.dart.api.common.service.schedule;
 
+import com.finance.dart.api.common.context.SimpleRequestAttributes;
 import com.finance.dart.api.common.dto.evaluation.StockEvaluationRequest;
 import com.finance.dart.api.common.dto.evaluation.StockEvaluationResponse;
 import com.finance.dart.api.common.entity.RecommendProfileEntity;
@@ -11,6 +12,7 @@ import com.finance.dart.api.common.service.schedule.RecommendedStocksProcessor.R
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.web.context.request.RequestContextHolder;
 
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
@@ -59,7 +61,9 @@ public class RecommendedStocksEvaluator {
                 StockEvaluationRequest request = new StockEvaluationRequest();
                 request.setSymbols(batch);
 
-                List<StockEvaluationResponse> responses = stockEvaluationService.evaluateStocks(request);
+                // 평가 경로가 request-scope 빈(RequestContext)에 의존 → 백그라운드 스레드에 합성 요청 스코프 바인딩
+                // (정상 HTTP 요청 1건 = 배치 1건과 동일 구조)
+                List<StockEvaluationResponse> responses = evaluateInRequestScope(request);
                 allResponses.addAll(responses);
 
                 long ok = responses.stream().filter(r -> !"ERROR".equals(r.getGrade())).count();
@@ -73,6 +77,20 @@ public class RecommendedStocksEvaluator {
 
         } catch (Exception e) {
             log.error("[전수 평가] 처리 중 오류 발생", e);
+        }
+    }
+
+    /**
+     * 합성 요청 스코프를 바인딩한 채 평가 실행 (백그라운드 스레드에서 request-scope 빈 사용)
+     */
+    private List<StockEvaluationResponse> evaluateInRequestScope(StockEvaluationRequest request) {
+        SimpleRequestAttributes attributes = new SimpleRequestAttributes();
+        RequestContextHolder.setRequestAttributes(attributes);
+        try {
+            return stockEvaluationService.evaluateStocks(request);
+        } finally {
+            RequestContextHolder.resetRequestAttributes();
+            attributes.requestCompleted();  // request-scope 빈 소멸 콜백 실행
         }
     }
 
