@@ -135,6 +135,14 @@
     - **파일**: `StockEvaluationService`(정적 헬퍼 calculateValueScore/resolveTimingSignal/resolveInvestmentSignal/resolveInvestmentSignalColor), `EvaluationConst`(VALUE_SCORE_MAX, INVEST_SIGNAL_*, TIMING_* 상수), `StockEvaluationResponse`(investmentSignal/valueScore/valueGrade/timingSignal/timingScore 필드), 프론트 `InvestmentEvaluation.jsx`
     - **추가 필드**: investmentSignal, investmentSignalColor, valueScore, valueGrade, timingSignal, timingScore
 
+16. **매수후보 품질 게이트 + 채권필터 강화 + 극단괴리 신뢰도 하향** (2026-08-13)
+    - **배경**: 실전 CSV(저평가성장주 302종목) 분석 결과 매수후보 26개 중 clean은 6개뿐 — 초소형주/외국ADR/극단괴리/채권이 매수후보로 샘. 밸류에이션 계산 약점(소형주 BPS, 금융주, ETD채권)이 그대로 노출
+    - **Fix1 품질게이트** `StockEvaluationService.applyQualityGate()`: 채권 or 이상치괴리(±2000%)→관망, 매수후보+초소형주(<$300M)/극단괴리(±200%)→관심목록. investmentSignal 산정 직후 적용
+    - **Fix2 채권감지 강화** `SecurityTypeUtil`(신설, RecommendedStocksProcessor 로직 이전+공용화): '1M BD'(1st mortgage bond) 이름토큰 + Entergy ETD 심볼블록리스트(ENJ/ENO/EMP). 추천필터+평가게이트 공용
+    - **Fix3 극단괴리 가치점수 하향** `evaluateStep3`: 가격차이율 절대값 ≥200%면 저평가 만점(+6) 대신 +1(계산신뢰도 낮음). 소형주/금융주 계산오류가 가치등급 부풀리는 것 방지
+    - **효과**(시뮬): 매수후보 26→14, WHLR/MASK/ENJ 등 제거. 상수: QUALITY_GATE_MICROCAP/UNREALISTIC_GAP_PCT/OUTLIER_GAP_PCT
+    - 미적용(범위밖): 중국ADR 매수후보 강등(ATAT 등 잔존)
+
 - **추가 필드**: high52wDropPercent, forwardPer, forwardPerWarning
 
 ---

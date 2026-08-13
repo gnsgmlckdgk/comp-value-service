@@ -16,6 +16,7 @@ import com.finance.dart.api.common.repository.RecommendProfileRepository;
 import com.finance.dart.api.common.service.RecommendHistoryService;
 import com.finance.dart.common.component.RedisComponent;
 import com.finance.dart.common.component.RedisKeyGenerator;
+import com.finance.dart.api.common.util.SecurityTypeUtil;
 import com.finance.dart.common.util.DateUtil;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -23,7 +24,6 @@ import org.springframework.stereotype.Service;
 
 import java.util.*;
 import java.util.concurrent.TimeUnit;
-import java.util.regex.Pattern;
 
 /**
  * 추천 종목 처리기
@@ -47,34 +47,6 @@ public class RecommendedStocksProcessor {
 
     /** Redis TTL (24시간) */
     private static final long REDIS_TTL_HOURS = 24;
-
-    /** 비일반주식 심볼 패턴 (워런트/우선주/CVR/유닛 등) */
-    private static final Pattern NON_COMMON_STOCK_SYMBOL_PATTERN = Pattern.compile(
-            ".*[-+](W[SB]?|WT|RT|RI|UN)$"              // 하이픈 뒤 명확한 접미사: -W(워런트), -WT, -RI(CVR), -UN(유닛)
-            + "|.*[-+]P[A-Z]?$"                          // 하이픈 뒤 우선주: -P, -PA, -PB, -PL 등 (BRK-A, BRK-B 같은 클래스 주식은 제외)
-            + "|.{3,}W[SW]$"                             // 워런트: SBCWW 등 (5글자 이상, WW/WS로 끝남)
-            + "|.{3,}PR[A-Z]$"                           // 우선주: BACPRL 등 (하이픈 없는 6글자 이상, PR+시리즈문자)
-    );
-
-    /** 비일반주식 기업명 키워드 (소문자 비교) */
-    private static final List<String> NON_COMMON_STOCK_NAME_KEYWORDS = List.of(
-            "warrant", "warrants",
-            "preferred", "preference",
-            "contingent value right",
-            "first mortgage bond", "mortgage bond",
-            "series due", "% series",
-            "debenture", "subordinated note", "junior subordinated",
-            "depositary share",
-            "capital trust",
-            " bond", " bonds",
-            " notes", " note "
-    );
-
-    /** 비일반주식 기업명 패턴 (정규식) - 이자율, 만기일 등 */
-    private static final Pattern NON_COMMON_STOCK_NAME_PATTERN = Pattern.compile(
-            "\\d+\\.?\\d*\\s*%"               // 이자율 표기: "5.35%", "7.25 %" 등 (채권/노트)
-            + "|\\bdue\\s+20\\d{2}\\b"         // 만기일: "due 2027" 등
-    );
 
     private final StockScreenerService stockScreenerService;
     private final RatiosTtmService ratiosTtmService;
@@ -267,24 +239,10 @@ public class RecommendedStocksProcessor {
     }
 
     /**
-     * 비일반주식 여부 판단 (심볼 패턴 + 기업명 키워드)
+     * 비일반주식 여부 판단 (공용 유틸에 위임)
      */
     static boolean isNonCommonStock(String symbol, String companyName) {
-        if (symbol != null && NON_COMMON_STOCK_SYMBOL_PATTERN.matcher(symbol).matches()) {
-            return true;
-        }
-        if (companyName != null) {
-            String nameLower = companyName.toLowerCase();
-            for (String keyword : NON_COMMON_STOCK_NAME_KEYWORDS) {
-                if (nameLower.contains(keyword)) {
-                    return true;
-                }
-            }
-            if (NON_COMMON_STOCK_NAME_PATTERN.matcher(nameLower).find()) {
-                return true;
-            }
-        }
-        return false;
+        return SecurityTypeUtil.isNonCommonStock(symbol, companyName);
     }
 
     /**

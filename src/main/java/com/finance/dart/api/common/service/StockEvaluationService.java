@@ -20,6 +20,7 @@ import com.finance.dart.api.common.dto.evaluation.EntryTimingAnalysis;
 import com.finance.dart.api.common.dto.evaluation.StepEvaluationDetail;
 import com.finance.dart.api.common.dto.evaluation.StockEvaluationRequest;
 import com.finance.dart.api.common.dto.evaluation.StockEvaluationResponse;
+import com.finance.dart.api.common.util.SecurityTypeUtil;
 import com.finance.dart.common.component.RedisComponent;
 import com.finance.dart.common.component.RedisKeyGenerator;
 import com.finance.dart.common.util.StringUtil;
@@ -262,6 +263,15 @@ public class StockEvaluationService {
         String timingSignal = resolveTimingSignal(entryTiming, step6Score);
         Integer timingScore = (entryTiming != null) ? entryTiming.getTimingScore() : null;
         String investmentSignal = resolveInvestmentSignal(valueGrade, timingSignal);
+
+        // 6-2. [Fix1] 매수후보 품질 게이트 - 밸류에이션 계산 약점(초소형주/극단괴리/채권)이 매수후보로 새는 것 방지
+        Long marketCap = (profile != null) ? profile.getMarketCap() : null;
+        String gatedSignal = applyQualityGate(investmentSignal, marketCap, priceGapPercent, symbol, result.get기업명());
+        if (!gatedSignal.equals(investmentSignal)) {
+            log.info("[QualityGate] {} - 투자판정 {} → {} (시총 {}, 괴리 {})",
+                    symbol, investmentSignal, gatedSignal, marketCap, priceGapPercent);
+            investmentSignal = gatedSignal;
+        }
         String investmentSignalColor = resolveInvestmentSignalColor(investmentSignal);
 
         // 7. 응답 DTO 생성
@@ -557,7 +567,11 @@ public class StockEvaluationService {
                             .multiply(new BigDecimal("100"));
                     double gap = gapPercent.doubleValue();
 
-                    if (gap >= 30) {
+                    // [Fix3] 비현실적 괴리(적정가가 현재가의 3배 이상 등)는 저평가가 아니라 계산오류 신호 → 만점 대신 최소
+                    if (Math.abs(gap) >= EvaluationConst.QUALITY_GATE_UNREALISTIC_GAP_PCT) {
+                        score += 1;
+                        details.append(String.format("⚠️ 가격차이 %.1f%% (비현실적 괴리 - 계산 신뢰도 낮음, +1점). ", gap));
+                    } else if (gap >= 30) {
                         score += 6;
                         details.append(String.format("✅ 가격차이 %.1f%% (저평가, +6점). ", gap));
                     } else if (gap >= 20) {
@@ -979,6 +993,43 @@ public class StockEvaluationService {
             return EvaluationConst.INVEST_SIGNAL_BUY;
         }
         return EvaluationConst.INVEST_SIGNAL_WATCH;
+    }
+
+    /**
+     * [Fix1] 매수후보 품질 게이트
+     * - 채권/특수증권 or 이상치 괴리(±2000%) → 관망 (계산 신뢰도 없음, 투자 불가)
+     * - 매수후보 + 초소형주(<$300M) or 극단괴리(±200%) → 관심목록 (행동 리스트에서 강등)
+     */
+    static String applyQualityGate(String signal, Long marketCap, String priceGapPercent,
+                                    String symbol, String companyName) {
+        double gap = parseGapPercent(priceGapPercent);  // NaN 가능
+
+        // 1) 채권/특수증권 or 이상치 괴리 → 관망
+        boolean isBond = SecurityTypeUtil.isNonCommonStock(symbol, companyName);
+        boolean isOutlier = !Double.isNaN(gap) && Math.abs(gap) >= EvaluationConst.QUALITY_GATE_OUTLIER_GAP_PCT;
+        if (isBond || isOutlier) {
+            return EvaluationConst.INVEST_SIGNAL_HOLD;
+        }
+
+        // 2) 매수후보 + 초소형주 or 극단괴리 → 관심목록
+        if (EvaluationConst.INVEST_SIGNAL_BUY.equals(signal)) {
+            boolean isMicroCap = marketCap != null && marketCap < EvaluationConst.QUALITY_GATE_MICROCAP;
+            boolean isExtremeGap = !Double.isNaN(gap) && Math.abs(gap) >= EvaluationConst.QUALITY_GATE_UNREALISTIC_GAP_PCT;
+            if (isMicroCap || isExtremeGap) {
+                return EvaluationConst.INVEST_SIGNAL_WATCH;
+            }
+        }
+        return signal;
+    }
+
+    /** 가격차이율 문자열("162.61%")을 double로 파싱 (실패 시 NaN) */
+    private static double parseGapPercent(String priceGapPercent) {
+        if (StringUtil.isStringEmpty(priceGapPercent) || "N/A".equals(priceGapPercent)) return Double.NaN;
+        try {
+            return Double.parseDouble(priceGapPercent.replace("%", "").trim());
+        } catch (NumberFormatException e) {
+            return Double.NaN;
+        }
     }
 
     /**

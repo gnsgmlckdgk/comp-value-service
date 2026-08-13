@@ -134,4 +134,12 @@ public class EvaluationConst {
     public static final double TIMING_FALLBACK_GOOD_STEP6 = 13.0;
     public static final double TIMING_FALLBACK_WAIT_STEP6 = 9.0;
 
+    /**
+     * 매수후보 품질 게이트 / 극단 괴리 신뢰도 하향 (Fix1/Fix3)
+     * - 밸류에이션 계산의 약점(소형주/금융주/채권)이 매수후보로 새는 것 방지
+     */
+    public static final long QUALITY_GATE_MICROCAP = 300_000_000L;      // 초소형주 기준 $300M
+    public static final double QUALITY_GATE_UNREALISTIC_GAP_PCT = 200.0; // 비현실적 괴리(계산신뢰도 낮음): 매수후보→관심목록, 가치점수 하향
+    public static final double QUALITY_GATE_OUTLIER_GAP_PCT = 2000.0;    // 이상치 괴리: 관망으로 강등
+
 }
